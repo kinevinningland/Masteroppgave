@@ -1,0 +1,32 @@
+FROM quay.io/jupyter/datascience-notebook:julia-1.10.4
+
+USER root
+# Install git lfs such that dataset repo is pulled correctly
+RUN sudo apt-get update && sudo apt-get install -y gnupg &&\
+    curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash &&\
+    sudo apt-get install -y git-lfs
+RUN pip install nbgitpuller jupytext
+
+COPY ./docker/overrides.json ${CONDA_DIR}/share/jupyter/lab/settings/overrides.json
+
+RUN mkdir -p /ReSDDP.jl
+COPY . /ReSDDP.jl
+RUN sudo chown -R jovyan:users /ReSDDP.jl
+ENV JULIA_NUM_THREADS=4
+
+USER jovyan
+
+# Install ReSDDP Julia package in shared environment
+RUN julia -e ' \
+    import Pkg; \
+    Pkg.update(); \
+    Pkg.add("FileIO"); \
+    Pkg.add("JLD2"); \
+    Pkg.add("Plots"); \
+    Pkg.activate("ReSDDP"; shared=true); \
+    Pkg.develop(path="/ReSDDP.jl"); \
+    Pkg.precompile(); \
+    Pkg.instantiate(); \
+    using FileIO, JLD2, Plots, ReSDDP;'
+
+WORKDIR /home/jovyan

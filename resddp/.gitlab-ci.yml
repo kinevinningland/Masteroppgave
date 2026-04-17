@@ -1,0 +1,64 @@
+.script:
+  script:
+    - |
+      julia --project=@. -e '
+        using Pkg
+        Pkg.add("TestReports")
+        Pkg.build()
+        using TestReports
+        cd("test")
+        TestReports.test(coverage=true)'
+  artifacts:
+    reports:
+      junit: test/testlog.xml
+
+.coverage:
+  coverage: /Test coverage (\d+\.\d+%)/
+  after_script:
+    - |
+      julia -e '
+        using Pkg
+        Pkg.add("Coverage")
+        using Coverage
+        c, t = get_summary(process_folder())
+        using Printf
+        @printf "Test coverage %.2f%%\n" 100c / t'
+# Julia 1.0:
+#   image: julia:1.0
+#   extends:
+#     - .script
+#     - .coverage
+Julia 1.10:
+  image: julia:1.10
+  extends:
+    - .script
+    - .coverage
+
+vlab:
+  rules:
+    # This ensures that only pushes to the default branch will trigger
+    # building of vlab image, and only from public repo.
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH && $CI_PROJECT_URL == 'https://gitlab.sintef.no/energy/res100/resddp'
+  tags:
+    - dind
+  services:
+    - name: docker:dind
+  variables:
+    DOCKER_IMAGE: $CI_REGISTRY_IMAGE
+    DOCKERFILE_PATH: docker/Dockerfile.vlab
+  script:
+    # - git clone https://RES100:$DATASET_READ_TOKEN@gitlab.sintef.no/res100/datasets.git datasets
+    - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY --username $CI_REGISTRY_USER --password-stdin
+    - docker buildx build -t $DOCKER_IMAGE:latest -f $DOCKERFILE_PATH .
+    - docker push $DOCKER_IMAGE:latest
+
+update-public-repo:
+  rules:
+    # This ensures that only pushes to the default branch will trigger
+    # a public repo udpate, and only from private repo.
+    - if: ($CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_PIPELINE_SOURCE == 'merge_request_event') && $CI_PROJECT_URL == 'https://gitlab.sintef.no/res100/ReSDDP'
+  script:
+    - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.sintef.no/res100/ReSDDP.git private
+    - cd private
+    - git remote add public https://${RESDDP_OPEN_WRITE_USER}:${RESDDP_OPEN_WRITE_TOKEN}@gitlab.sintef.no/energy/res100/ReSDDP.git || git remote set-url public https://${RESDDP_OPEN_WRITE_USER}:${RESDDP_OPEN_WRITE_TOKEN}@gitlab.sintef.no/energy/res100/ReSDDP.git
+    - git push public main:main
