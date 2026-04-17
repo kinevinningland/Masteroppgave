@@ -34,9 +34,21 @@ function print_results_h5(dataset::String,RT::Result,model::Model,parameters::Pa
       #Market results
       marketGroup = create_group(areaGroup, "Market")
 
-      marketStepGroup = create_group(marketGroup, "Market_steps")
-      for iMark = 1:model.AMData[iArea].NMStep
-         write(marketStepGroup, model.AMData[iArea].MSData[iMark].Name, RT.MarkTable[iArea,iMark,:,:,:])
+      #marketStepGroup = create_group(marketGroup, "Market_steps")
+      #for iMark = 1:model.AMData[iArea].NMStep
+      #   write(marketStepGroup, model.AMData[iArea].MSData[iMark].Name, RT.MarkTable[iArea,iMark,:,:,:])
+      #end
+      for iMark = 1:model.AMData[iArea].NMStep #byttet den over ut med denne
+
+         base_name = model.AMData[iArea].MSData[iMark].Name
+         name = base_name
+
+         # Hvis navn finnes → legg til nummer
+         if haskey(marketStepGroup, name)
+            name = string(base_name, "_", iMark)
+         end
+
+         write(marketStepGroup, name, RT.MarkTable[iArea,iMark,:,:,:])
       end
 
       write(marketGroup, "Load", RT.LoadTable[iArea,:,:,:])
@@ -250,7 +262,9 @@ function print_results(dataset::String,RT::Result,model::Model,parameters::Param
          for iStage = 1:parameters.Control.NStageSim
             for k = 1:parameters.Time.NK
                #sum market
-               @printf(out,"%16.6f ",sum(RT.MarkTable[iArea,iMark,iScen,iStage,k] for iMark=1:model.AMData[iArea].NMStep))
+               val = sum(RT.MarkTable[iArea,iMark,iScen,iStage,k] for iMark=1:model.AMData[iArea].NMStep; init=0.0)#Added
+               @printf(out, "%16.6f ", val) #Added
+               #@printf(out,"%16.6f ",sum(RT.MarkTable[iArea,iMark,iScen,iStage,k] for iMark=1:model.AMData[iArea].NMStep))
             end
          end
          @printf(out,"%s \n","")

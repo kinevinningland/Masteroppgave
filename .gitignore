@@ -1,0 +1,6 @@
+datasets/
+*.lp
+*.mps
+*.dat
+*.jld2
+.DS_Store
