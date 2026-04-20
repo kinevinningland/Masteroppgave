@@ -41,7 +41,7 @@ function print_results_h5(dataset::String,RT::Result,model::Model,parameters::Pa
       #Market results
       marketGroup = create_group(areaGroup, "Market")
 
-      #marketStepGroup = create_group(marketGroup, "Market_steps")
+      marketStepGroup = create_group(marketGroup, "Market_steps")
       #for iMark = 1:model.AMData[iArea].NMStep
       #   write(marketStepGroup, model.AMData[iArea].MSData[iMark].Name, RT.MarkTable[iArea,iMark,:,:,:])
       #end
