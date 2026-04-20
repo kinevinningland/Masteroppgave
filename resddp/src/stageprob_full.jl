@@ -153,6 +153,9 @@ module StageProbFull
          neg_by_area = ORData.neg_by_area
 
          #Opp- og nedreguleringsreserver
+         @variable(M, 0 <= cap_zone_up[z=1:NZ, k=1:NK], base_name="cap_zone_up")
+         @variable(M, 0 <= cap_zone_down[z=1:NZ, k=1:NK], base_name="cap_zone_down")
+
          @variable(M, 0 <= cap_hydro_up[iSys=1:NHSys, k=1:NK],   base_name="cap_hydro_up")
          @variable(M, 0 <= cap_hydro_down[iSys=1:NHSys, k=1:NK], base_name="cap_hydro_down")
          @variable(M, 0 <= cap_wind_down[iArea=1:NArea, k=1:NK],  base_name="cap_wind_down")
@@ -172,6 +175,34 @@ module StageProbFull
          @constraint(M, wp_avail_fix[a=1:NArea, k=1:NK],wp_avail[a,k] == 0.0)
 
          #Oppreguleringskrav
+         @constraint(M, reserve_req_up[z=1:NZ-1, k=1:NK],
+         cap_zone_up[z,k] >= zone_reqs[z].RI_up * 3 #Fikse at 3 er DT
+            + zone_reqs[z].NI_up * sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0)
+         )
+         @constraint(M, reserve_req_down[z=1:NZ-1, k=1:NK],
+         cap_zone_down[z,k] >= zone_reqs[z].RI_down * 3 #Fikse at 3 er DT
+            + zone_reqs[z].NI_down * sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0)
+         )
+         @constraint(M, reserve_split_down[z=1:NZ, k=1:NK],
+         cap_zone_down[z,k] ==
+            sum(cap_hydro_down[iSys, k] for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0) 
+            + sum(cap_wind_down[a,k] for a in areas_in_zone[z]; init=0.0) 
+            + (ORData.LH2Reserves ? sum(cap_h2dis_down[iH2, k] for iH2 in 1:NH2Area if (h2_to_area[iH2] in areas_in_zone[z]); init=0.0) : 0.0)
+            + (ORData.LH2Reserves ? sum(cap_h2chg_down[iH2, k] for iH2 in 1:NH2Area if (h2_to_area[iH2] in areas_in_zone[z]); init=0.0) : 0.0)
+            + (ORData.LMarkReserves ? sum(cap_mark_down[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.neg_by_area, a, Set{Int}()); init=0.0) : 0.0) #Fikse Denne
+         )
+
+         @constraint(M, reserve_split_up[z=1:NZ, k=1:NK],
+         cap_zone_up[z,k] ==
+            sum(cap_hydro_up[iSys, k] for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0) 
+            + (ORData.LH2Reserves ? sum(cap_h2dis_up[iH2, k] for iH2 in 1:NH2Area if (h2_to_area[iH2] in areas_in_zone[z]); init=0.0) : 0.0)
+            + (ORData.LH2Reserves ? sum(cap_h2chg_up[iH2, k] for iH2 in 1:NH2Area if (h2_to_area[iH2] in areas_in_zone[z]); init=0.0) : 0.0)
+            + (ORData.LMarkReserves ? sum(cap_mark_up[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.pos_by_area, a, Set{Int}()); init=0.0) : 0.0) #Fikse denne
+         )
+
+
+         #=
+         #Oppreguleringskrav
          @constraint(M, reserve_up[z=1:NZa, k=1:NK],
             sum(cap_hydro_up[iSys, k] for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0) 
             + (ORData.LH2Reserves ? sum(cap_h2dis_up[iH2, k] for iH2 in 1:NH2Area if (h2_to_area[iH2] in areas_in_zone[z]); init=0.0) : 0.0)
@@ -183,12 +214,14 @@ module StageProbFull
          #Nedreguleringskrav
          @constraint(M, reserve_down[z=1:NZa, k=1:NK],
             sum(cap_hydro_down[iSys, k] for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0) 
+            + sum(cap_wind_down[a,k] for a in areas_in_zone[z]; init=0.0) 
             + (ORData.LH2Reserves ? sum(cap_h2dis_down[iH2, k] for iH2 in 1:NH2Area if (h2_to_area[iH2] in areas_in_zone[z]); init=0.0) : 0.0)
             + (ORData.LH2Reserves ? sum(cap_h2chg_down[iH2, k] for iH2 in 1:NH2Area if (h2_to_area[iH2] in areas_in_zone[z]); init=0.0) : 0.0)
             + (ORData.LMarkReserves ? sum(cap_mark_down[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.neg_by_area, a, Set{Int}()); init=0.0) : 0.0) #Fikse Denne
             >= zone_reqs[z].RI_down * 3 #Fikse at 3 er DT
             + zone_reqs[z].NI_down * sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0)
          )
+            =#
 
          #koble hver teknologis cap-variabel til dens egne fysiske grenser
          @constraint(M, hydro_up[iSys=1:NHSys, k=1:NK], prod[iSys,k] + cap_hydro_up[iSys,k] <= WeekFrac * HSys[iSys].MaxProd)  #OK
