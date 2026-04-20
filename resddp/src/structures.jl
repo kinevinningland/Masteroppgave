@@ -85,6 +85,15 @@ struct DemandResponse
     ExtraConstrSigma::Float64
 end
 
+struct ReserveZoneReq #ADDED
+    zone_name::String
+    RI_up::Float64          #Reference incident up [GW]
+    RI_down::Float64        #Reference incident down [GW]
+    NI_up::Float64          #Nominal imbalance up [GW]
+    NI_down::Float64        #Nominal imbalance down [GW]
+end
+
+
 struct OperatingReserves #ADDED
     NZ::Int                 # Total number of price zones, incl "others"
     NZ_active::Int
@@ -99,15 +108,6 @@ struct OperatingReserves #ADDED
     pos_by_area::Dict{Int, Set{Int}}
     neg_by_area::Dict{Int, Set{Int}}
 end
-
-struct ReserveZoneReq #ADDED
-    zone_name::String
-    RI_up::Float64          #Reference incident up [GW]
-    RI_down::Float64        #Reference incident down [GW]
-    NI_up::Float64          #Nominal imbalance up [GW]
-    NI_down::Float64        #Nominal imbalance down [GW]
-end
-
 
 struct Parameters
     Control::Control
