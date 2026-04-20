@@ -25,8 +25,8 @@ LoadScale = 1.0
 LineCapScale = 1.0
 CapReqFrac = 0#0.10
 H2CompLoss = 0.10
-CTR = ReSDDP.Control(LFeasCut,LFeasPerStage,LCostApprox,LCostApproxNewCuts,LWindStoch,LDemandResponse,LExtreme,LIgnoreCrossCorr,LReserves,MaxIter,CCMaxIter,ConvEps,NScen,
-                     NWindScen,NScenSim,NBranch,NStage,NStageSim,ResInitFrac,ResMinFrac,MaxResScale,LoadScale,LineCapScale,CapReqFrac,H2CompLoss) #Added LReserves 
+CTR = ReSDDP.Control(LFeasCut,LFeasPerStage,LCostApprox,LCostApproxNewCuts,LWindStoch,LDemandResponse,LExtreme,LIgnoreCrossCorr,LOperatingReserves,MaxIter,CCMaxIter,ConvEps,NScen,
+                     NWindScen,NScenSim,NBranch,NStage,NStageSim,ResInitFrac,ResMinFrac,MaxResScale,LoadScale,LineCapScale,CapReqFrac,H2CompLoss) #Added LOperatingReserves 
 
 #AGGREGATION DATA
 ModCutoff = 100
