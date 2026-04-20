@@ -9,13 +9,14 @@ function load(dataset::String, parameters::Parameters)::Model
     DMData = ReadDynmod(dataset,AHData,NArea,AreaName,MyKeys,MaxModArea,CTI.NWeek)
     DRData = ReadDemandResponse(dataset,NArea,CTI.NWeek,AreaName,CTR.LDemandResponse)
     H2Data = ReadH2(dataset,AHData,NArea,AreaName,CNS,CTI,CTR)
-    ORData = ReadOperatingReserves(NArea, NHsys, NAreaSys,AreaSys, H2Data, AMData,CTR.LOperatingReserves) #Added
     PrintMarketSummary(dataset,NArea,AMData,WPData,MCon,LineCap,CTI)
     
 
     NCascade,HCascade = IdentifyCascades(AHData,NArea,USMod,ModInfReg,ModInfUReg,CTR,CTI,CNS)
     NHSys,HSys,NAreaSys,AreaSys,USModSys = AggrSystems(HCascade,AHData,NArea,ModInfReg,ModInfUReg,CTR,CTI,CNS,CAGR)
     InfReg,RegFrac = AggrInflow(NHSys,HSys,ModInfReg,ModInfUReg,AHData,CTR,CTI,CNS)
+
+    ORData = ReadOperatingReserves(NArea, NHsys, NAreaSys,AreaSys, H2Data, AMData,CTR.LOperatingReserves) #Added
 
     PrintCascadeStats(dataset,NHSys,HSys,CAGR)
     PrintInflow(dataset,InfReg,NHSys,CTI.NWeek,CTR.NBranch,CTI.NInflowYear)
