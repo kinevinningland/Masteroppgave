@@ -168,7 +168,7 @@ end
 function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,LOperatingReserves)
     #Return dummy object if OR is not included
     if !LOperatingReserves
-        return OperatingReserves(0,0,String[],ReserveZoneReq[],Int[],Vector{Vector{Int}}(),Int[],Int[],false,false,Dict{Int, Set{Int}}(),Dict{Int, Set{Int}})
+        return OperatingReserves(0,0,String[],ReserveZoneReq[],Int[],Vector{Vector{Int}}(),Int[],Int[],false,false,Dict{Int, Set{Int}}(),Dict{Int, Set{Int}}())
     end
 
     LH2Reserves = false
