@@ -123,7 +123,7 @@ function simulate_aggregated(model::Model, inflow_model::InflowModel, parameters
 
     NMaxMStep = maximum([model.AMData[iArea].NMStep for iArea in 1:model.NArea])
     
-    ResultTable = init_result(model.NArea, model.NHSys, NMaxMStep, parameters.Control.NScenSim, parameters.Control.NStageSim, parameters.Time.NK, model.NLine, model.NZ) #NZ ADDED
+    ResultTable = init_result(model.NArea, model.NHSys, NMaxMStep, parameters.Control.NScenSim, parameters.Control.NStageSim, parameters.Time.NK, model.NLine, model.ORData.NZ) #NZ ADDED
 
     #START SIMULATION
     H2Init = zeros(Float64,model.H2Data.NArea)
