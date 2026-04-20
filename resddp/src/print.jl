@@ -119,7 +119,7 @@ function print_results_h5(dataset::String,RT::Result,model::Model,parameters::Pa
    if parameters.Control.LOperatingReserves #ADDED, mangler mark
 
       NZa = model.ORData.NZ_active
-      price_zones = model.ORData.Price_zones
+      price_zones = model.ORData.price_zones
       area_to_zone = model.ORData.area_to_zone
       areas_in_zone = model.ORData.areas_in_zone
 
