@@ -171,14 +171,6 @@ function ReadOperatingReserves(NArea, NHsys, NAreaSys, AreaSys, H2Data, AMData,L
         return OperatingReserves(0,0,String[],ReserveZoneReq[],Int[],Vector{Vector{Int}}(),Int[],Int[],false,false,Dict{Int, Set{Int}}(),Dict{Int, Set{Int}})
     end
 
-    struct ReserveZoneReq
-        zone_name::String
-        RI_up::Float64          #Reference incident up [GW]
-        RI_down::Float64        #Reference incident down [GW]
-        NI_up::Float64          #Nominal imbalance up [GW]
-        NI_down::Float64        #Nominal imbalance down [GW]
-    end
-
     LH2Reserves = false
     LMarkReserves = false
 

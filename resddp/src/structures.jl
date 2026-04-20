@@ -100,6 +100,14 @@ struct OperatingReserves #ADDED
     neg_by_area::Dict{Int, Set{Int}}
 end
 
+struct ReserveZoneReq #ADDED
+    zone_name::String
+    RI_up::Float64          #Reference incident up [GW]
+    RI_down::Float64        #Reference incident down [GW]
+    NI_up::Float64          #Nominal imbalance up [GW]
+    NI_down::Float64        #Nominal imbalance down [GW]
+end
+
 
 struct Parameters
     Control::Control
