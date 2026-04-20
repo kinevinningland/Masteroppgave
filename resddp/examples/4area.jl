@@ -74,7 +74,7 @@ strategy = data["strategy"]
 
 # Simulate aggregated
 println("Start simulation ..")
-results_agg = simulate_aggregated(model, inflow_model, parameters, strategy, feas_spaces, init_val; optimizer = optimizer)
+results_agg = simulate_aggregated(model, inflow_model, parameters, strategy, feas_spaces, init_val; optimizer = optimizer, fixed_seed = true)#fixed_seed added
 
 # Print results to ASCII files 
 println("Write results ..")

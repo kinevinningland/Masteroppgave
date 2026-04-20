@@ -10,6 +10,8 @@ function print_results_h5(dataset::String,RT::Result,model::Model,parameters::Pa
    attrs(file)["NStage"] = parameters.Control.NStageSim
    attrs(file)["NK"]     = parameters.Time.NK
 
+   write(file, "ObjectiveValue", RT.ObjTable) #Added
+
    for iArea = 1:model.NArea
       areaGroup = create_group(file, model.AreaName[iArea])
 
@@ -29,6 +31,11 @@ function print_results_h5(dataset::String,RT::Result,model::Model,parameters::Pa
             attrs(hydroGroup[dset])["Dim 2"] = "NStage"
             attrs(hydroGroup[dset])["Dim 3"] = "NK"
          end
+
+         write(hydroGroup, "WaterValue", RT.WaterValueTable[iArea,:,:]) #Added
+         attrs(hydroGroup["WaterValue"])["Dim 1"] = "NScen" #Added
+         attrs(hydroGroup["WaterValue"])["Dim 2"] = "NStage" #Added
+
       end
 
       #Market results
@@ -82,6 +89,7 @@ function print_results_h5(dataset::String,RT::Result,model::Model,parameters::Pa
               attrs(H2Group[dset])["Dim 3"] = "NK"
           end
       end
+      
    end
 
    #Flow results
@@ -106,6 +114,92 @@ function print_results_h5(dataset::String,RT::Result,model::Model,parameters::Pa
       attrs(flowGroup["Line "*string(iLine)])["Dim 1"]       = "NScen"
       attrs(flowGroup["Line "*string(iLine)])["Dim 2"]       = "NStage"
       attrs(flowGroup["Line "*string(iLine)])["Dim 3"]       = "NK"
+   end
+
+   if parameters.Control.LOperatingReserves #ADDED, mangler mark
+
+      NZa = model.ORData.NZ_active
+      price_zones = model.ORData.Price_zones
+      area_to_zone = model.ORData.area_to_zone
+      areas_in_zone = model.ORData.areas_in_zone
+
+      pzGroup = create_group(file, "XNordic_Reserve_req") #hovedmappe
+
+      write(pzGroup, "Names", price_zones)
+      write(pzGroup, "AreaToZone", area_to_zone)      
+      write(pzGroup, "price_zones", price_zones)
+
+      byZA = create_group(pzGroup, "ByZoneArea")
+
+      for z in 1:NZa
+         zname = price_zones[z]
+         zGroup = create_group(byZA, zname) #Per sone
+         if hasproperty(RT, :CapZoneUpTable)
+            write(zGroup, "ReserveUp",   RT.CapZoneUpTable[z,:,:,:])
+            write(zGroup, "ReserveDown", RT.CapZoneDownTable[z,:,:,:])
+            write(zGroup, "ReserveDualUp",   RT.CapDualUpTable[z,:,:,:])
+            write(zGroup, "ReserveDualDown", RT.CapDualDownTable[z,:,:,:])
+
+            for dset in ["ReserveUp","ReserveDown"]
+               attrs(zGroup[dset])["Dim 1"] = "NScen"
+               attrs(zGroup[dset])["Dim 2"] = "NStage"
+               attrs(zGroup[dset])["Dim 3"] = "NK"
+            end
+         end
+         
+         areasGroup = create_group(zGroup, "Areas")
+         write(zGroup, "AreaIndices", areas_in_zone[z])
+         attrs(zGroup["AreaIndices"])["Dim 1"] = "NAreaInZone"
+         for a in areas_in_zone[z]
+            aname = model.AreaName[a]
+            aGroup = create_group(areasGroup, aname)
+
+            for iSys in 1:model.NHSys
+               if iSys == a
+                  # dette hydrosystemet tilhører område a
+                  if hasproperty(RT, :HydroCapUpTable)
+                     write(aGroup, "HydroCapUp", RT.HydroCapUpTable[a,:,:,:])
+                     write(aGroup, "HydroCapDown", RT.HydroCapDownTable[a,:,:,:])
+
+                     for dset in ["HydroCapUp", "HydroCapDown"]
+                        attrs(aGroup[dset])["Dim 1"] = "NScen"
+                        attrs(aGroup[dset])["Dim 2"] = "NStage"
+                        attrs(aGroup[dset])["Dim 3"] = "NK"
+                     end
+                  end
+               end
+            end
+            if model.H2Data.Ind[a] > 0
+               # dette H2-systemet tilhører område a
+               write(aGroup, "H2CapUpDis", RT.H2CapUpDisTable[a,:,:,:])
+               write(aGroup, "H2CapDownDis", RT.H2CapDownDisTable[a,:,:,:])
+               write(aGroup, "H2CapUpChg", RT.H2CapUpChgTable[a,:,:,:])
+               write(aGroup, "H2CapDownChg", RT.H2CapDownChgTable[a,:,:,:])
+
+               for dset in ["H2CapUpDis", "H2CapDownDis", "H2CapUpChg", "H2CapDownChg"]
+                  attrs(aGroup[dset])["Dim 1"] = "NScen"
+                  attrs(aGroup[dset])["Dim 2"] = "NStage"
+                  attrs(aGroup[dset])["Dim 3"] = "NK"
+               end
+               
+            end
+
+            # Bidrag per område (finnes allerede i RT)
+            if hasproperty(RT, :WindCapDownTable)
+               write(aGroup, "WindDownArea",   RT.WindCapDownTable[a,:,:,:])
+               write(aGroup, "SpotPrice", RT.PriceTable[a,:,:,:])
+
+               for dset in ["WindDownArea", "SpotPrice"]
+                     attrs(aGroup[dset])["Dim 1"] = "NScen"
+                     attrs(aGroup[dset])["Dim 2"] = "NStage"
+                     attrs(aGroup[dset])["Dim 3"] = "NK"
+               end
+            end
+         end
+      end 
+
+      
+
    end
 
    close(file)

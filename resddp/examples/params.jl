@@ -7,12 +7,13 @@ LWindStoch = false
 LDemandResponse = false
 LExtreme = false
 LIgnoreCrossCorr = false
-MaxIter = 50
+LOperatingReserves = true #Added
+MaxIter = 80#50
 CCMaxIter = 1
 ConvEps = 1.0E-3
 NScen = 30
 NWindScen = 5
-NScenSim = 1#30
+NScenSim = 10#30
 NResid = NBranch = 7
 NStage = 3*52
 NStageSim =2*52
@@ -22,10 +23,10 @@ ResMinFrac = 0.10
 MaxResScale = 1.0
 LoadScale = 1.0
 LineCapScale = 1.0
-CapReqFrac = 0.10
+CapReqFrac = 0#0.10
 H2CompLoss = 0.10
-CTR = ReSDDP.Control(LFeasCut,LFeasPerStage,LCostApprox,LCostApproxNewCuts,LWindStoch,LDemandResponse,LExtreme,LIgnoreCrossCorr,MaxIter,CCMaxIter,ConvEps,NScen,
-                     NWindScen,NScenSim,NBranch,NStage,NStageSim,ResInitFrac,ResMinFrac,MaxResScale,LoadScale,LineCapScale,CapReqFrac,H2CompLoss)
+CTR = ReSDDP.Control(LFeasCut,LFeasPerStage,LCostApprox,LCostApproxNewCuts,LWindStoch,LDemandResponse,LExtreme,LIgnoreCrossCorr,LReserves,MaxIter,CCMaxIter,ConvEps,NScen,
+                     NWindScen,NScenSim,NBranch,NStage,NStageSim,ResInitFrac,ResMinFrac,MaxResScale,LoadScale,LineCapScale,CapReqFrac,H2CompLoss) #Added LReserves 
 
 #AGGREGATION DATA
 ModCutoff = 100

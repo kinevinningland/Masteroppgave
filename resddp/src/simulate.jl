@@ -119,10 +119,11 @@ function simulate_aggregated(model::Model, inflow_model::InflowModel, parameters
     SimulatedCost = zeros(Float64, parameters.Control.NScenSim)
 
     SS = SampleScenario(parameters.Control.NScenSim, parameters.Control.NStageSim, parameters.Time.NWeek, inflow_model, parameters.Control.LExtreme; fixed_seed = fixed_seed)
+    SampledWindYears = fill(1, parameters.Control.NScenSim) #Added
 
     NMaxMStep = maximum([model.AMData[iArea].NMStep for iArea in 1:model.NArea])
-
-    ResultTable = init_result(model.NArea, model.NHSys, NMaxMStep, parameters.Control.NScenSim, parameters.Control.NStageSim, parameters.Time.NK, model.NLine)
+    
+    ResultTable = init_result(model.NArea, model.NHSys, NMaxMStep, parameters.Control.NScenSim, parameters.Control.NStageSim, parameters.Time.NK, model.NLine, model.NZ) #NZ ADDED
 
     #START SIMULATION
     H2Init = zeros(Float64,model.H2Data.NArea)
@@ -156,10 +157,11 @@ function simulate_aggregated(model::Model, inflow_model::InflowModel, parameters
                     model.LineCap,model.LineLoss, parameters.Time, t==parameters.Control.NStage,
                     parameters.Control.LFeasSpace, feas_spaces[fWeek].NFeasCut, feas_spaces[fWeek].FCC,
                     parameters.Control.CapReqFrac,MyWPData,parameters.Control.LDemandResponse,model.DRData,
-                    model.H2Data,optimizer)
+                    model.H2Data,parameters.Control.LOperatingReserves,model.ORData,optimizer) #ADDED, LOperatingReserves &ORData
 
                 for iScen = start_scen:end_scen
-                    wYear = sample(strategy.WindYears)
+                    #wYear = sample(strategy.WindYears) #kommentert ud
+                    wYear = SampledWindYears[iScen] #Added
                     #Update constraint right-hand sides
                     Zstate = zeros(Float64,inflow_model.NSer)
                     Eps = inflow_model.Resid[1:inflow_model.NSer,sWeek,SS.SScen[iScen,t]]
@@ -194,6 +196,10 @@ function simulate_aggregated(model::Model, inflow_model::InflowModel, parameters
                     for iArea = 1:model.NArea
                         for k = 1:parameters.Time.NK
                             JuMP.set_normalized_rhs(SP_FORW[:wptarget][iArea,k], max(model.WPData[iArea,wYear,sWeek,k],0.0))
+                            if parameters.Control.LOperatingReserves #ADDED
+                            JuMP.set_normalized_rhs(SP_FORW[:wp_avail_fix][iArea,k], max(model.WPData[iArea,wYear,sWeek,k],0.0))
+                            JuMP.set_normalized_rhs(SP_FORW[:wind_dn2][iArea,k], max(model.WPData[iArea,wYear,sWeek,k],0.0))
+                            end
                         end
                     end
 
@@ -209,7 +215,7 @@ function simulate_aggregated(model::Model, inflow_model::InflowModel, parameters
                         termstat = termination_status(SP_FORW)
                         error(println("Solver terminated with status $termstat in forward iteration (stage,scen): ",t," ",iScen))
                     end
-                    save!(ResultTable, SP_FORW, model.AMData,model.H2Data, InflowSys, model.NArea, model.NHSys, parameters.Time.NK, model.NLine, iScen, t)
+                    save!(ResultTable, SP_FORW, model.AMData,model.H2Data, InflowSys, model.NArea, model.NHSys, parameters.Time.NK, model.NLine, iScen, t, parameters.Control.LOperatingReserves, model.ORData.NZ) #ORData ADDED
 
                     for iSys = 1:model.NHSys
                         SimulatedStateTraj[iSys,iScen,t] = JuMP.value(SP_FORW[:res][iSys,end])

@@ -47,6 +47,7 @@ struct Control
     LDemandResponse::Bool
     LExtreme::Bool
     LIgnoreCrossCorr::Bool
+    LOperatingReserves::Bool #Added
     MaxIter::Int
     CCMaxIter::Int
     ConvEps::Float64
@@ -82,6 +83,21 @@ struct DemandResponse
     LIncludeExtraConstr::Array{Bool}
     ExtraConstrFilter::Array{Int}
     ExtraConstrSigma::Float64
+end
+
+struct OperatingReserves #ADDED
+    NZ::Int                 # Total number of price zones, incl "others"
+    NZ_active::Int
+    price_zones::Vector{String}          #price zone names
+    zone_reqs::Vector{ReserveZoneReq}
+    area_to_zone::Vector{Int}            # Model area index -> zone index (1..NZ)
+    areas_in_zone::Vector{Vector{Int}}   # Zone index -> list of model area indices
+    hydrosys_to_area::Vector{Int}        # Hydro system index -> model area index
+    h2_to_area::Vector{Int}
+    LH2Reserves::Bool
+    LMarkReserves::Bool  
+    pos_by_area::Dict{Int, Set{Int}}
+    neg_by_area::Dict{Int, Set{Int}}
 end
 
 
@@ -296,6 +312,7 @@ struct Model
     USMod::Array{AreaUpstreamMod} # Array{AreaUpstreamMod}
     WPData # Wind power data
     DRData::DemandResponse #Demand response data
+    ORData::OperatingReserves #ADDED
     NArea # Number of areas
     ModInfReg # Module regulated inflow - Array{Float64, n_mod, n_week, n_inflow_years}
     ModInfUReg # Module unregulated inflow
@@ -373,6 +390,20 @@ struct Result
     DemandDnTable::Array{Float64}
     H2StoreTable::Array{Float64}
     H2DisTable::Array{Float64}
+    #ALL Below ADDED
+    WindCapDownTable::Array{Float64}
+    HydroCapDownTable::Array{Float64}
+    HydroCapUpTable::Array{Float64}
+    H2CapUpDisTable::Array{Float64}
+    H2CapDownDisTable::Array{Float64}
+    H2CapUpChgTable::Array{Float64}
+    H2CapDownChgTable::Array{Float64}
+    CapZoneDownTable::Array{Float64}
+    CapZoneUpTable::Array{Float64}
+    CapDualUpTable::Array{Float64}
+    CapDualDownTable::Array{Float64}
+    ObjTable::Array{Float64}
+    WaterValueTable::Array{Float64}
 end
 
 struct DetailedResult

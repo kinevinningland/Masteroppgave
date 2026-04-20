@@ -5,7 +5,7 @@ module StageProbFull
    const MOI = MathOptInterface
 
    function Build(t,iWeek,IM,NHSys,HSys,NAreaSys,AreaSys,AMData,MCon,EV,CCR,CCH,CCI,CNS,NCut,NArea,NLine,LineCap,LineLoss,CTI,LEndVal,
-                  LFeasSpace,NFeasCut,FCC,CapReq,MyWPData,LDemandResponse,DR,H2Data,optimizer)
+                  LFeasSpace,NFeasCut,FCC,CapReq,MyWPData,LDemandResponse,DR,H2Data,LOperatingReserves,ORData,optimizer)
 
       M = Model(optimizer)
 
@@ -139,6 +139,81 @@ module StageProbFull
                      sum(sum(dr_dn[iArea, ll,l] for ll = max(MaxLoadRec-DR.LoadRec[iStep]+1,2*MaxLoadRec-DR.LoadRec[iStep]+2-l):min(MaxLoadRec+DR.LoadRec[iStep]+1,DR.LoadRec[iStep]+1+NK-l)) for l=(k-DR.ExtraConstrFilter[iStep]+1):k)
                      <= DR.ExtraConstrSigma*DR.ExtraConstrFilter[iStep]*sum(DR.MaxDnShift[iArea,iWeek,jStep] for jStep=1:iStep))
       end   
+
+      if LOperatingReserves #ADDED
+         NZ = ORData.NZ
+         NZa = ORData.NZ_active
+         price_zones = ORData.price_zones
+         zone_reqs = ORData.zone_reqs
+         area_to_zone = ORData.area_to_zone
+         areas_in_zone = ORData.areas_in_zone
+         hydrosys_to_area = ORData.hydrosys_to_area
+         h2_to_area = ORData.h2_to_area
+         pos_by_area = ORData.pos_by_area
+         neg_by_area = ORData.neg_by_area
+
+         #Opp- og nedreguleringsreserver
+         @variable(M, 0 <= cap_hydro_up[iSys=1:NHSys, k=1:NK],   base_name="cap_hydro_up")
+         @variable(M, 0 <= cap_hydro_down[iSys=1:NHSys, k=1:NK], base_name="cap_hydro_down")
+         @variable(M, 0 <= cap_wind_down[iArea=1:NArea, k=1:NK],  base_name="cap_wind_down")
+         if ORData.LH2Reserves
+            @variable(M, 0 <= cap_h2dis_up[iH2=1:NH2Area, k=1:NK]  <= H2Data.Areas[iH2].MaxDis, base_name="cap_h2dis_up")
+            @variable(M, 0 <= cap_h2chg_up[iH2=1:NH2Area, k=1:NK]  <= H2Data.Areas[iH2].MaxDis, base_name="cap_h2chg_up")
+            @variable(M, 0 <= cap_h2dis_down[iH2=1:NH2Area, k=1:NK]<= H2Data.Areas[iH2].MaxDis, base_name="cap_h2dis_down")
+            @variable(M, 0 <= cap_h2chg_down[iH2=1:NH2Area, k=1:NK]<= H2Data.Areas[iH2].MaxDis, base_name="cap_h2chg_down")
+         end
+         if ORData.LMarkReserves
+            @variable(M, 0 <= cap_mark_up[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK],   base_name="cap_mark_up")
+            @variable(M, 0 <= cap_mark_down[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK], base_name="cap_mark_down")
+         end
+
+         #Diverse
+         @variable(M, wp_avail[a=1:NArea, k=1:NK] >= 0, base_name="wp_avail")
+         @constraint(M, wp_avail_fix[a=1:NArea, k=1:NK],wp_avail[a,k] == 0.0)
+
+         #Oppreguleringskrav
+         @constraint(M, reserve_up[z=1:NZa, k=1:NK],
+            sum(cap_hydro_up[iSys, k] for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0) 
+            + (ORData.LH2Reserves ? sum(cap_h2dis_up[iH2, k] for iH2 in 1:NH2Area if (h2_to_area[iH2] in areas_in_zone[z]); init=0.0) : 0.0)
+            + (ORData.LH2Reserves ? sum(cap_h2chg_up[iH2, k] for iH2 in 1:NH2Area if (h2_to_area[iH2] in areas_in_zone[z]); init=0.0) : 0.0)
+            + (ORData.LMarkReserves ? sum(cap_mark_up[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.pos_by_area, a, Set{Int}()); init=0.0) : 0.0) #Fikse denne
+            >= zone_reqs[z].RI_up * 3 #Fikse at 3 er DT
+            + zone_reqs[z].NI_up * sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0)
+         )
+         #Nedreguleringskrav
+         @constraint(M, reserve_down[z=1:NZa, k=1:NK],
+            sum(cap_hydro_down[iSys, k] for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0) 
+            + (ORData.LH2Reserves ? sum(cap_h2dis_down[iH2, k] for iH2 in 1:NH2Area if (h2_to_area[iH2] in areas_in_zone[z]); init=0.0) : 0.0)
+            + (ORData.LH2Reserves ? sum(cap_h2chg_down[iH2, k] for iH2 in 1:NH2Area if (h2_to_area[iH2] in areas_in_zone[z]); init=0.0) : 0.0)
+            + (ORData.LMarkReserves ? sum(cap_mark_down[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.neg_by_area, a, Set{Int}()); init=0.0) : 0.0) #Fikse Denne
+            >= zone_reqs[z].RI_down * 3 #Fikse at 3 er DT
+            + zone_reqs[z].NI_down * sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0)
+         )
+
+         #koble hver teknologis cap-variabel til dens egne fysiske grenser
+         @constraint(M, hydro_up[iSys=1:NHSys, k=1:NK], prod[iSys,k] + cap_hydro_up[iSys,k] <= WeekFrac * HSys[iSys].MaxProd)  #OK
+         @constraint(M, hydro_dn[iSys=1:NHSys, k=1:NK], prod[iSys,k] - cap_hydro_down[iSys,k] >= WeekFrac * HSys[iSys].MinProd[iWeek]) #OK
+         @constraint(M, hydroRes_cap_up[iSys=1:NHSys, k=1:NK], res[iSys,k] >= cap_hydro_up[iSys,k])
+         @constraint(M, hydroRes_cap_down[iSys=1:NHSys, k=1:NK], res[iSys,k] + cap_hydro_down[iSys,k] <= HSys[iSys].MaxRes)
+        
+         @constraint(M, wind_dn[iArea=1:NArea,k=1:NK], wprod[iArea,k] >= cap_wind_down[iArea,k]) #OK
+         @constraint(M,wind_dn2[iArea=1:NArea,k=1:NK], cap_wind_down[iArea,k] <= max(MyWPData[iArea,k],0.0))
+         
+         if ORData.LH2Reserves
+            @constraint(M, h2dis_up[iH2=1:NH2Area, k=1:NK], h2dis[iH2,k] + cap_h2dis_up[iH2,k] <= H2Data.Areas[iH2].MaxDis) #OK
+            @constraint(M, h2chg_up[iH2=1:NH2Area, k=1:NK], h2chg[iH2,k] >= cap_h2chg_up[iH2,k]) #OK
+            @constraint(M, h2dis_down[iH2=1:NH2Area, k=1:NK], h2dis[iH2,k] >= cap_h2dis_down[iH2,k]) #OK
+            @constraint(M, h2chg_down[iH2=1:NH2Area, k=1:NK], h2chg[iH2,k] + cap_h2chg_down[iH2,k] <= H2Data.Areas[iH2].MaxDis) #OK
+            @constraint(M, h2res_cap_up_dis[iH2=1:NH2Area, k=1:NK], h2res[iH2,k] >= cap_h2dis_up[iH2,k]) 
+            @constraint(M, h2res_cap_up_chg[iH2=1:NH2Area, k=1:NK],h2res[iH2,k] + cap_h2chg_up[iH2,k] + cap_h2dis_up[iH2,k] <= H2Data.Areas[iH2].MaxRes)
+         end
+         if ORData.LMarkReserves
+            @constraint(M, mark_up[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK; iMark in get(pos_by_area, AreaName[a], Set{Int}())], mark[a,iMark,k] + cap_mark_up[a,iMark,k] <= WeekFrac * max(0.0, AMData[a].MSData[iMark].Capacity[iWeek]))
+            @constraint(M, mark_dn[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK; iMark in get(neg_by_area, AreaName[a], Set{Int}())], mark[a,iMark,k] - cap_mark_down[a,iMark,k] >= WeekFrac * min(0.0, AMData[a].MSData[iMark].Capacity[iWeek]))          
+         end
+         #Går ann å sette cap til null og ta bort dens constraints som allerede ligger i modellen
+         #Ta else (hvis ikke OR: sette på dens constraints)
+      end
 
 
 

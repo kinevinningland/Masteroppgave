@@ -9,6 +9,7 @@ function load(dataset::String, parameters::Parameters)::Model
     DMData = ReadDynmod(dataset,AHData,NArea,AreaName,MyKeys,MaxModArea,CTI.NWeek)
     DRData = ReadDemandResponse(dataset,NArea,CTI.NWeek,AreaName,CTR.LDemandResponse)
     H2Data = ReadH2(dataset,AHData,NArea,AreaName,CNS,CTI,CTR)
+    ORData = ReadOperatingReserves(NArea, NHsys, NAreaSys,AreaSys, H2Data, AMData,CTR.LOperatingReserves) #Added
     PrintMarketSummary(dataset,NArea,AMData,WPData,MCon,LineCap,CTI)
     
 
@@ -21,10 +22,10 @@ function load(dataset::String, parameters::Parameters)::Model
 
     EV = ReadEndValue(dataset,NHSys)
 
-    model = Model(AHData, AMData, DMData, H2Data, USMod, WPData, DRData, NArea, ModInfReg,
+    model = Model(AHData, AMData, DMData, H2Data, USMod, WPData, DRData, ORData,NArea, ModInfReg,
         ModInfUReg, AreaName, MyKeys, MaxModArea, MCon, LineCap, LineLoss, NLine,
         NCascade, HCascade, NHSys,HSys, NAreaSys, AreaSys, USModSys,
-        InfReg, RegFrac, EV)
+        InfReg, RegFrac, EV) #ORData Added
 
     return model
 end
