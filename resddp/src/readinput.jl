@@ -174,20 +174,20 @@ function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,L
     LH2Reserves = false
     LMarkReserves = false
 
-    price_zones = ["NO1", "NO2", "NO3", "NO4", "NO5","Others"]
+    price_zones = ["NO1", "NO2", "NO3", "NO4","Others"]
     NZ = length(price_zones)
     zone_reqs = [
         ReserveZoneReq("NO1", 0.344, 0.172, 0.58, 0.56),
         ReserveZoneReq("NO2", 1.4, 1.4, 0.37, 0.37),
         ReserveZoneReq("NO3", 0.29, 0.145, 0.33, 0.38),
         ReserveZoneReq("NO4", 0.35, 0.175, 0.31, 0.33),
-        ReserveZoneReq("NO5", 1.4, 1.4, 0.37, 0.37),
+        #ReserveZoneReq("NO5", 1.4, 1.4, 0.37, 0.37),
         ReserveZoneReq("Others", 0.0, 0.0, 0.0, 0.0)
     ]
 
     area_to_zone = fill(findfirst(==("Others"), price_zones),NArea) #Areas not explicitly listed default to "Others"
     area_to_zone[33] = findfirst(==("NO3"), price_zones) #OK
-    area_to_zone[34] = findfirst(==("NO5"), price_zones) #OK
+    area_to_zone[34] = findfirst(==("NO2"), price_zones) #OK Var NO5
     area_to_zone[35] = findfirst(==("NO2"), price_zones) #OK
     area_to_zone[36] = findfirst(==("NO2"), price_zones) #OK
     area_to_zone[39] = findfirst(==("Others"), price_zones) #OK
@@ -216,7 +216,7 @@ function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,L
     area_to_zone[10] = findfirst(==("NO4"), price_zones) #OK
     area_to_zone[11] = findfirst(==("NO4"), price_zones) #OK
 
-    area_to_zone[7] = findfirst(==("NO5"), price_zones) #OK
+    area_to_zone[7] = findfirst(==("NO2"), price_zones) #OK Var NO5
 
     area_to_zone[12] = findfirst(==("Others"), price_zones) #OK
     area_to_zone[13] = findfirst(==("Others"), price_zones) #OK
