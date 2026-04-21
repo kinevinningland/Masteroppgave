@@ -7,7 +7,7 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
 
     NMaxMStep = maximum([model.AMData[iArea].NMStep for iArea in 1:model.NArea])
 
-    DetailedResultTable = init_detailed_result(model.NArea, model.NHSys, NMaxMStep, parameters.Control.NScenSim, parameters.Control.NStageSim, parameters.Time.NK, model.NLine, NMaxMod)
+    DetailedResultTable = init_detailed_result(model.NArea, model.NHSys, NMaxMStep, parameters.Control.NScenSim, parameters.Control.NStageSim, parameters.Time.NK, model.NLine, NMaxMod, model.ORData.NZ) #ADDED NZ
 
     ResInit0 = zeros(Float64,model.NHSys,NMaxMod)
 
@@ -38,7 +38,7 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
                 SP_FORW = StageProbDet.Build(t,sWeek,model.USMod,model.AHData,model.AMData,model.HSys,model.MCon,
                 model.EV,strategy.CCR,strategy.CCH,parameters.Constants,strategy.NCut,model.NHSys,model.NArea,
                 model.NLine,model.LineCap,model.LineLoss,parameters.Time,t==parameters.Control.NStageSim,
-                parameters.Control.LDemandResponse,model.DRData,optimizer)
+                parameters.Control.LDemandResponse,model.DRData,parameters.Control.LOperatingReserves,model.ORData,optimizer) #ADDED, LOperatingReserves & ORData
 
                 for iScen = start_scen:end_scen
                     if t > 1
@@ -51,7 +51,7 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
                         for iMod=1:model.AHData[iArea].NMod
                             CurrInf = parameters.Time.WeekFrac*(model.ModInfReg[model.AHData[iArea].MData[iMod].ModCnt,sWeek,iScen] + model.ModInfUReg[model.AHData[iArea].MData[iMod].ModCnt,sWeek,iScen])
 
-                            JuMP.set_normalized_rhs(SP_FORW[:resbalReg0][iArea,iMod], ResInit[iArea,iMod] + CurrInf)
+                            JuMP.set_normalized_rhs(SP_FORW[:resbalReg0][iArea,iMod], max(0.0,ResInit[iArea,iMod] + CurrInf)) #ADDED max(0.0,...) to avoid negative reservoir levels
                             for k=2:parameters.Time.NK
                                 JuMP.set_normalized_rhs(SP_FORW[:resbalReg][iArea,iMod,k], CurrInf)
                             end
@@ -60,6 +60,10 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
                     for iArea=1:model.NArea
                         for k=1:parameters.Time.NK
                             JuMP.set_normalized_rhs(SP_FORW[:wptarget][iArea,k], max(model.WPData[iArea,iScen,sWeek,k],0.0))
+                            if parameters.Control.LOperatingReserves #ADDED
+                                JuMP.set_normalized_rhs(SP_FORW[:wp_avail_fix][iArea,k], max(model.WPData[iArea,iScen,sWeek,k],0.0))
+                                JuMP.set_normalized_rhs(SP_FORW[:wind_dn2][iArea,k], max(model.WPData[iArea,iScen,sWeek,k],0.0))
+                            end
                         end
                     end
                 
@@ -88,7 +92,7 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
                         termstat = termination_status(SP_FORW)
                         error(println("Solver terminated with status $termstat in forward iteration (stage,scen): ",t," ",iScen))
                     end
-                    save_detailed!(DetailedResultTable, SP_FORW, model.AMData, model.AHData, model.NArea, model.NHSys, parameters.Time.NK, model.NLine, iScen, t)
+                    save_detailed!(DetailedResultTable, SP_FORW, model.AMData, model.AHData, model.NArea, model.NHSys, parameters.Time.NK, model.NLine, iScen, t,parameters.Control.LOperatingReserves) #ADDED LOperatingReserves   
 
                     for iSys = 1:model.NHSys
                         for iMod = 1:model.AHData[iSys].NMod

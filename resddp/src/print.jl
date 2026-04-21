@@ -244,8 +244,20 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
       marketGroup = create_group(areaGroup, "Market")
 
       marketStepGroup = create_group(marketGroup, "Market_steps")
-      for iMark = 1:model.AMData[iArea].NMStep
-         write(marketStepGroup, model.AMData[iArea].MSData[iMark].Name, DRT.MarkTable[iArea,iMark,:,:,:])
+      #for iMark = 1:model.AMData[iArea].NMStep #tatt bort
+      #   write(marketStepGroup, model.AMData[iArea].MSData[iMark].Name, DRT.MarkTable[iArea,iMark,:,:,:])
+      #end
+      for iMark = 1:model.AMData[iArea].NMStep #ADDED
+
+         base_name = model.AMData[iArea].MSData[iMark].Name
+         name = base_name
+
+         # Hvis navn finnes → legg til nummer
+         if haskey(marketStepGroup, name)
+            name = string(base_name, "_", iMark)
+         end
+
+         write(marketStepGroup, name, DRT.MarkTable[iArea,iMark,:,:,:])
       end
 
       write(marketGroup, "Load", DRT.LoadTable[iArea,:,:,:])
@@ -291,6 +303,76 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
       attrs(flowGroup["Line "*string(iLine)])["Dim 2"]       = "NStage"
       attrs(flowGroup["Line "*string(iLine)])["Dim 3"]       = "NK"
    end
+
+   if parameters.Control.LOperatingReserves #ADDED, mangler mark
+
+      NZa = model.ORData.NZ_active
+      price_zones = model.ORData.price_zones
+      area_to_zone = model.ORData.area_to_zone
+      areas_in_zone = model.ORData.areas_in_zone
+
+      pzGroup = create_group(file, "XNordic_Reserve_req") #hovedmappe
+
+      write(pzGroup, "Names", price_zones)
+      write(pzGroup, "AreaToZone", area_to_zone)      
+      write(pzGroup, "price_zones", price_zones)
+
+      byZA = create_group(pzGroup, "ByZoneArea")
+
+      for z in 1:NZa
+         zname = price_zones[z]
+         zGroup = create_group(byZA, zname) #Per sone
+         if hasproperty(DRT, :CapZoneUpTable)
+            write(zGroup, "ReserveUp",   DRT.CapZoneUpTable[z,:,:,:])
+            write(zGroup, "ReserveDown", DRT.CapZoneDownTable[z,:,:,:])
+            write(zGroup, "ReserveDualUp",   DRT.CapDualUpTable[z,:,:,:])
+            write(zGroup, "ReserveDualDown", DRT.CapDualDownTable[z,:,:,:])
+
+            for dset in ["ReserveUp","ReserveDown"]
+               attrs(zGroup[dset])["Dim 1"] = "NScen"
+               attrs(zGroup[dset])["Dim 2"] = "NStage"
+               attrs(zGroup[dset])["Dim 3"] = "NK"
+            end
+         end
+         
+         areasGroup = create_group(zGroup, "Areas")
+         write(zGroup, "AreaIndices", areas_in_zone[z])
+         attrs(zGroup["AreaIndices"])["Dim 1"] = "NAreaInZone"
+         for a in areas_in_zone[z]
+            aname = model.AreaName[a]
+            aGroup = create_group(areasGroup, aname)
+
+            for iSys in 1:model.NHSys
+               if iSys == a
+                  # dette hydrosystemet tilhører område a
+                  if hasproperty(DRT, :HydroCapUpTable)
+                     write(aGroup, "HydroCapUp", DRT.HydroCapUpTable[a,:,:,:])
+                     write(aGroup, "HydroCapDown", DRT.HydroCapDownTable[a,:,:,:])
+
+                     for dset in ["HydroCapUp", "HydroCapDown"]
+                        attrs(aGroup[dset])["Dim 1"] = "NScen"
+                        attrs(aGroup[dset])["Dim 2"] = "NStage"
+                        attrs(aGroup[dset])["Dim 3"] = "NK"
+                     end
+                  end
+               end
+            end
+
+            # Bidrag per område (finnes allerede i RT)
+            if hasproperty(DRT, :WindCapDownTable)
+               write(aGroup, "WindDownArea",   DRT.WindCapDownTable[a,:,:,:])
+               write(aGroup, "SpotPrice", DRT.PriceTable[a,:,:,:])
+
+               for dset in ["WindDownArea", "SpotPrice"]
+                     attrs(aGroup[dset])["Dim 1"] = "NScen"
+                     attrs(aGroup[dset])["Dim 2"] = "NStage"
+                     attrs(aGroup[dset])["Dim 3"] = "NK"
+               end
+            end
+         end
+      end 
+   end
+
 
    close(file)
 end

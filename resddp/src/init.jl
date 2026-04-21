@@ -134,7 +134,7 @@ function init_result(NArea,NHSys,NMaxMStep,NScen,NStage,NK,NLine,NZ)::Result #NZ
                   CapZoneUpTable, CapZoneDownTable, HydroCapUpTable, HydroCapDownTable, WindCapDownTable, CapDualUpTable, CapDualDownTable, ObjTable, WaterValueTable,H2CapUpDisTable,H2CapDownDisTable,H2CapUpChgTable,H2CapDownChgTable) #Last line ADDED
  end
 
- function init_detailed_result(NArea,NHSys,NMaxMStep,NScen,NStage,NK,NLine,NMaxMod)::DetailedResult
+ function init_detailed_result(NArea,NHSys,NMaxMStep,NScen,NStage,NK,NLine,NMaxMod,NZ)::DetailedResult
 
     ReservoirTable = zeros(Float64,NHSys,NMaxMod,NScen,NStage,NK)
     HProdTable = zeros(Float64,NHSys,NMaxMod,NScen,NStage,NK) 
@@ -151,8 +151,20 @@ function init_result(NArea,NHSys,NMaxMStep,NScen,NStage,NK,NLine,NZ)::Result #NZ
     DemandDnTable = zeros(Float64,NArea,NScen,NStage,NK)
     H2StoreTable = zeros(Float64,NArea,NScen,NStage,NK)
     H2DisTable = zeros(Float64,NArea,NScen,NStage,NK)
+    CapZoneUpTable   = zeros(Float64, NZ, NScen, NStage, NK)#ALL Below ADDED
+    CapZoneDownTable = zeros(Float64, NZ, NScen, NStage, NK) 
+    HydroCapUpTable   = zeros(Float64, NHSys, NScen, NStage, NK)
+    HydroCapDownTable = zeros(Float64, NHSys, NScen, NStage, NK)
+    WindCapDownTable = zeros(Float64, NArea, NScen, NStage, NK)
+    CapDualUpTable = zeros(Float64, NZ, NScen, NStage, NK) 
+    CapDualDownTable = zeros(Float64, NZ, NScen, NStage, NK) 
+    #CapDualUpTable = zeros(Float64, NScen, NStage, NK) 
+    #CapDualDownTable = zeros(Float64, NScen, NStage, NK) 
+    ObjTable = zeros(Float64, NScen, NStage)  
+    WaterValueTable = zeros(Float64, NHSys, NScen, NStage)
 
     return DetailedResult(ReservoirTable,HProdTable,MarkTable,FlowTable,DischargeTable,SpillTable,BypassTable,LoadTable,WindTable,PriceTable,
-                          RationingTable,DemandUpTable,DemandDnTable,H2StoreTable,H2DisTable)
+                          RationingTable,DemandUpTable,DemandDnTable,H2StoreTable,H2DisTable,
+                          CapZoneUpTable, CapZoneDownTable, HydroCapUpTable, HydroCapDownTable, WindCapDownTable, CapDualUpTable, CapDualDownTable, ObjTable, WaterValueTable) #Last line ADDED
  end
 
