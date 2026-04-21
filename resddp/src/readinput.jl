@@ -165,10 +165,10 @@ function ReadDemandResponse(dataset,NArea,NWeek,AreaName,LDemandResponse)
     return DemandResponse(NLoadRecStep, LoadRec, MaxUpShift, MaxDnShift, LIncludeExtraConstr, ExtraConstrFilter, ExtraConstrSigma)
 end
 
-function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,LOperatingReserves)
+function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,AreaName,LOperatingReserves)
     #Return dummy object if OR is not included
     if !LOperatingReserves
-        return OperatingReserves(0,0,String[],ReserveZoneReq[],Int[],Vector{Vector{Int}}(),Int[],Int[],false,false,Dict{String, Set{Int}}(),Dict{String, Set{Int}}())
+        return OperatingReserves(0,0,String[],ReserveZoneReq[],Int[],Vector{Vector{Int}}(),Int[],Int[],false,false,Dict{Int, Set{Int}}(),Dict{Int, Set{Int}}())
     end
 
     LH2Reserves = false
@@ -266,9 +266,9 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, H2Data, 
     tidsserie_path = joinpath(dataset, "TidsserieData.h5")
 
     clean_str(x) = strip(replace(String(x), '\0' => ' ')) |>
-                    s -> replace(s, r"\s+" => " ") |>
-                    strip |>
-                    s -> replace(s, r",\s*$" => "")
+                   s -> replace(s, r"\s+" => " ") |>
+                   strip |>
+                   s -> replace(s, r",\s*$" => "")
 
     lc(s) = lowercase(String(s))
 
@@ -282,7 +282,7 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, H2Data, 
 
     function get_attr_int(obj, key)
         s = get_attr_str(obj, key; default="")
-        s2 = replace(s, r"[^0-9\-]" => "")
+        s2 = replace(s, r"[^0-9\\-]" => "")
         isempty(s2) ? missing : try parse(Int, s2) catch; missing end
     end
 
@@ -306,11 +306,18 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, H2Data, 
         occursin("pa. salg dellast", lc(navn))
     )
 
-    pos_by_area = Dict{String, Set{Int}}()
-    neg_by_area = Dict{String, Set{Int}}()
+    # map fra områdenavn -> områdeindeks
+    area_index = Dict(strip(name) => i for (i, name) in enumerate(AreaName))
+
+    pos_by_area = Dict{Int, Set{Int}}()
+    neg_by_area = Dict{Int, Set{Int}}()
 
     h5open(tidsserie_path, "r") do f
         for area in keys(f)
+            area_name = strip(String(area))
+            haskey(area_index, area_name) || continue
+            a = area_index[area_name]
+
             g_area = f[area]
             haskey(g_area, "TRINN") || continue
             g_trinn = g_area["TRINN"]
@@ -326,17 +333,19 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, H2Data, 
                 idv === missing && continue
 
                 m = read(g_step["Mengde"])
-                mmin = minimum(m); mmax = maximum(m)
+                mmin = minimum(m)
+                mmax = maximum(m)
 
                 if mmax > 0 && realistic_pos(navn)
-                    push!(get!(pos_by_area, String(area), Set{Int}()), idv)
+                    push!(get!(pos_by_area, a, Set{Int}()), idv)
                 end
                 if mmin < 0 && realistic_neg(navn)
-                    push!(get!(neg_by_area, String(area), Set{Int}()), idv)
+                    push!(get!(neg_by_area, a, Set{Int}()), idv)
                 end
             end
         end
     end
+
 
     println("Read ORData.csv")
 

@@ -105,8 +105,8 @@ struct OperatingReserves #ADDED
     h2_to_area::Vector{Int}
     LH2Reserves::Bool
     LMarkReserves::Bool  
-    pos_by_area::Dict{String, Set{Int}}
-    neg_by_area::Dict{String, Set{Int}}
+    pos_by_area::Dict{Int, Set{Int}}
+    neg_by_area::Dict{Int, Set{Int}}
 end
 
 struct Parameters
