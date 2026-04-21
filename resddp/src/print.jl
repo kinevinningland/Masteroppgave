@@ -185,8 +185,8 @@ function print_results_h5(dataset::String,RT::Result,model::Model,parameters::Pa
             end
 
             if model.ORData.LMarkReserves
-               write(aGroup, "MarketUpArea",   RT.MarkCapUpAreaTable[a,:,:,:])
-               write(aGroup, "MarketDownArea", RT.MarkCapDownAreaTable[a,:,:,:])
+               write(aGroup, "MarketUpArea",   RT.MarkCapUpTable[a,:,:,:])
+               write(aGroup, "MarketDownArea", RT.MarkCapDownTable[a,:,:,:])
 
                for dset in ["MarketUpArea", "MarketDownArea"]
                      attrs(aGroup[dset])["Dim 1"] = "NScen"
@@ -386,8 +386,8 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
                end
             end
             if model.ORData.LMarkReserves
-               write(aGroup, "MarketUpArea",   DRT.MarkCapUpAreaTable[a,:,:,:])
-               write(aGroup, "MarketDownArea", DRT.MarkCapDownAreaTable[a,:,:,:])
+               write(aGroup, "MarketUpArea",   DRT.MarkCapUpTable[a,:,:,:])
+               write(aGroup, "MarketDownArea", DRT.MarkCapDownTable[a,:,:,:])
 
                for dset in ["MarketUpArea", "MarketDownArea"]
                      attrs(aGroup[dset])["Dim 1"] = "NScen"
