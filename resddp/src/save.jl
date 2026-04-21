@@ -1,9 +1,5 @@
 function save!(RT::Result, SP_FORW,AMData,H2Data,InflowSys,NArea,NHSys,NK,NLine,s,t,LOperatingReserves,NZ) #NZ, LOperatingReserves ADDED
-    if t < parameters.Control.NStageSim #ADDED
-        RT.ObjTable[iScen, t] = JuMP.objective_value(SP_FORW) - JuMP.value(SP_FORW[:alpha])
-    else
-        RT.ObjTable[iScen, t] = JuMP.objective_value(SP_FORW)  # ingen alpha-subtraksjon
-    end
+    RT.ObjTable[iScen, t] = JuMP.objective_value(SP_FORW) - JuMP.value(SP_FORW[:alpha])
     for iSys = 1:NHSys
         for k = 1:NK
             RT.ReservoirTable[iSys,s,t,k] = JuMP.value(SP_FORW[:res][iSys,k])
