@@ -105,6 +105,8 @@ function save_detailed!(DRT::DetailedResult, SP_FORW,AMData,AHData,NArea,NHSys,N
                 DRT.HProdTable[iSys,iMod,s,t,k] = JuMP.value(SP_FORW[:ghy][iSys,iMod,k])
             end
         end
+        DRT.WaterValueTable[iSys,s,t] = JuMP.shadow_price(SP_FORW[:endvol][iSys]) #Added
+        
     end
     for iArea = 1:NArea
         for k = 1:NK
@@ -125,7 +127,6 @@ function save_detailed!(DRT::DetailedResult, SP_FORW,AMData,AHData,NArea,NHSys,N
             DRT.DemandUpTable[iArea,s,t,k] = JuMP.haskey(SP_FORW, :dr_up) ?  JuMP.value(SP_FORW[:dr_up][iArea,k]) : 0
             DRT.DemandDnTable[iArea,s,t,k] = JuMP.haskey(SP_FORW, :dr_dn) ?  (JuMP.value(SP_FORW[:dr_up][iArea,k]) - JuMP.value(SP_FORW[:dr_tot][iArea,k])) : 0
         end
-        DRT.WaterValueTable[iArea,s,t] = JuMP.shadow_price(SP_FORW[:endvol][iArea]) #Added
     end
     for iLine = 1:NLine
         for k = 1:NK
