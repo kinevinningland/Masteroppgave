@@ -215,6 +215,8 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
    attrs(file)["NStage"] = parameters.Control.NStageSim
    attrs(file)["NK"]     = parameters.Time.NK
 
+   write(file, "ObjectiveValue", DRT.ObjTable) #Added
+
    for iArea = 1:model.NArea
       areaGroup = create_group(file, model.AreaName[iArea])
       if iArea <= model.NHSys
@@ -238,6 +240,9 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
                attrs(moduleGroup[dset])["Dim 3"] = "NK"
             end
          end
+         write(hydroGroup, "WaterValue", DRT.WaterValueTable[iArea,:,:]) #Added
+         attrs(hydroGroup["WaterValue"])["Dim 1"] = "NScen" #Added
+         attrs(hydroGroup["WaterValue"])["Dim 2"] = "NStage" #Added
       end
 
       #Market results
