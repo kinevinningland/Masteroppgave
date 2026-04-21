@@ -411,6 +411,8 @@ struct Result
     H2CapDownDisTable::Array{Float64}
     H2CapUpChgTable::Array{Float64}
     H2CapDownChgTable::Array{Float64}
+    MarkCapUpTable::Array{Float64}
+    MarkCapDownTable::Array{Float64}
 end
 
 struct DetailedResult
@@ -438,4 +440,6 @@ struct DetailedResult
     CapDualDownTable::Array{Float64}
     ObjTable::Array{Float64}
     WaterValueTable::Array{Float64}
+    MarkCapUpTable::Array{Float64}
+    MarkCapDownTable::Array{Float64}
 end

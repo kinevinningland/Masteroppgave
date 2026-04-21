@@ -76,6 +76,16 @@ function save!(RT::Result, SP_FORW,AMData,H2Data,InflowSys,NArea,NHSys,NK,NLine,
         for iArea = 1:NArea
             for k = 1:NK
                 RT.WindCapDownTable[iArea,s,t,k] = JuMP.value(SP_FORW[:cap_wind_down][iArea,k])
+                
+                if JuMP.haskey(SP_FORW, :cap_mark_up)
+                    RT.MarkCapUpAreaTable[iArea,s,t,k] =
+                        sum(JuMP.value(SP_FORW[:cap_mark_up][iArea,iMark,k]) for iMark in 1:AMData[iArea].NMStep)
+                end
+                if JuMP.haskey(SP_FORW, :cap_mark_down)
+                    RT.MarkCapDownAreaTable[iArea,s,t,k] =
+                        sum(JuMP.value(SP_FORW[:cap_mark_down][iArea,iMark,k]) for iMark in 1:AMData[iArea].NMStep)
+                end
+
             end
             if H2Data.Ind[iArea] > 0
                 for k = 1:NK
@@ -171,8 +181,16 @@ function save_detailed!(DRT::DetailedResult, SP_FORW,AMData,AHData,NArea,NHSys,N
         for iArea = 1:NArea
             for k = 1:NK
                 DRT.WindCapDownTable[iArea,s,t,k] = JuMP.value(SP_FORW[:cap_wind_down][iArea,k])
+                if JuMP.haskey(SP_FORW, :cap_mark_up)
+                    DRT.MarkCapUpAreaTable[iArea,s,t,k] =
+                        sum(JuMP.value(SP_FORW[:cap_mark_up][iArea,iMark,k]) for iMark in 1:AMData[iArea].NMStep)
+                end
+                if JuMP.haskey(SP_FORW, :cap_mark_down)
+                    DRT.MarkCapDownAreaTable[iArea,s,t,k] =
+                        sum(JuMP.value(SP_FORW[:cap_mark_down][iArea,iMark,k]) for iMark in 1:AMData[iArea].NMStep)
+                end
             end
-        end     
+        end    
         
     end
 end

@@ -184,6 +184,17 @@ function print_results_h5(dataset::String,RT::Result,model::Model,parameters::Pa
                
             end
 
+            if model.ORData.LMarkReserves
+               write(aGroup, "MarketUpArea",   RT.MarkCapUpAreaTable[a,:,:,:])
+               write(aGroup, "MarketDownArea", RT.MarkCapDownAreaTable[a,:,:,:])
+
+               for dset in ["MarketUpArea", "MarketDownArea"]
+                     attrs(aGroup[dset])["Dim 1"] = "NScen"
+                     attrs(aGroup[dset])["Dim 2"] = "NStage"
+                     attrs(aGroup[dset])["Dim 3"] = "NK"
+               end
+            end
+
             # Bidrag per område (finnes allerede i RT)
             if hasproperty(RT, :WindCapDownTable)
                write(aGroup, "WindDownArea",   RT.WindCapDownTable[a,:,:,:])
@@ -207,7 +218,7 @@ end
 
 function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Model,parameters::Parameters)
 
-   file = h5open(string(dataset,"DetSimResults_4Zone.h5"),"w")
+   file = h5open(string(dataset,"DetSimResults_4Zone_noRes.h5"),"w")
    
    attrs(file)["NArea"]  = model.NArea
    attrs(file)["NHSys"]  = model.NHSys
@@ -369,6 +380,16 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
                write(aGroup, "SpotPrice", DRT.PriceTable[a,:,:,:])
 
                for dset in ["WindDownArea", "SpotPrice"]
+                     attrs(aGroup[dset])["Dim 1"] = "NScen"
+                     attrs(aGroup[dset])["Dim 2"] = "NStage"
+                     attrs(aGroup[dset])["Dim 3"] = "NK"
+               end
+            end
+            if model.ORData.LMarkReserves
+               write(aGroup, "MarketUpArea",   DRT.MarkCapUpAreaTable[a,:,:,:])
+               write(aGroup, "MarketDownArea", DRT.MarkCapDownAreaTable[a,:,:,:])
+
+               for dset in ["MarketUpArea", "MarketDownArea"]
                      attrs(aGroup[dset])["Dim 1"] = "NScen"
                      attrs(aGroup[dset])["Dim 2"] = "NStage"
                      attrs(aGroup[dset])["Dim 3"] = "NK"
