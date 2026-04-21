@@ -2,7 +2,7 @@ using HDF5
 
 function print_results_h5(dataset::String,RT::Result,model::Model,parameters::Parameters)
 
-   file = h5open(string(dataset,"AggrSimResults_wMark.h5"),"w")
+   file = h5open(string(dataset,"AggrSimResults_noRes.h5"),"w")
    
    attrs(file)["NArea"]  = model.NArea
    attrs(file)["NHSys"]  = model.NHSys
