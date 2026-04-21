@@ -572,7 +572,9 @@ function print_detailed_results(dataset::String,DRT::DetailedResult,model::Model
          for iStage = 1:parameters.Control.NStageSim
             for k = 1:parameters.Time.NK
                #sum market
-               @printf(out,"%16.6f ",sum(DRT.MarkTable[iArea,iMark,iScen,iStage,k] for iMark=1:model.AMData[iArea].NMStep))
+               #@printf(out,"%16.6f ",sum(DRT.MarkTable[iArea,iMark,iScen,iStage,k] for iMark=1:model.AMData[iArea].NMStep))
+               val = sum((DRT.MarkTable[iArea,iMark,iScen,iStage,k] for iMark=1:model.AMData[iArea].NMStep); init=0.0)
+               @printf(out,"%16.6f ", val)
             end
          end
          @printf(out,"%s \n","")

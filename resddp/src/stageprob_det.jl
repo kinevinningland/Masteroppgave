@@ -157,13 +157,13 @@ module StageProbDet
          #Oppreguleringskrav
          @constraint(M, reserve_req_up[z=1:NZ-1, k=1:NK],
          cap_zone_up[z,k] >= zone_reqs[z].RI_up * 3 #Fikse at 3 er DT
-            + zone_reqs[z].NI_up * 0.5*sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0) + 0.03 * sum(AMData[iArea].MLData[iLoad].Load[iWeek,k]
+            + zone_reqs[z].NI_up * 0.25*sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0) + 0.03 * sum(AMData[iArea].MLData[iLoad].Load[iWeek,k]
                  for iArea in areas_in_zone[z]
                  for iLoad in 1:AMData[iArea].NLoad; init=0.0)
          )
          @constraint(M, reserve_req_down[z=1:NZ-1, k=1:NK],
          cap_zone_down[z,k] >= zone_reqs[z].RI_down * 3 #Fikse at 3 er DT
-            + zone_reqs[z].NI_down * 0.5*sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0) + 0.03 * sum(AMData[iArea].MLData[iLoad].Load[iWeek,k]
+            + zone_reqs[z].NI_down * 0.25*sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0) + 0.03 * sum(AMData[iArea].MLData[iLoad].Load[iWeek,k]
                  for iArea in areas_in_zone[z]
                  for iLoad in 1:AMData[iArea].NLoad; init=0.0)
          )
