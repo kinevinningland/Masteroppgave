@@ -1,5 +1,9 @@
 function save!(RT::Result, SP_FORW,AMData,H2Data,InflowSys,NArea,NHSys,NK,NLine,s,t,LOperatingReserves,NZ) #NZ, LOperatingReserves ADDED
-    RT.ObjTable[s,t] = JuMP.objective_value(SP_FORW) #Added
+    if t < parameters.Control.NStageSim #ADDED
+        RT.ObjTable[iScen, t] = JuMP.objective_value(SP_FORW) - JuMP.value(SP_FORW[:alpha])
+    else
+        RT.ObjTable[iScen, t] = JuMP.objective_value(SP_FORW)  # ingen alpha-subtraksjon
+    end
     for iSys = 1:NHSys
         for k = 1:NK
             RT.ReservoirTable[iSys,s,t,k] = JuMP.value(SP_FORW[:res][iSys,k])
@@ -94,7 +98,12 @@ function save!(RT::Result, SP_FORW,AMData,H2Data,InflowSys,NArea,NHSys,NK,NLine,
 end
 
 function save_detailed!(DRT::DetailedResult, SP_FORW,AMData,AHData,NArea,NHSys,NK,NLine,s,t,LOperatingReserves)#ADDED LOperatingReserves
-    DRT.ObjTable[s,t] = JuMP.objective_value(SP_FORW) #Added
+    if t < parameters.Control.NStageSim #ADDED
+        DRT.ObjTable[iScen, t] = JuMP.objective_value(SP_FORW) - JuMP.value(SP_FORW[:alpha])
+    else
+        DRT.ObjTable[iScen, t] = JuMP.objective_value(SP_FORW)  # ingen alpha-subtraksjon
+    end
+
     for iSys = 1:NHSys
         for iMod = 1:AHData[iSys].NMod
             for k = 1:NK
