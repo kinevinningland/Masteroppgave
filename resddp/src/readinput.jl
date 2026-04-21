@@ -262,6 +262,82 @@ function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,L
         end
     end
 
+    #Mark reserves
+    tidsserie_path = joinpath(dataset, "TidsserieData.h5")
+
+    clean_str(x) = strip(replace(String(x), '\0' => ' ')) |>
+                    s -> replace(s, r"\s+" => " ") |>
+                    strip |>
+                    s -> replace(s, r",\s*$" => "")
+
+    lc(s) = lowercase(String(s))
+
+    function get_attr_str(obj, key; default="")
+        a = attrs(obj)
+        haskey(a, key) || return default
+        v = a[key]
+        v = (v isa AbstractVector && length(v) > 0) ? v[1] : v
+        return clean_str(v)
+    end
+
+    function get_attr_int(obj, key)
+        s = get_attr_str(obj, key; default="")
+        s2 = replace(s, r"[^0-9\-]" => "")
+        isempty(s2) ? missing : try parse(Int, s2) catch; missing end
+    end
+
+    excluded(navn::String) = begin
+        n = lc(navn)
+        occursin("nucl", n) || occursin("nuclear", n) ||
+        occursin("el-import", n) || occursin("el-export", n) ||
+        occursin("h2-import", n) || occursin("waste", n) ||
+        occursin("a/s union", n)
+    end
+
+    realistic_pos(navn::String) = !excluded(navn) && (
+        occursin("pa. kjop dellast", lc(navn)) ||
+        (occursin("hydro", lc(navn)) && !occursin("ps_hydro_con", lc(navn)))
+    )
+
+    realistic_neg(navn::String) = !excluded(navn) && (
+        occursin("ps_hydro_con", lc(navn)) ||
+        occursin("kraftintensiv", lc(navn)) ||
+        occursin("kjelkraft", lc(navn)) ||
+        occursin("pa. salg dellast", lc(navn))
+    )
+
+    pos_by_area = Dict{String, Set{Int}}()
+    neg_by_area = Dict{String, Set{Int}}()
+
+    h5open(tidsserie_path, "r") do f
+        for area in keys(f)
+            g_area = f[area]
+            haskey(g_area, "TRINN") || continue
+            g_trinn = g_area["TRINN"]
+
+            for trinn_key in keys(g_trinn)
+                startswith(String(trinn_key), "Trinn_") || continue
+                g_step = g_trinn[trinn_key]
+                haskey(g_step, "Mengde") || continue
+
+                navn = get_attr_str(g_step, "Navn"; default="")
+                isempty(navn) && continue
+                idv = get_attr_int(g_step, "Id")
+                idv === missing && continue
+
+                m = read(g_step["Mengde"])
+                mmin = minimum(m); mmax = maximum(m)
+
+                if mmax > 0 && realistic_pos(navn)
+                    push!(get!(pos_by_area, String(area), Set{Int}()), idv)
+                end
+                if mmin < 0 && realistic_neg(navn)
+                    push!(get!(neg_by_area, String(area), Set{Int}()), idv)
+                end
+            end
+        end
+    end
+
     pos_by_area = Dict{Int, Set{Int}}()
     neg_by_area = Dict{Int, Set{Int}}()
 
