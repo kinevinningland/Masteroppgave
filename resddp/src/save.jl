@@ -185,7 +185,9 @@ function save_detailed!(DRT::DetailedResult, SP_FORW,AMData,AHData,NArea,NHSys,N
         for iArea = 1:NArea
             for k = 1:NK
                 DRT.WindCapDownTable[iArea,s,t,k] = JuMP.value(SP_FORW[:cap_wind_down][iArea,k])
-                
+                DRT.SlackUpTable[iArea,s,t,k] = JuMP.value(SP_FORW[:slackUp][iArea,k])
+                DRT.SlackDownTable[iArea,s,t,k] = JuMP.value(SP_FORW[:slackDown][iArea,k])
+
                 if JuMP.haskey(SP_FORW, :cap_mark_up_pos)
                     DRT.MarkCapUpTablePos[iArea,s,t,k] = sum(JuMP.value(SP_FORW[:cap_mark_up_pos][iArea,iMark,k])  for iMark in get(ORData.pos_by_area, iArea, Set{Int}()); init=0.0)
                 end

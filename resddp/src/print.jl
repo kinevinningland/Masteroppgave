@@ -359,6 +359,8 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
          for a in areas_in_zone[z]
             aname = model.AreaName[a]
             aGroup = create_group(areasGroup, aname)
+            write(aGroup, "SlackUp", DRT.SlackUpTable[iArea,:,:,:])
+            write(aGroup, "SlackDown", DRT.SlackDownTable[iArea,:,:,:])
 
             for iSys in 1:model.NHSys
                if iSys == a
