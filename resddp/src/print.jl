@@ -220,7 +220,7 @@ end
 
 function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Model,parameters::Parameters)
 
-   file = h5open(string(dataset,"DetSimResults_4Zone_wRes_noMark_100%.h5"),"w")
+   file = h5open(string(dataset,"DetSimResults_4Zone_wRes_noMark_120%.h5"),"w")
    
    attrs(file)["NArea"]  = model.NArea
    attrs(file)["NHSys"]  = model.NHSys
@@ -352,8 +352,8 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
                attrs(zGroup[dset])["Dim 3"] = "NK"
             end
          end
-         write(aGroup, "SlackUp", DRT.SlackUpTable[z,:,:,:])
-         write(aGroup, "SlackDown", DRT.SlackDownTable[z,:,:,:])
+         write(zGroup, "SlackUp", DRT.SlackUpTable[z,:,:,:])
+         write(zGroup, "SlackDown", DRT.SlackDownTable[z,:,:,:])
          
          areasGroup = create_group(zGroup, "Areas")
          write(zGroup, "AreaIndices", areas_in_zone[z])
