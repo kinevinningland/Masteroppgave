@@ -52,8 +52,7 @@ module StageProbDet
                  +sum(CNS.CSpi*spi[iArea,iMod,k] for iArea=1:NHSys for iMod=1:AHData[iArea].NMod for k=1:NK) 
                  +sum(CNS.CByp*byp[iArea,iMod,k] for iArea=1:NHSys for iMod=1:AHData[iArea].NMod for k=1:NK) 
                  +sum(CNS.CRat*rat[iArea,k] for iArea=1:NArea for k=1:NK) +alpha
-                 +sum(CNS.CRat*slackUp[iArea,k] for iArea=1:NArea for k=1:NK) #ADDED
-                 +sum(CNS.CRat*slackDown[iArea,k] for iArea=1:NArea for k=1:NK)) #ADDED
+                 + (LOperatingReserves ? sum(CNS.CRat*slackUp[z,k]   for z=1:NZ-1 for k=1:NK) + sum(CNS.CRat*slackDown[z,k] for z=1:NZ-1 for k=1:NK) : 0.0))#ADDED
 
       #INITIAL RESERVOIR BALANCE [MM3/DT]
       @constraint(M,resbalReg0[iArea=1:NHSys,iMod=1:AHData[iArea].NMod],res[iArea,iMod,1]
@@ -157,24 +156,23 @@ module StageProbDet
          #Diverse
          @variable(M, wp_avail[a=1:NArea, k=1:NK] >= 0, base_name="wp_avail")
          @constraint(M, wp_avail_fix[a=1:NArea, k=1:NK],wp_avail[a,k] == 0.0)
-         @variable(M,0.0 <= slackUp[iArea=1:NArea,k=1:NK] <= CNS.Big,base_name="slackUp")   
-         @variable(M,0.0 <= slackDown[iArea=1:NArea,k=1:NK] <= CNS.Big,base_name="slackDown")  
+         @variable(M, 0 <= slackDown[z=1:NZ, k=1:NK], base_name="slackDown")
+         @variable(M, 0 <= slackUp[z=1:NZ, k=1:NK],   base_name="slackUp")
 
          #Oppreguleringskrav
          @constraint(M, reserve_req_up[z=1:NZ-1, k=1:NK],
-         cap_zone_up[z,k] >= zone_reqs[z].RI_up * 3 #Fikse at 3 er DT
+         cap_zone_up[z,k] + slackUp[z,k] >= zone_reqs[z].RI_up * 3 #Fikse at 3 er DT
             + zone_reqs[z].NI_up * 0.75*sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0) + 0.03 * sum(AMData[iArea].MLData[iLoad].Load[iWeek,k]
                  for iArea in areas_in_zone[z]
-                 for iLoad in 1:AMData[iArea].NLoad; init=0.0
-                  +slackUp[iArea,k] for iArea in areas_in_zone[z]; init=0.0)
-         )
+                 for iLoad in 1:AMData[iArea].NLoad; init=0.0))
+
+
          @constraint(M, reserve_req_down[z=1:NZ-1, k=1:NK],
-         cap_zone_down[z,k] >= zone_reqs[z].RI_down * 3 #Fikse at 3 er DT
+         cap_zone_down[z,k] + slackDown[z,k] >= zone_reqs[z].RI_down * 3 #Fikse at 3 er DT
             + zone_reqs[z].NI_down * 0.75*sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0) + 0.03 * sum(AMData[iArea].MLData[iLoad].Load[iWeek,k]
                  for iArea in areas_in_zone[z]
-                 for iLoad in 1:AMData[iArea].NLoad; init=0.0
-                  +slackDown[iArea,k] for iArea in areas_in_zone[z]; init=0.0)
-         )
+                 for iLoad in 1:AMData[iArea].NLoad; init=0.0))
+
          @constraint(M, reserve_split_down[z=1:NZ, k=1:NK],
          cap_zone_down[z,k] ==
             sum(cap_hydro_down[iSys, k] for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0) 
@@ -203,10 +201,10 @@ module StageProbDet
          @constraint(M, wind_dn2[iArea=1:NArea,k=1:NK], cap_wind_down[iArea,k] <= 0.0) #OK
 
          if ORData.LMarkReserves
-            @constraint(M, mark_up_pos[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK; iMark in get(pos_by_area, a, Set{Int}())], mark[a,iMark,k] + cap_mark_up_pos[a,iMark,k] <= WeekFrac * max(0.0, AMData[a].MSData[iMark].Capacity[iWeek])) #OK
-            @constraint(M, mark_dn_neg[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK; iMark in get(neg_by_area, a, Set{Int}())], mark[a,iMark,k] - cap_mark_down_neg[a,iMark,k] >= WeekFrac * min(0.0, AMData[a].MSData[iMark].Capacity[iWeek]))#OK
-            @constraint(M, mark_up_neg[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK; iMark in get(neg_by_area, a, Set{Int}())], -mark[a,iMark,k] >= cap_mark_up_neg[a,iMark,k]) #OK
-            @constraint(M, mark_dn_pos[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK; iMark in get(pos_by_area, a, Set{Int}())], mark[a,iMark,k] >= cap_mark_down_pos[a,iMark,k]) #OK     
+            #@constraint(M, mark_up_pos[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK; iMark in get(pos_by_area, a, Set{Int}())], mark[a,iMark,k] + cap_mark_up_pos[a,iMark,k] <= WeekFrac * max(0.0, AMData[a].MSData[iMark].Capacity[iWeek])) #OK
+            #@constraint(M, mark_dn_neg[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK; iMark in get(neg_by_area, a, Set{Int}())], mark[a,iMark,k] - cap_mark_down_neg[a,iMark,k] >= WeekFrac * min(0.0, AMData[a].MSData[iMark].Capacity[iWeek]))#OK
+            #@constraint(M, mark_up_neg[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK; iMark in get(neg_by_area, a, Set{Int}())], -mark[a,iMark,k] >= cap_mark_up_neg[a,iMark,k]) #OK
+            #@constraint(M, mark_dn_pos[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK; iMark in get(pos_by_area, a, Set{Int}())], mark[a,iMark,k] >= cap_mark_down_pos[a,iMark,k]) #OK     
          end
          
          #Går ann å sette cap til null og ta bort dens constraints som allerede ligger i modellen

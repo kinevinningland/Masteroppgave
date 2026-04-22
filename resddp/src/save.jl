@@ -181,12 +181,22 @@ function save_detailed!(DRT::DetailedResult, SP_FORW,AMData,AHData,NArea,NHSys,N
                 DRT.HydroCapUpTable[iSys,s,t,k] = JuMP.value(SP_FORW[:cap_hydro_up][iSys,k])
             end
         end
+        if JuMP.haskey(SP_FORW, :slackUp)
+            czup = SP_FORW[:slackUp]   # ConstraintRef-array
+            for z in axes(czup,1), k in axes(czup,2)
+                DRT.SlackUpTable[z,s,t,k] = JuMP.value(czup[z,k])
+            end
+        end
+        if JuMP.haskey(SP_FORW, :slackDown)
+            czdn = SP_FORW[:slackDown]   # ConstraintRef-array
+            for z in axes(czdn,1), k in axes(czdn,2)
+                DRT.SlackDownTable[z,s,t,k] = JuMP.value(czdn[z,k])
+            end
+        end
 
         for iArea = 1:NArea
             for k = 1:NK
                 DRT.WindCapDownTable[iArea,s,t,k] = JuMP.value(SP_FORW[:cap_wind_down][iArea,k])
-                DRT.SlackUpTable[iArea,s,t,k] = JuMP.value(SP_FORW[:slackUp][iArea,k])
-                DRT.SlackDownTable[iArea,s,t,k] = JuMP.value(SP_FORW[:slackDown][iArea,k])
 
                 if JuMP.haskey(SP_FORW, :cap_mark_up_pos)
                     DRT.MarkCapUpTablePos[iArea,s,t,k] = sum(JuMP.value(SP_FORW[:cap_mark_up_pos][iArea,iMark,k])  for iMark in get(ORData.pos_by_area, iArea, Set{Int}()); init=0.0)
