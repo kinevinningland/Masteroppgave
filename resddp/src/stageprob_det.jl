@@ -46,6 +46,9 @@ module StageProbDet
       @variable(M,0.0 <= rat[iArea=1:NArea,k=1:NK] <= CNS.Big,base_name="rat")                                                      # GWh
       @variable(M,-CNS.AlphaMax <= alpha <= CNS.AlphaMax,base_name="alp")                                                           # 10E3 EUR
 
+      @variable(M, 0 <= slackDown[z=1:ORData.NZ, k=1:NK], base_name="slackDown")
+      @variable(M, 0 <= slackUp[z=1:ORData.NZ, k=1:NK],   base_name="slackUp")
+
       #Min Cost [10E3 EUR]
       @objective(M,MathOptInterface.MIN_SENSE,
                  sum(AMData[iArea].MSData[iMark].Price[iWeek]*mark[iArea,iMark,k] for iArea=1:NArea for iMark=1:AMData[iArea].NMStep for k=1:NK)
@@ -156,8 +159,7 @@ module StageProbDet
          #Diverse
          @variable(M, wp_avail[a=1:NArea, k=1:NK] >= 0, base_name="wp_avail")
          @constraint(M, wp_avail_fix[a=1:NArea, k=1:NK],wp_avail[a,k] == 0.0)
-         @variable(M, 0 <= slackDown[z=1:NZ, k=1:NK], base_name="slackDown")
-         @variable(M, 0 <= slackUp[z=1:NZ, k=1:NK],   base_name="slackUp")
+
 
          #Oppreguleringskrav
          @constraint(M, reserve_req_up[z=1:NZ-1, k=1:NK],
