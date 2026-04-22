@@ -352,6 +352,8 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
                attrs(zGroup[dset])["Dim 3"] = "NK"
             end
          end
+         write(aGroup, "SlackUp", DRT.SlackUpTable[z,:,:,:])
+         write(aGroup, "SlackDown", DRT.SlackDownTable[z,:,:,:])
          
          areasGroup = create_group(zGroup, "Areas")
          write(zGroup, "AreaIndices", areas_in_zone[z])
@@ -359,8 +361,6 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
          for a in areas_in_zone[z]
             aname = model.AreaName[a]
             aGroup = create_group(areasGroup, aname)
-            write(aGroup, "SlackUp", DRT.SlackUpTable[iArea,:,:,:])
-            write(aGroup, "SlackDown", DRT.SlackDownTable[iArea,:,:,:])
 
             for iSys in 1:model.NHSys
                if iSys == a
