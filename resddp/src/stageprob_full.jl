@@ -195,9 +195,10 @@ module StageProbFull
             + sum(cap_wind_down[a,k] for a in areas_in_zone[z]; init=0.0) 
             + (ORData.LH2Reserves ? sum(cap_h2dis_down[iH2, k] for iH2 in 1:NH2Area if (h2_to_area[iH2] in areas_in_zone[z]); init=0.0) : 0.0)
             + (ORData.LH2Reserves ? sum(cap_h2chg_down[iH2, k] for iH2 in 1:NH2Area if (h2_to_area[iH2] in areas_in_zone[z]); init=0.0) : 0.0)
-            + (ORData.LMarkReserves ? sum(cap_mark_down_pos[a, iMark, k] for a in areas_in_zone[z] for iMark in 1:AMData[a].NMStep; init=0.0) : 0.0)
-            + (ORData.LMarkReserves ? sum(cap_mark_down_neg[a, iMark, k] for a in areas_in_zone[z] for iMark in 1:AMData[a].NMStep; init=0.0) : 0.0)
-         )
+            #+ (ORData.LMarkReserves ? sum(cap_mark_down_pos[a, iMark, k] for a in areas_in_zone[z] for iMark in 1:AMData[a].NMStep; init=0.0) : 0.0)
+            #+ (ORData.LMarkReserves ? sum(cap_mark_down_neg[a, iMark, k] for a in areas_in_zone[z] for iMark in 1:AMData[a].NMStep; init=0.0) : 0.0)
+            + (ORData.LMarkReserves ? sum(cap_mark_down_pos[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.pos_by_area, a, Set{Int}()); init=0.0) : 0.0)
+            + (ORData.LMarkReserves ? sum(cap_mark_down_neg[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.neg_by_area, a, Set{Int}()); init=0.0) : 0.0))
 
          @constraint(M, reserve_split_up[z=1:NZ, k=1:NK],
          cap_zone_up[z,k] ==
@@ -205,9 +206,10 @@ module StageProbFull
             + (ORData.LH2Reserves ? sum(cap_h2dis_up[iH2, k] for iH2 in 1:NH2Area if (h2_to_area[iH2] in areas_in_zone[z]); init=0.0) : 0.0)
             + (ORData.LH2Reserves ? sum(cap_h2chg_up[iH2, k] for iH2 in 1:NH2Area if (h2_to_area[iH2] in areas_in_zone[z]); init=0.0) : 0.0)
             #+ (ORData.LMarkReserves ? sum(cap_mark_up[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.pos_by_area, a, Set{Int}()); init=0.0) : 0.0) #Fikse denne
-            + (ORData.LMarkReserves ? sum(cap_mark_up_pos[a, iMark, k] for a in areas_in_zone[z] for iMark in 1:AMData[a].NMStep; init=0.0) : 0.0)
-            + (ORData.LMarkReserves ? sum(cap_mark_up_neg[a, iMark, k] for a in areas_in_zone[z] for iMark in 1:AMData[a].NMStep; init=0.0) : 0.0)
-         )
+            #+ (ORData.LMarkReserves ? sum(cap_mark_up_pos[a, iMark, k] for a in areas_in_zone[z] for iMark in 1:AMData[a].NMStep; init=0.0) : 0.0)
+            #+ (ORData.LMarkReserves ? sum(cap_mark_up_neg[a, iMark, k] for a in areas_in_zone[z] for iMark in 1:AMData[a].NMStep; init=0.0) : 0.0)
+            + (ORData.LMarkReserves ? sum(cap_mark_up_pos[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.pos_by_area, a, Set{Int}()); init=0.0) : 0.0)
+            + (ORData.LMarkReserves ? sum(cap_mark_up_neg[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.neg_by_area, a, Set{Int}()); init=0.0) : 0.0))
 
 
          #=
