@@ -185,13 +185,18 @@ function save_detailed!(DRT::DetailedResult, SP_FORW,AMData,AHData,NArea,NHSys,N
         for iArea = 1:NArea
             for k = 1:NK
                 DRT.WindCapDownTable[iArea,s,t,k] = JuMP.value(SP_FORW[:cap_wind_down][iArea,k])
-                if JuMP.haskey(SP_FORW, :cap_mark_up)
-                    DRT.MarkCapUpTable[iArea,s,t,k] =
-                        sum(JuMP.value(SP_FORW[:cap_mark_up][iArea,iMark,k]) for iMark in 1:AMData[iArea].NMStep)
+                
+                if JuMP.haskey(SP_FORW, :cap_mark_up_pos)
+                    DRT.MarkCapUpTablePos[iArea,s,t,k] = sum(JuMP.value(SP_FORW[:cap_mark_up_pos][iArea,iMark,k])  for iMark in get(ORData.pos_by_area, iArea, Set{Int}()); init=0.0)
                 end
                 if JuMP.haskey(SP_FORW, :cap_mark_down)
-                    DRT.MarkCapDownTable[iArea,s,t,k] =
-                        sum(JuMP.value(SP_FORW[:cap_mark_down][iArea,iMark,k]) for iMark in 1:AMData[iArea].NMStep)
+                    DRT.MarkCapDownTablePos[iArea,s,t,k] = sum(JuMP.value(SP_FORW[:cap_mark_down][iArea,iMark,k])  for iMark in get(ORData.pos_by_area, iArea, Set{Int}()); init=0.0)
+                end
+                if JuMP.haskey(SP_FORW, :cap_mark_up_neg)
+                    DRT.MarkCapUpTableNeg[iArea,s,t,k] = sum(JuMP.value(SP_FORW[:cap_mark_up_neg][iArea,iMark,k])  for iMark in get(ORData.pos_by_area, iArea, Set{Int}()); init=0.0)
+                end
+                if JuMP.haskey(SP_FORW, :cap_mark_down_neg)
+                    DRT.MarkCapDownTableNeg[iArea,s,t,k] = sum(JuMP.value(SP_FORW[:cap_mark_down_neg][iArea,iMark,k])  for iMark in get(ORData.pos_by_area, iArea, Set{Int}()); init=0.0)
                 end
             end
         end    

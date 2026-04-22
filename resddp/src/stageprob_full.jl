@@ -259,6 +259,10 @@ module StageProbFull
          end
          #Går ann å sette cap til null og ta bort dens constraints som allerede ligger i modellen
          #Ta else (hvis ikke OR: sette på dens constraints)
+         sharing = false
+         if sharing
+
+         end
       end
 
 

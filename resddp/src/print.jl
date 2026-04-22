@@ -388,10 +388,12 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
                end
             end
             if model.ORData.LMarkReserves
-               write(aGroup, "MarketUpArea",   DRT.MarkCapUpTable[a,:,:,:])
-               write(aGroup, "MarketDownArea", DRT.MarkCapDownTable[a,:,:,:])
+               write(aGroup, "MarketUpAreaPos",   DRT.MarkCapUpTablePos[a,:,:,:])
+               write(aGroup, "MarketDownAreaPos", DRT.MarkCapDownTablePos[a,:,:,:])
+               write(aGroup, "MarketUpAreaNeg",   DRT.MarkCapUpTableNeg[a,:,:,:])
+               write(aGroup, "MarketDownAreaNeg", DRT.MarkCapDownTableNeg[a,:,:,:])
 
-               for dset in ["MarketUpArea", "MarketDownArea"]
+               for dset in ["MarketUpAreaPos", "MarketDownAreaPos", "MarketUpAreaNeg", "MarketDownAreaNeg"]
                      attrs(aGroup[dset])["Dim 1"] = "NScen"
                      attrs(aGroup[dset])["Dim 2"] = "NStage"
                      attrs(aGroup[dset])["Dim 3"] = "NK"

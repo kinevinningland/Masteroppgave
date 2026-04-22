@@ -442,6 +442,8 @@ struct DetailedResult
     CapDualDownTable::Array{Float64}
     ObjTable::Array{Float64}
     WaterValueTable::Array{Float64}
-    MarkCapUpTable::Array{Float64}
-    MarkCapDownTable::Array{Float64}
+    MarkCapUpTablePos::Array{Float64}
+    MarkCapDownTablePos::Array{Float64}
+    MarkCapUpTableNeg::Array{Float64}
+    MarkCapDownTableNeg::Array{Float64}
 end

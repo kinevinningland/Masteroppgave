@@ -172,7 +172,7 @@ function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,A
     end
 
     LH2Reserves = false
-    LMarkReserves = true
+    LMarkReserves = false
 
     price_zones = ["NO1", "NO2", "NO3", "NO4","Others"]
     NZ = length(price_zones)
