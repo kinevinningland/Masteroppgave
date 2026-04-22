@@ -16,7 +16,7 @@ function load(dataset::String, parameters::Parameters)::Model
     NHSys,HSys,NAreaSys,AreaSys,USModSys = AggrSystems(HCascade,AHData,NArea,ModInfReg,ModInfUReg,CTR,CTI,CNS,CAGR)
     InfReg,RegFrac = AggrInflow(NHSys,HSys,ModInfReg,ModInfUReg,AHData,CTR,CTI,CNS)
 
-    ORData = ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys,AreaSys, H2Data, AMData,AreaName,CTR.LOperatingReserves) #Added
+    ORData = ReadOperatingReserves(NArea, NHSys, NAreaSys,AreaSys, H2Data, AMData,AreaName,CTR.LOperatingReserves) #Added
 
     PrintCascadeStats(dataset,NHSys,HSys,CAGR)
     PrintInflow(dataset,InfReg,NHSys,CTI.NWeek,CTR.NBranch,CTI.NInflowYear)

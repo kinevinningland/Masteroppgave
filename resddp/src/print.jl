@@ -185,8 +185,10 @@ function print_results_h5(dataset::String,RT::Result,model::Model,parameters::Pa
             end
 
             if model.ORData.LMarkReserves
-               write(aGroup, "MarketUpArea",   RT.MarkCapUpTable[a,:,:,:])
-               write(aGroup, "MarketDownArea", RT.MarkCapDownTable[a,:,:,:])
+               write(aGroup, "MarketUpArea",   RT.MarkCapUpTablePos[a,:,:,:])
+               write(aGroup, "MarketDownArea", RT.MarkCapDownTablePos[a,:,:,:])
+               write(aGroup, "MarketUpArea",   RT.MarkCapUpTableNeg[a,:,:,:])
+               write(aGroup, "MarketDownArea", RT.MarkCapDownTableNeg[a,:,:,:])
 
                for dset in ["MarketUpArea", "MarketDownArea"]
                      attrs(aGroup[dset])["Dim 1"] = "NScen"

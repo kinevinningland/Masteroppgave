@@ -165,7 +165,7 @@ function ReadDemandResponse(dataset,NArea,NWeek,AreaName,LDemandResponse)
     return DemandResponse(NLoadRecStep, LoadRec, MaxUpShift, MaxDnShift, LIncludeExtraConstr, ExtraConstrFilter, ExtraConstrSigma)
 end
 
-function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,AreaName,LOperatingReserves)
+function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,AreaName,LOperatingReserves)
     #Return dummy object if OR is not included
     if !LOperatingReserves
         return OperatingReserves(0,0,String[],ReserveZoneReq[],Int[],Vector{Vector{Int}}(),Int[],Int[],false,false,Dict{Int, Set{Int}}(),Dict{Int, Set{Int}}())
@@ -263,6 +263,46 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, H2Data, 
     end
 
     #Mark reserves
+    lc(s) = lowercase(String(s))
+
+    excluded(navn::String) = begin
+        n = lc(navn)
+        occursin("nucl", n) || occursin("nuclear", n) ||
+        occursin("el-import", n) || occursin("el-export", n) ||
+        occursin("h2-import", n) || occursin("waste", n) ||
+        occursin("a/s union", n)
+    end
+
+    realistic_pos(navn::String) = !excluded(navn) && (
+        occursin("pa. kjop dellast", lc(navn)) ||
+        (occursin("hydro", lc(navn)) && !occursin("ps_hydro_con", lc(navn)))
+    )
+
+    realistic_neg(navn::String) = !excluded(navn) && (
+        occursin("ps_hydro_con", lc(navn)) ||
+        occursin("kraftintensiv", lc(navn)) ||
+        occursin("kjelkraft", lc(navn)) ||
+        occursin("pa. salg dellast", lc(navn))
+    )
+
+    pos_by_area = Dict{Int, Set{Int}}()
+    neg_by_area = Dict{Int, Set{Int}}()
+
+    for a in 1:NArea
+        for iMark in 1:AMData[a].NMStep
+            navn   = AMData[a].MSData[iMark].Name
+            maxcap = maximum(AMData[a].MSData[iMark].Capacity)
+            mincap = minimum(AMData[a].MSData[iMark].Capacity)
+
+            if maxcap > 0 && realistic_pos(navn)
+                push!(get!(pos_by_area, a, Set{Int}()), iMark)
+            end
+            if mincap < 0 && realistic_neg(navn)
+                push!(get!(neg_by_area, a, Set{Int}()), iMark)
+            end
+        end
+    end
+    #=
     tidsserie_path = joinpath(dataset, "TidsserieData.h5")
 
     clean_str(x) = strip(replace(String(x), '\0' => ' ')) |>
@@ -345,6 +385,7 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, H2Data, 
             end
         end
     end
+    =#
 
 
     println("Read ORData.csv")

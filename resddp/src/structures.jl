@@ -411,8 +411,10 @@ struct Result
     H2CapDownDisTable::Array{Float64}
     H2CapUpChgTable::Array{Float64}
     H2CapDownChgTable::Array{Float64}
-    MarkCapUpTable::Array{Float64}
-    MarkCapDownTable::Array{Float64}
+    MarkCapUpTablePos::Array{Float64}
+    MarkCapDownTablePos::Array{Float64}
+    MarkCapUpTableNeg::Array{Float64}
+    MarkCapDownTableNeg::Array{Float64}
 end
 
 struct DetailedResult

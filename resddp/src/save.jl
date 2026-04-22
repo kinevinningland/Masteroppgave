@@ -77,11 +77,17 @@ function save!(RT::Result, SP_FORW,AMData,H2Data,InflowSys,NArea,NHSys,NK,NLine,
             for k = 1:NK
                 RT.WindCapDownTable[iArea,s,t,k] = JuMP.value(SP_FORW[:cap_wind_down][iArea,k])
                 
-                if JuMP.haskey(SP_FORW, :cap_mark_up)
-                    RT.MarkCapUpTable[iArea,s,t,k] = sum(JuMP.value(SP_FORW[:cap_mark_up][iArea,iMark,k]) for iMark in 1:AMData[iArea].NMStep)
+                if JuMP.haskey(SP_FORW, :cap_mark_up_pos)
+                    RT.MarkCapUpTablePos[iArea,s,t,k] = sum(JuMP.value(SP_FORW[:cap_mark_up_pos][iArea,iMark,k]) for iMark in 1:AMData[iArea].NMStep)
                 end
                 if JuMP.haskey(SP_FORW, :cap_mark_down)
-                    RT.MarkCapDownTable[iArea,s,t,k] = sum(JuMP.value(SP_FORW[:cap_mark_down][iArea,iMark,k]) for iMark in 1:AMData[iArea].NMStep)
+                    RT.MarkCapDownTablePos[iArea,s,t,k] = sum(JuMP.value(SP_FORW[:cap_mark_down][iArea,iMark,k]) for iMark in 1:AMData[iArea].NMStep)
+                end
+                if JuMP.haskey(SP_FORW, :cap_mark_up_neg)
+                    RT.MarkCapUpTableNeg[iArea,s,t,k] = sum(JuMP.value(SP_FORW[:cap_mark_up_neg][iArea,iMark,k]) for iMark in 1:AMData[iArea].NMStep)
+                end
+                if JuMP.haskey(SP_FORW, :cap_mark_down_neg)
+                    RT.MarkCapDownTableNeg[iArea,s,t,k] = sum(JuMP.value(SP_FORW[:cap_mark_down_neg][iArea,iMark,k]) for iMark in 1:AMData[iArea].NMStep)
                 end
 
             end
