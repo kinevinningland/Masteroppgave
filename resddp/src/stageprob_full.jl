@@ -250,9 +250,9 @@ module StageProbFull
             @constraint(M, h2res_cap_up_chg[iH2=1:NH2Area, k=1:NK],h2res[iH2,k] + cap_h2chg_up[iH2,k] + cap_h2dis_up[iH2,k] <= H2Data.Areas[iH2].MaxRes)
          end
          if ORData.LMarkReserves
-            @constraint(M, mark_up_pos[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK; iMark in get(pos_by_area, a, Set{Int}())], mark[a,iMark,k] + cap_mark_up[a,iMark,k] <= WeekFrac * max(0.0, AMData[a].MSData[iMark].Capacity[iWeek])) #OK
-            @constraint(M, mark_dn_neg[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK; iMark in get(neg_by_area, a, Set{Int}())], mark[a,iMark,k] - cap_mark_down[a,iMark,k] >= WeekFrac * min(0.0, AMData[a].MSData[iMark].Capacity[iWeek]))#OK
-            @constraint(M, mark_up_neg[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK; iMark in get(neg_by_area, a, Set{Int}())], -mark[a,iMark,k] >= cap_mark_up[a,iMark,k]) #OK
+            @constraint(M, mark_up_pos[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK; iMark in get(pos_by_area, a, Set{Int}())], mark[a,iMark,k] + cap_mark_up_pos[a,iMark,k] <= WeekFrac * max(0.0, AMData[a].MSData[iMark].Capacity[iWeek])) #OK
+            @constraint(M, mark_dn_neg[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK; iMark in get(neg_by_area, a, Set{Int}())], mark[a,iMark,k] - cap_mark_down_neg[a,iMark,k] >= WeekFrac * min(0.0, AMData[a].MSData[iMark].Capacity[iWeek]))#OK
+            @constraint(M, mark_up_neg[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK; iMark in get(neg_by_area, a, Set{Int}())], -mark[a,iMark,k] >= cap_mark_up_neg[a,iMark,k]) #OK
             @constraint(M, mark_dn_pos[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK; iMark in get(pos_by_area, a, Set{Int}())], mark[a,iMark,k] >= cap_mark_down_pos[a,iMark,k]) #OK     
          end
          #Går ann å sette cap til null og ta bort dens constraints som allerede ligger i modellen
