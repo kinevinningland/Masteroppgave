@@ -52,7 +52,7 @@ module StageProbDet
                  +sum(CNS.CSpi*spi[iArea,iMod,k] for iArea=1:NHSys for iMod=1:AHData[iArea].NMod for k=1:NK) 
                  +sum(CNS.CByp*byp[iArea,iMod,k] for iArea=1:NHSys for iMod=1:AHData[iArea].NMod for k=1:NK) 
                  +sum(CNS.CRat*rat[iArea,k] for iArea=1:NArea for k=1:NK) +alpha
-                 + (LOperatingReserves ? sum(CNS.CRat*slackUp[z,k]   for z=1:NZ-1 for k=1:NK) + sum(CNS.CRat*slackDown[z,k] for z=1:NZ-1 for k=1:NK) : 0.0))#ADDED
+                 + (LOperatingReserves ? sum(CNS.CRat*slackUp[z,k]   for z=1:ORData.NZ-1 for k=1:NK) + sum(CNS.CRat*slackDown[z,k] for z=1:ORData.NZ-1 for k=1:NK) : 0.0))#ADDED
 
       #INITIAL RESERVOIR BALANCE [MM3/DT]
       @constraint(M,resbalReg0[iArea=1:NHSys,iMod=1:AHData[iArea].NMod],res[iArea,iMod,1]
