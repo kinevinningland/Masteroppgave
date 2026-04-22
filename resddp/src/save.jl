@@ -1,4 +1,4 @@
-function save!(RT::Result, SP_FORW,AMData,H2Data,InflowSys,NArea,NHSys,NK,NLine,s,t,LOperatingReserves,NZ) #NZ, LOperatingReserves ADDED
+function save!(RT::Result, SP_FORW,AMData,H2Data,InflowSys,NArea,NHSys,NK,NLine,s,t,LOperatingReserves,ORData) #NZ, LOperatingReserves ADDED
     RT.ObjTable[s, t] = JuMP.objective_value(SP_FORW) - JuMP.value(SP_FORW[:alpha])
     for iSys = 1:NHSys
         for k = 1:NK

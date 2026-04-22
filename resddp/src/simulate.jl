@@ -219,7 +219,7 @@ function simulate_aggregated(model::Model, inflow_model::InflowModel, parameters
                         termstat = termination_status(SP_FORW)
                         error(println("Solver terminated with status $termstat in forward iteration (stage,scen): ",t," ",iScen))
                     end
-                    save!(ResultTable, SP_FORW, model.AMData,model.H2Data, InflowSys, model.NArea, model.NHSys, parameters.Time.NK, model.NLine, iScen, t, parameters.Control.LOperatingReserves, model.ORData.NZ) #ORData ADDED
+                    save!(ResultTable, SP_FORW, model.AMData,model.H2Data, InflowSys, model.NArea, model.NHSys, parameters.Time.NK, model.NLine, iScen, t, parameters.Control.LOperatingReserves, model.ORData) #ORData ADDED
 
                     for iSys = 1:model.NHSys
                         SimulatedStateTraj[iSys,iScen,t] = JuMP.value(SP_FORW[:res][iSys,end])
