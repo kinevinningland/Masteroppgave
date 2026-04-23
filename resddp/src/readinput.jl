@@ -175,16 +175,6 @@ function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,A
     LMarkReserves = false
     LSharing = true
 
-    price_zones = ["NO1", "NO2", "NO3", "NO4"]
-    NZ = length(price_zones)
-    zone_reqs = [
-        ReserveZoneReq("NO1", 0.344, 0.172, 0.58, 0.56),
-        ReserveZoneReq("NO2", 1.4, 1.4, 0.37, 0.37),
-        ReserveZoneReq("NO3", 0.29, 0.145, 0.33, 0.38),
-        ReserveZoneReq("NO4", 0.35, 0.175, 0.31, 0.33),
-        #ReserveZoneReq("NO5", 1.4, 1.4, 0.37, 0.37),
-    ]
-
     area_to_zone = fill(0,NArea) 
     area_to_zone[33] = findfirst(==("NO3"), price_zones) #OK
     area_to_zone[34] = findfirst(==("NO2"), price_zones) #OK Var NO5
@@ -225,6 +215,26 @@ function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,A
     h2_to_area = Int[] #tas bort
     pos_by_area = Dict{Int, Set{Int}}() #tas bort
     neg_by_area = Dict{Int, Set{Int}}() #tas bort
+
+    max_load_per_zone = zeros(Float64,NZ)
+    for z in 1:NZ
+        for a in areas_in_zone[z]
+            for iLoad in 1:AMData[a].NLoad
+                max_load_per_zone[z] += maximum(AMData[a].MLData[iLoad].Load)
+            end
+        end
+    end
+    
+
+    price_zones = ["NO1", "NO2", "NO3", "NO4"]
+    NZ = length(price_zones)
+    zone_reqs = [
+        ReserveZoneReq("NO1", 0.344, 0.172, 0.58, 0.56, 0.48, 0.4,max_load_per_zone[1]),
+        ReserveZoneReq("NO2", 1.4, 1.4, 0.37, 0.37, 0.48, 0.4,max_load_per_zone[2]),
+        ReserveZoneReq("NO3", 0.29, 0.145, 0.33, 0.38, 0.48, 0.4,max_load_per_zone[3]),
+        ReserveZoneReq("NO4", 0.35, 0.175, 0.31, 0.33, 0.48, 0.4,max_load_per_zone[4]),
+        #ReserveZoneReq("NO5", 1.4, 1.4, 0.37, 0.37),
+    ]
 
 
     neighboring_zones = Set{Tuple{Int, Int}}()#

@@ -118,7 +118,7 @@ function print_results_h5(dataset::String,RT::Result,model::Model,parameters::Pa
 
    if parameters.Control.LOperatingReserves #ADDED, mangler mark
 
-      NZa = model.ORData.NZ_active
+      NZ = model.ORData.NZ
       price_zones = model.ORData.price_zones
       area_to_zone = model.ORData.area_to_zone
       areas_in_zone = model.ORData.areas_in_zone
@@ -131,7 +131,7 @@ function print_results_h5(dataset::String,RT::Result,model::Model,parameters::Pa
 
       byZA = create_group(pzGroup, "ByZoneArea")
 
-      for z in 1:NZa
+      for z in 1:NZ
          zname = price_zones[z]
          zGroup = create_group(byZA, zname) #Per sone
          if hasproperty(RT, :CapZoneUpTable)
@@ -324,7 +324,7 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
 
    if parameters.Control.LOperatingReserves #ADDED, mangler mark
 
-      NZa = model.ORData.NZ_active
+      NZ = model.ORData.NZ
       price_zones = model.ORData.price_zones
       area_to_zone = model.ORData.area_to_zone
       areas_in_zone = model.ORData.areas_in_zone
@@ -337,7 +337,7 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
 
       byZA = create_group(pzGroup, "ByZoneArea")
 
-      for z in 1:NZa
+      for z in 1:NZ
          zname = price_zones[z]
          zGroup = create_group(byZA, zname) #Per sone
          if hasproperty(DRT, :CapZoneUpTable)
