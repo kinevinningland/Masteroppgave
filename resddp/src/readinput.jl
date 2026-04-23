@@ -175,6 +175,9 @@ function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,A
     LMarkReserves = false
     LSharing = false
 
+    price_zones = ["NO1", "NO2", "NO3", "NO4"]
+    NZ = length(price_zones)
+
     area_to_zone = fill(0,NArea) 
     area_to_zone[33] = findfirst(==("NO3"), price_zones) #OK
     area_to_zone[34] = findfirst(==("NO2"), price_zones) #OK Var NO5
@@ -225,9 +228,6 @@ function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,A
         end
     end
     
-
-    price_zones = ["NO1", "NO2", "NO3", "NO4"]
-    NZ = length(price_zones)
     zone_reqs = [
         ReserveZoneReq("NO1", 0.344, 0.172, 0.58, 0.56, 0.48, 0.4,max_load_per_zone[1]),
         ReserveZoneReq("NO2", 1.4, 1.4, 0.37, 0.37, 0.48, 0.4,max_load_per_zone[2]),
