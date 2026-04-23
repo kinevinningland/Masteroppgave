@@ -172,9 +172,10 @@ function init_result(NArea,NHSys,NMaxMStep,NScen,NStage,NK,NLine,NZ)::Result #NZ
     MarkCapDownTableNeg = zeros(Float64, NArea, NScen, NStage, NK)
     SlackUpTable = zeros(Float64,NZ,NScen,NStage,NK)
     SlackDownTable = zeros(Float64,NZ,NScen,NStage,NK)
+    SharingUpTable = zeros(Float64,NZ-1,NZ-1,NScen,NStage,NK)
 
     return DetailedResult(ReservoirTable,HProdTable,MarkTable,FlowTable,DischargeTable,SpillTable,BypassTable,LoadTable,WindTable,PriceTable,
                           RationingTable,DemandUpTable,DemandDnTable,H2StoreTable,H2DisTable,
-                          CapZoneUpTable, CapZoneDownTable, HydroCapUpTable, HydroCapDownTable, WindCapDownTable, CapDualUpTable, CapDualDownTable, ObjTable, WaterValueTable,MarkCapUpTablePos,MarkCapDownTablePos,MarkCapUpTableNeg,MarkCapDownTableNeg,SlackUpTable,SlackDownTable) #Last line ADDED
+                          CapZoneUpTable, CapZoneDownTable, HydroCapUpTable, HydroCapDownTable, WindCapDownTable, CapDualUpTable, CapDualDownTable, ObjTable, WaterValueTable,MarkCapUpTablePos,MarkCapDownTablePos,MarkCapUpTableNeg,MarkCapDownTableNeg,SlackUpTable,SlackDownTable,SharingUpTable) #Last line ADDED
  end
 

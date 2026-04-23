@@ -195,6 +195,12 @@ function save_detailed!(DRT::DetailedResult, SP_FORW,AMData,AHData,NArea,NHSys,N
                 DRT.SlackDownTable[z,s,t,k] = JuMP.value(czdn[z,k])
             end
         end
+        if JuMP.haskey(SP_FORW, :sharing_up)
+            su = SP_FORW[:sharing_up]
+            for z1 in axes(su, 1), z2 in axes(su, 2), k in axes(su, 3)
+                DRT.SharingUpTable[z1, z2, s, t, k] = JuMP.value(su[z1, z2, k])
+            end
+        end
 
         for iArea = 1:NArea
             for k = 1:NK

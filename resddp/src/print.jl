@@ -220,7 +220,7 @@ end
 
 function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Model,parameters::Parameters)
 
-   file = h5open(string(dataset,"DetSimResults_4Zone_wRes_noMark_120%.h5"),"w")
+   file = h5open(string(dataset,"DetSimResults_4Zone_wRes_wSharing_120%.h5"),"w")
    
    attrs(file)["NArea"]  = model.NArea
    attrs(file)["NHSys"]  = model.NHSys
@@ -415,6 +415,22 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
             end
          end
       end 
+      if hasproperty(DRT, :SharingUpTable)
+         sharingGroup = create_group(pzGroup, "Sharing")
+         for z1 in 1:NZa
+            for z2 in 1:NZa
+               if z1 != z2
+                  dname = string(price_zones[z1], "_to_", price_zones[z2])
+                  write(sharingGroup, dname, DRT.SharingUpTable[z1,z2,:,:,:])
+                  attrs(sharingGroup[dname])["From"]  = price_zones[z1]
+                  attrs(sharingGroup[dname])["To"]    = price_zones[z2]
+                  attrs(sharingGroup[dname])["Dim 1"] = "NScen"
+                  attrs(sharingGroup[dname])["Dim 2"] = "NStage"
+                  attrs(sharingGroup[dname])["Dim 3"] = "NK"
+               end
+            end
+         end
+      end
    end
 
 

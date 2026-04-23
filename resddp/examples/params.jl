@@ -16,7 +16,7 @@ NWindScen = 5
 NScenSim = 1#10#30
 NResid = NBranch = 7
 NStage = 3*52
-NStageSim =2*52
+NStageSim =52#2*52
 LNewInflowModel = false
 ResInitFrac = 0.60
 ResMinFrac = 0.10

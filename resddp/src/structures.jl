@@ -448,4 +448,5 @@ struct DetailedResult
     MarkCapDownTableNeg::Array{Float64}
     SlackUpTable::Array{Float64}
     SlackDownTable::Array{Float64}
+    SharingUpTable::Array{Float64}
 end

@@ -159,6 +159,33 @@ module StageProbDet
          #Diverse
          @variable(M, wp_avail[a=1:NArea, k=1:NK] >= 0, base_name="wp_avail")
          @constraint(M, wp_avail_fix[a=1:NArea, k=1:NK],wp_avail[a,k] == 0.0)
+         
+         
+         sharing = false #legge inn i ORData
+         if sharing
+            sharing_amount = 0.01
+            @variable(M, 0 <= sharing_up[z1=1:NZa,z2=1:NZa, k=1:NK], base_name="sharing_up")
+            #@variable(M, 0 <= sharing_down[z1=1:NZa,z2=1:NZa, k=1:NK], base_name="sharing_down")
+            #constraint som passer på at sonene grenser
+            neighboring_zones = Set{Tuple{Int, Int}}()
+            for iArea in 1:NArea
+               z1 = area_to_zone[iArea]
+               for iLine in 1:MCon[iArea].NCon
+                  lineIdx = MCon[iArea].LIndxOut[iLine]
+                  for a in 1:NArea
+                     if lineIdx in MCon[a].LIndxIn
+                        z2 = area_to_zone[a]
+                        if z1 != z2
+                        push!(neighboring_zones, (min(z1,z2), max(z1,z2)))
+                        end
+                     end
+                  end
+               end
+            end 
+            @constraint(M, sharing_balance_up[z1=1:NZa, z2=1:NZa, k=1:NK; z1 != z2 && (min(z1,z2),max(z1,z2)) in neighboring_zones], sharing_up[z1,z2,k] <= sharing_amount * (zone_reqs[z2].RI_up * 3 + zone_reqs[z2].NI_up * sum(wp_avail[a,k] for a in areas_in_zone[z2]; init=0.0) + 0.03 * sum(AMData[iArea].MLData[iLoad].Load[iWeek,k] for iArea in areas_in_zone[z2] for iLoad in 1:AMData[iArea].NLoad; init=0.0)))
+   
+         end
+         
 
 
          #Oppreguleringskrav
@@ -166,14 +193,16 @@ module StageProbDet
          cap_zone_up[z,k] + slackUp[z,k] >= (zone_reqs[z].RI_up * 3 #Fikse at 3 er DT
             + zone_reqs[z].NI_up * sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0) + 0.03 * sum(AMData[iArea].MLData[iLoad].Load[iWeek,k]
                  for iArea in areas_in_zone[z]
-                 for iLoad in 1:AMData[iArea].NLoad; init=0.0))*1.2)
+                 for iLoad in 1:AMData[iArea].NLoad; init=0.0))
+            )
+
 
          #Nedreguleringskrav
          @constraint(M, reserve_req_down[z=1:NZ-1, k=1:NK],
          cap_zone_down[z,k] + slackDown[z,k] >= (zone_reqs[z].RI_down * 3 #Fikse at 3 er DT
             + zone_reqs[z].NI_down * sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0) + 0.03 * sum(AMData[iArea].MLData[iLoad].Load[iWeek,k]
                  for iArea in areas_in_zone[z]
-                 for iLoad in 1:AMData[iArea].NLoad; init=0.0))*1.2)
+                 for iLoad in 1:AMData[iArea].NLoad; init=0.0)))
          
 
          #Sammenhengen mellom zonesum av kapasiteter og sum av individuelle kapasiteter
@@ -193,6 +222,8 @@ module StageProbDet
             #+ (ORData.LMarkReserves ? sum(cap_mark_up[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.pos_by_area, a, Set{Int}()); init=0.0) : 0.0) #Fikse denne
             + (ORData.LMarkReserves ? sum(cap_mark_up_pos[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.pos_by_area, a, Set{Int}()); init=0.0) : 0.0)
             + (ORData.LMarkReserves ? sum(cap_mark_up_neg[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.neg_by_area, a, Set{Int}()); init=0.0) : 0.0)
+            + (sharing ? sum(sharing_up[z1, z, k] for z1 in 1:NZa if z1 != z && (min(z1,z),max(z1,z)) in neighboring_zones; init=0.0) : 0.0)
+            - (sharing ? sum(sharing_up[z, z2, k] for z2 in 1:NZa if z2 != z && (min(z,z2),max(z,z2)) in neighboring_zones; init=0.0) : 0.0)
          )
 
 
