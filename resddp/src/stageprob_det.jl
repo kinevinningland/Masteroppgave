@@ -130,100 +130,65 @@ module StageProbDet
       end
       
       if LOperatingReserves #ADDED
+         #Ha en hvis zone, hvis sharing og hvis system ... og ha dette som input i ORData
+         
          NZ = ORData.NZ
-         NZa = ORData.NZ_active
-         price_zones = ORData.price_zones
          zone_reqs = ORData.zone_reqs
          area_to_zone = ORData.area_to_zone
          areas_in_zone = ORData.areas_in_zone
          hydrosys_to_area = ORData.hydrosys_to_area
-         h2_to_area = ORData.h2_to_area
-         pos_by_area = ORData.pos_by_area
-         neg_by_area = ORData.neg_by_area
+         LSharing = ORData.LSharing
+
 
          #Opp- og nedreguleringsreserver
          @variable(M, 0 <= cap_zone_up[z=1:NZ, k=1:NK], base_name="cap_zone_up")
          @variable(M, 0 <= cap_zone_down[z=1:NZ, k=1:NK], base_name="cap_zone_down")
          @variable(M, 0 <= cap_hydro_up_mod[iArea=1:NHSys,iMod=1:AHData[iArea].NMod,k=1:NK], base_name="cap_hydro_up_mod")
          @variable(M, 0 <= cap_hydro_down_mod[iArea=1:NHSys,iMod=1:AHData[iArea].NMod,k=1:NK],base_name="cap_hydro_down_mod")
-         #@expression(M, cap_hydro_up[iArea=1:NHSys,k=1:NK], sum(cap_hydro_up_mod[iArea,iMod,k] for iMod=1:AHData[iArea].NMod))
-         #@expression(M, cap_hydro_down[iArea=1:NHSys,k=1:NK], sum(cap_hydro_down_mod[iArea,iMod,k] for iMod=1:AHData[iArea].NMod))
          @variable(M, 0 <= cap_wind_down[iArea=1:NArea,k=1:NK], base_name="cap_wind_down")
-         if ORData.LMarkReserves
-            @variable(M, 0 <= cap_mark_up_pos[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK],   base_name="cap_mark_up_pos")
-            @variable(M, 0 <= cap_mark_down_pos[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK], base_name="cap_mark_down_pos")
-            @variable(M, 0 <= cap_mark_up_neg[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK],   base_name="cap_mark_up_neg")
-            @variable(M, 0 <= cap_mark_down_neg[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK], base_name="cap_mark_down_neg")
-         end
 
+         
          #Diverse
          @variable(M, wp_avail[a=1:NArea, k=1:NK] >= 0, base_name="wp_avail")
          @constraint(M, wp_avail_fix[a=1:NArea, k=1:NK],wp_avail[a,k] == 0.0)
          
+
+         #Opp- og nedreguleringskrav
+         @expression(M, cap_up_amount[z = 1:NZ, k=1:NK], 
+            zone_reqs[z].RI_up * 3 #Fikse at 3 er DT
+            + zone_reqs[z].NI_up * sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0) 
+            + 0.03 * sum(AMData[iArea].MLData[iLoad].Load[iWeek,k] for iArea in areas_in_zone[z] for iLoad in 1:AMData[iArea].NLoad; init=0.0))
          
-         sharing = true #legge inn i ORData
-         if sharing
-            sharing_amount = 0.01
-            @variable(M, 0 <= sharing_up[z1=1:NZa,z2=1:NZa, k=1:NK], base_name="sharing_up")
-            #@variable(M, 0 <= sharing_down[z1=1:NZa,z2=1:NZa, k=1:NK], base_name="sharing_down")
-            #constraint som passer på at sonene grenser
-            neighboring_zones = Set{Tuple{Int, Int}}()
-            for iArea in 1:NArea
-               z1 = area_to_zone[iArea]
-               for iLine in 1:MCon[iArea].NCon
-                  lineIdx = MCon[iArea].LIndxOut[iLine]
-                  for a in 1:NArea
-                     if lineIdx in MCon[a].LIndxIn
-                        z2 = area_to_zone[a]
-                        if z1 != z2
-                        push!(neighboring_zones, (min(z1,z2), max(z1,z2)))
-                        end
-                     end
-                  end
-               end
-            end 
-            @constraint(M, sharing_balance_up[z1=1:NZa, z2=1:NZa, k=1:NK; z1 != z2 && (min(z1,z2),max(z1,z2)) in neighboring_zones], sharing_up[z1,z2,k] <= sharing_amount * (zone_reqs[z2].RI_up * 3 + zone_reqs[z2].NI_up * sum(wp_avail[a,k] for a in areas_in_zone[z2]; init=0.0) + 0.03 * sum(AMData[iArea].MLData[iLoad].Load[iWeek,k] for iArea in areas_in_zone[z2] for iLoad in 1:AMData[iArea].NLoad; init=0.0)))
-   
+         @expression(M, cap_down_amount[z = 1:NZ, k=1:NK], 
+            zone_reqs[z].RI_down * 3 #Fikse at 3 er DT
+            + zone_reqs[z].NI_down * sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0) 
+            + 0.03 * sum(AMData[iArea].MLData[iLoad].Load[iWeek,k] for iArea in areas_in_zone[z] for iLoad in 1:AMData[iArea].NLoad; init=0.0))
+         
+         #deling av reserver
+         if LSharing
+            sharing_amount = 0.01 #legge inn i ORData
+            @variable(M, 0 <= sharing_up[z1=1:NZ,z2=1:NZ, k=1:NK], base_name="sharing_up")
+            @constraint(M, sharing_balance_up[z1=1:NZ, z2=1:NZ, k=1:NK; z1 != z2 && (min(z1,z2),max(z1,z2)) in ORData.neighboring_zones], sharing_up[z1,z2,k] <= sharing_amount *cap_up_amount[z2,k]) #constraint som passer på at sonene grenser
          end
+
+         #Opp- og nedreguleringskrav
+         @constraint(M, reserve_req_up[z=1:NZ, k=1:NK],
+         cap_zone_up[z,k] + slackUp[z,k] >= cap_up_amount[z,k])
+
+         @constraint(M, reserve_req_down[z=1:NZ, k=1:NK],
+         cap_zone_down[z,k] + slackDown[z,k] >= cap_down_amount[z,k])
+
          
-
-
-         #Oppreguleringskrav
-         @constraint(M, reserve_req_up[z=1:NZ-1, k=1:NK],
-         cap_zone_up[z,k] + slackUp[z,k] >= (zone_reqs[z].RI_up * 3 #Fikse at 3 er DT
-            + zone_reqs[z].NI_up * sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0) + 0.03 * sum(AMData[iArea].MLData[iLoad].Load[iWeek,k]
-                 for iArea in areas_in_zone[z]
-                 for iLoad in 1:AMData[iArea].NLoad; init=0.0))
-            )
-
-
-         #Nedreguleringskrav
-         @constraint(M, reserve_req_down[z=1:NZ-1, k=1:NK],
-         cap_zone_down[z,k] + slackDown[z,k] >= (zone_reqs[z].RI_down * 3 #Fikse at 3 er DT
-            + zone_reqs[z].NI_down * sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0) + 0.03 * sum(AMData[iArea].MLData[iLoad].Load[iWeek,k]
-                 for iArea in areas_in_zone[z]
-                 for iLoad in 1:AMData[iArea].NLoad; init=0.0)))
-         
-
          #Sammenhengen mellom zonesum av kapasiteter og sum av individuelle kapasiteter
-         @constraint(M, reserve_split_down[z=1:NZ, k=1:NK],
-         cap_zone_down[z,k] ==
-            #sum(cap_hydro_down[iSys, k] for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0) 
+         @constraint(M, reserve_split_down[z=1:NZ, k=1:NK], cap_zone_down[z,k] ==
             sum(sum(cap_hydro_down_mod[iSys, iMod, k] for iMod in 1:AHData[iSys].NMod) for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0)
             + sum(cap_wind_down[a,k] for a in areas_in_zone[z]; init=0.0) 
-            + (ORData.LMarkReserves ? sum(cap_mark_down_pos[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.pos_by_area, a, Set{Int}()); init=0.0) : 0.0)
-            + (ORData.LMarkReserves ? sum(cap_mark_down_neg[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.neg_by_area, a, Set{Int}()); init=0.0) : 0.0)
          )
 
-         @constraint(M, reserve_split_up[z=1:NZ, k=1:NK],
-         cap_zone_up[z,k] ==
-            #sum(cap_hydro_up[iSys, k] for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0) 
+         @constraint(M, reserve_split_up[z=1:NZ, k=1:NK], cap_zone_up[z,k] ==
             sum(sum(cap_hydro_up_mod[iSys, iMod, k] for iMod in 1:AHData[iSys].NMod) for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0)
-            #+ (ORData.LMarkReserves ? sum(cap_mark_up[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.pos_by_area, a, Set{Int}()); init=0.0) : 0.0) #Fikse denne
-            + (ORData.LMarkReserves ? sum(cap_mark_up_pos[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.pos_by_area, a, Set{Int}()); init=0.0) : 0.0)
-            + (ORData.LMarkReserves ? sum(cap_mark_up_neg[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.neg_by_area, a, Set{Int}()); init=0.0) : 0.0)
-            + (sharing && z <= NZa ? sum(sharing_up[z1, z, k] for z1 in 1:NZa if z1 != z && (min(z1,z),max(z1,z)) in neighboring_zones; init=0.0) : 0.0)
-            - (sharing && z <= NZa ? sum(sharing_up[z, z2, k] for z2 in 1:NZa if z2 != z && (min(z,z2),max(z,z2)) in neighboring_zones; init=0.0) : 0.0)
+            + (LSharing && z <= NZ ? sum(sharing_up[z1, z, k] for z1 in 1:NZ if z1 != z && (min(z1,z),max(z1,z)) in neighboring_zones; init=0.0) : 0.0)
+            - (LSharing && z <= NZ ? sum(sharing_up[z, z2, k] for z2 in 1:NZ if z2 != z && (min(z,z2),max(z,z2)) in neighboring_zones; init=0.0) : 0.0)
          )
 
 
@@ -232,16 +197,9 @@ module StageProbDet
          @constraint(M, hydro_down_mod[iArea=1:NHSys, iMod=1:AHData[iArea].NMod, k=1:NK], cap_hydro_down_mod[iArea,iMod,k] <= ghy[iArea,iMod,k])
          @constraint(M, hydro_res_up_mod[iArea=1:NHSys, iMod=1:AHData[iArea].NMod, k=1:NK], cap_hydro_up_mod[iArea,iMod,k] <= AHData[iArea].EffSea[iMod] * MAGEFF2GWH * res[iArea,iMod,k])
          @constraint(M, hydro_down_mod_res[iArea=1:NHSys, iMod=1:AHData[iArea].NMod, k=1:NK], cap_hydro_down_mod[iArea,iMod,k] <= AHData[iArea].EffSea[iMod] * MAGEFF2GWH * (AHData[iArea].MData[iMod].MaxRes - res[iArea,iMod,k]))
-         
          @constraint(M, wind_dn[iArea=1:NArea,k=1:NK], wprod[iArea,k] >= cap_wind_down[iArea,k]) #OK
          @constraint(M, wind_dn2[iArea=1:NArea,k=1:NK], cap_wind_down[iArea,k] <= 0.0) #OK
 
-         if ORData.LMarkReserves
-            #@constraint(M, mark_up_pos[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK; iMark in get(pos_by_area, a, Set{Int}())], mark[a,iMark,k] + cap_mark_up_pos[a,iMark,k] <= WeekFrac * max(0.0, AMData[a].MSData[iMark].Capacity[iWeek])) #OK
-            #@constraint(M, mark_dn_neg[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK; iMark in get(neg_by_area, a, Set{Int}())], mark[a,iMark,k] - cap_mark_down_neg[a,iMark,k] >= WeekFrac * min(0.0, AMData[a].MSData[iMark].Capacity[iWeek]))#OK
-            #@constraint(M, mark_up_neg[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK; iMark in get(neg_by_area, a, Set{Int}())], -mark[a,iMark,k] >= cap_mark_up_neg[a,iMark,k]) #OK
-            #@constraint(M, mark_dn_pos[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK; iMark in get(pos_by_area, a, Set{Int}())], mark[a,iMark,k] >= cap_mark_down_pos[a,iMark,k]) #OK     
-         end
          
          #Går ann å sette cap til null og ta bort dens constraints som allerede ligger i modellen
          #Ta else (hvis ikke OR: sette på dens constraints)

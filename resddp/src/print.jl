@@ -417,8 +417,8 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
       end 
       if hasproperty(DRT, :SharingUpTable)
          sharingGroup = create_group(pzGroup, "Sharing")
-         for z1 in 1:NZa
-            for z2 in 1:NZa
+         for z1 in 1:NZ
+            for z2 in 1:NZ
                if z1 != z2
                   dname = string(price_zones[z1], "_to_", price_zones[z2])
                   write(sharingGroup, dname, DRT.SharingUpTable[z1,z2,:,:,:])
