@@ -176,9 +176,11 @@ function save_detailed!(DRT::DetailedResult, SP_FORW,AMData,AHData,NArea,NHSys,N
             end
         end  
         for iSys = 1:NHSys
-            for k = 1:NK
-                DRT.HydroCapDownTable[iSys,s,t,k] = JuMP.value(SP_FORW[:cap_hydro_down][iSys,k])
-                DRT.HydroCapUpTable[iSys,s,t,k] = JuMP.value(SP_FORW[:cap_hydro_up][iSys,k])
+            for iMod = 1:AHData[iSys].NMod
+                for k = 1:NK
+                    DRT.HydroCapDownTable[iSys,iMod,s,t,k] = JuMP.value(SP_FORW[:cap_hydro_down][iSys,iMod,k])
+                    DRT.HydroCapUpTable[iSys,iMod,s,t,k] = JuMP.value(SP_FORW[:cap_hydro_up][iSys,iMod,k])
+                end
             end
         end
         if JuMP.haskey(SP_FORW, :slackUp)

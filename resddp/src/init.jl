@@ -157,8 +157,8 @@ function init_result(NArea,NHSys,NMaxMStep,NScen,NStage,NK,NLine,NZ)::Result #NZ
     H2DisTable = zeros(Float64,NArea,NScen,NStage,NK)
     CapZoneUpTable   = zeros(Float64, NZ, NScen, NStage, NK)#ALL Below ADDED
     CapZoneDownTable = zeros(Float64, NZ, NScen, NStage, NK) 
-    HydroCapUpTable   = zeros(Float64, NHSys, NScen, NStage, NK)
-    HydroCapDownTable = zeros(Float64, NHSys, NScen, NStage, NK)
+    HydroCapUpTable   = zeros(Float64, NHSys, NMaxMod, NScen, NStage, NK)
+    HydroCapDownTable = zeros(Float64, NHSys, NMaxMod, NScen, NStage, NK)
     WindCapDownTable = zeros(Float64, NArea, NScen, NStage, NK)
     CapDualUpTable = zeros(Float64, NZ, NScen, NStage, NK) 
     CapDualDownTable = zeros(Float64, NZ, NScen, NStage, NK) 

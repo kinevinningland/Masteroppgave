@@ -362,8 +362,19 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
             aname = model.AreaName[a]
             aGroup = create_group(areasGroup, aname)
 
-            for iSys in 1:model.NHSys
-               if iSys == a
+            if a <= model.NHSys
+               for iMod=1:model.AHData[a].NMod
+                  moduleGroupRes = create_group(aGroup, "Module "*string(iMod))
+                  write(moduleGroupRes, "HydroCapUp", DRT.HydroCapUpTable[a,iMod,:,:,:])
+                  write(moduleGroupRes, "HydroCapDown", DRT.HydroCapDownTable[a,iMod,:,:,:])
+
+                  for dset in keys(moduleGroupRes)
+                     attrs(moduleGroupRes[dset])["Dim 1"] = "NScen"
+                     attrs(moduleGroupRes[dset])["Dim 2"] = "NStage"
+                     attrs(moduleGroupRes[dset])["Dim 3"] = "NK"
+                  end
+               end
+                  #=
                   # dette hydrosystemet tilhører område a
                   if hasproperty(DRT, :HydroCapUpTable)
                      write(aGroup, "HydroCapUp", DRT.HydroCapUpTable[a,:,:,:])
@@ -375,7 +386,8 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
                         attrs(aGroup[dset])["Dim 3"] = "NK"
                      end
                   end
-               end
+                  =#
+               
             end
 
             # Bidrag per område (finnes allerede i RT)

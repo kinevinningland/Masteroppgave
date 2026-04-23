@@ -146,8 +146,8 @@ module StageProbDet
          @variable(M, 0 <= cap_zone_down[z=1:NZ, k=1:NK], base_name="cap_zone_down")
          @variable(M, 0 <= cap_hydro_up_mod[iArea=1:NHSys,iMod=1:AHData[iArea].NMod,k=1:NK], base_name="cap_hydro_up_mod")
          @variable(M, 0 <= cap_hydro_down_mod[iArea=1:NHSys,iMod=1:AHData[iArea].NMod,k=1:NK],base_name="cap_hydro_down_mod")
-         @expression(M, cap_hydro_up[iArea=1:NHSys,k=1:NK], sum(cap_hydro_up_mod[iArea,iMod,k] for iMod=1:AHData[iArea].NMod))
-         @expression(M, cap_hydro_down[iArea=1:NHSys,k=1:NK], sum(cap_hydro_down_mod[iArea,iMod,k] for iMod=1:AHData[iArea].NMod))
+         #@expression(M, cap_hydro_up[iArea=1:NHSys,k=1:NK], sum(cap_hydro_up_mod[iArea,iMod,k] for iMod=1:AHData[iArea].NMod))
+         #@expression(M, cap_hydro_down[iArea=1:NHSys,k=1:NK], sum(cap_hydro_down_mod[iArea,iMod,k] for iMod=1:AHData[iArea].NMod))
          @variable(M, 0 <= cap_wind_down[iArea=1:NArea,k=1:NK], base_name="cap_wind_down")
          if ORData.LMarkReserves
             @variable(M, 0 <= cap_mark_up_pos[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK],   base_name="cap_mark_up_pos")
@@ -166,27 +166,30 @@ module StageProbDet
          cap_zone_up[z,k] + slackUp[z,k] >= (zone_reqs[z].RI_up * 3 #Fikse at 3 er DT
             + zone_reqs[z].NI_up * sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0) + 0.03 * sum(AMData[iArea].MLData[iLoad].Load[iWeek,k]
                  for iArea in areas_in_zone[z]
-                 for iLoad in 1:AMData[iArea].NLoad; init=0.0)))*1.2
+                 for iLoad in 1:AMData[iArea].NLoad; init=0.0))*1.2)
 
-
+         #Nedreguleringskrav
          @constraint(M, reserve_req_down[z=1:NZ-1, k=1:NK],
          cap_zone_down[z,k] + slackDown[z,k] >= (zone_reqs[z].RI_down * 3 #Fikse at 3 er DT
             + zone_reqs[z].NI_down * sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0) + 0.03 * sum(AMData[iArea].MLData[iLoad].Load[iWeek,k]
                  for iArea in areas_in_zone[z]
-                 for iLoad in 1:AMData[iArea].NLoad; init=0.0)))*1.2
+                 for iLoad in 1:AMData[iArea].NLoad; init=0.0))*1.2)
+         
 
+         #Sammenhengen mellom zonesum av kapasiteter og sum av individuelle kapasiteter
          @constraint(M, reserve_split_down[z=1:NZ, k=1:NK],
          cap_zone_down[z,k] ==
-            sum(cap_hydro_down[iSys, k] for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0) 
+            #sum(cap_hydro_down[iSys, k] for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0) 
+            sum(sum(cap_hydro_down_mod[hydrosys_to_area[iSys], iMod, k] for iMod in 1:AHData[hydrosys_to_area[iSys]].NMod) for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0)
             + sum(cap_wind_down[a,k] for a in areas_in_zone[z]; init=0.0) 
-            #+ (ORData.LMarkReserves ? sum(cap_mark_down[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.neg_by_area, a, Set{Int}()); init=0.0) : 0.0) #Fikse Denne
             + (ORData.LMarkReserves ? sum(cap_mark_down_pos[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.pos_by_area, a, Set{Int}()); init=0.0) : 0.0)
             + (ORData.LMarkReserves ? sum(cap_mark_down_neg[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.neg_by_area, a, Set{Int}()); init=0.0) : 0.0)
          )
 
          @constraint(M, reserve_split_up[z=1:NZ, k=1:NK],
          cap_zone_up[z,k] ==
-            sum(cap_hydro_up[iSys, k] for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0) 
+            #sum(cap_hydro_up[iSys, k] for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0) 
+            sum(sum(cap_hydro_up_mod[hydrosys_to_area[iSys], iMod, k] for iMod in 1:AHData[hydrosys_to_area[iSys]].NMod) for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0)
             #+ (ORData.LMarkReserves ? sum(cap_mark_up[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.pos_by_area, a, Set{Int}()); init=0.0) : 0.0) #Fikse denne
             + (ORData.LMarkReserves ? sum(cap_mark_up_pos[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.pos_by_area, a, Set{Int}()); init=0.0) : 0.0)
             + (ORData.LMarkReserves ? sum(cap_mark_up_neg[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.neg_by_area, a, Set{Int}()); init=0.0) : 0.0)
