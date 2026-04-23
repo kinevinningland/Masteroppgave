@@ -173,7 +173,7 @@ function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,A
 
     LH2Reserves = false
     LMarkReserves = false
-    LSharing = true
+    LSharing = false
 
     area_to_zone = fill(0,NArea) 
     area_to_zone[33] = findfirst(==("NO3"), price_zones) #OK
