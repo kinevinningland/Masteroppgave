@@ -161,7 +161,7 @@ module StageProbDet
          @constraint(M, wp_avail_fix[a=1:NArea, k=1:NK],wp_avail[a,k] == 0.0)
          
          
-         sharing = false #legge inn i ORData
+         sharing = true #legge inn i ORData
          if sharing
             sharing_amount = 0.01
             @variable(M, 0 <= sharing_up[z1=1:NZa,z2=1:NZa, k=1:NK], base_name="sharing_up")
