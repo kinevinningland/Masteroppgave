@@ -222,8 +222,8 @@ module StageProbDet
             #+ (ORData.LMarkReserves ? sum(cap_mark_up[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.pos_by_area, a, Set{Int}()); init=0.0) : 0.0) #Fikse denne
             + (ORData.LMarkReserves ? sum(cap_mark_up_pos[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.pos_by_area, a, Set{Int}()); init=0.0) : 0.0)
             + (ORData.LMarkReserves ? sum(cap_mark_up_neg[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.neg_by_area, a, Set{Int}()); init=0.0) : 0.0)
-            + (sharing ? sum(sharing_up[z1, z, k] for z1 in 1:NZa if z1 != z && (min(z1,z),max(z1,z)) in neighboring_zones; init=0.0) : 0.0)
-            - (sharing ? sum(sharing_up[z, z2, k] for z2 in 1:NZa if z2 != z && (min(z,z2),max(z,z2)) in neighboring_zones; init=0.0) : 0.0)
+            + (sharing && z <= NZa ? sum(sharing_up[z1, z, k] for z1 in 1:NZa if z1 != z && (min(z1,z),max(z1,z)) in neighboring_zones; init=0.0) : 0.0)
+            - (sharing && z <= NZa ? sum(sharing_up[z, z2, k] for z2 in 1:NZa if z2 != z && (min(z,z2),max(z,z2)) in neighboring_zones; init=0.0) : 0.0)
          )
 
 
