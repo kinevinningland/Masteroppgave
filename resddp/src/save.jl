@@ -178,8 +178,8 @@ function save_detailed!(DRT::DetailedResult, SP_FORW,AMData,AHData,NArea,NHSys,N
         for iSys = 1:NHSys
             for iMod = 1:AHData[iSys].NMod
                 for k = 1:NK
-                    DRT.HydroCapDownTable[iSys,iMod,s,t,k] = JuMP.value(SP_FORW[:cap_hydro_down][iSys,iMod,k])
-                    DRT.HydroCapUpTable[iSys,iMod,s,t,k] = JuMP.value(SP_FORW[:cap_hydro_up][iSys,iMod,k])
+                    DRT.HydroCapDownTable[iSys,iMod,s,t,k] = JuMP.value(SP_FORW[:cap_hydro_down_mod][iSys,iMod,k])
+                    DRT.HydroCapUpTable[iSys,iMod,s,t,k] = JuMP.value(SP_FORW[:cap_hydro_up_mod][iSys,iMod,k])
                 end
             end
         end
