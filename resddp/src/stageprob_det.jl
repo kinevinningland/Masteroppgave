@@ -167,8 +167,26 @@ module StageProbDet
          #deling av reserver
          if LSharing
             sharing_amount = 0.01 #legge inn i ORData
+
+            lines_between_zones = Dict{Tuple{Int, Int}, Vector{Int}}()
+            for a1 in 1:NArea
+               z1_a = area_to_zone[a1]
+               for iLine in MCon[a1].NCon
+                  lineIdx = MCon[a1].LIndxOut[iLine]
+                  for a2 in 1:NArea
+                     if lineIdx in MCon[a2].LIndxIn
+                        z2_a = area_to_zone[a2]
+                        if z1_a != z2_a
+                           key = (z1_a,z2_a)
+                           push!(lines_between_zones,key,Int[],lineIdx)
+                        end
+                     end
+                  end
+               end
+            end
             @variable(M, 0 <= sharing_up[z1=1:NZ,z2=1:NZ, k=1:NK], base_name="sharing_up")
-            @constraint(M, sharing_balance_up[z1=1:NZ, z2=1:NZ, k=1:NK; z1 != z2 && (min(z1,z2),max(z1,z2)) in ORData.neighboring_zones], sharing_up[z1,z2,k] <= sharing_amount *cap_up_amount[z2,k]) #constraint som passer på at sonene grenser
+            @constraint(M, sharing_balance_up[z1=1:NZ, z2=1:NZ, k=1:NK; z1 != z2 && (min(z1,z2),max(z1,z2)) in ORData.neighboring_zones], sharing_up[z1,z2,k] <= sharing_amount *cap_up_amount[z2,k]) 
+            @constraint(M, sharing_etran_up[z1=1:NZ, z2=1:NZ, k=1:NK; z1 != z2 && (min(z1,z2),max(z1,z2)) in ORData.neighboring_zones], sharing_up[z1,z2,k] <= sum(WeekFrac * LineCap[l] - etran[l,k] for l in get(lines_between_zones, (z1,z2), Int[]); init=0.0))
          end
 
          #Opp- og nedreguleringskrav

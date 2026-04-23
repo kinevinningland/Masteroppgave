@@ -185,7 +185,7 @@ function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,A
         #ReserveZoneReq("NO5", 1.4, 1.4, 0.37, 0.37),
     ]
 
-    area_to_zone = fill(findfirst(==("Others"), price_zones),NArea) #Areas not explicitly listed default to "Others"
+    area_to_zone = fill(0,NArea) 
     area_to_zone[33] = findfirst(==("NO3"), price_zones) #OK
     area_to_zone[34] = findfirst(==("NO2"), price_zones) #OK Var NO5
     area_to_zone[35] = findfirst(==("NO2"), price_zones) #OK
