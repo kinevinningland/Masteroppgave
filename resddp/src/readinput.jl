@@ -210,9 +210,11 @@ function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,A
 
     areas_in_zone = [Int[] for _ in 1:NZ]
     for a in 1:NArea
-        push!(areas_in_zone[area_to_zone[a]], a)
+        z = area_to_zone[a]
+        if z > 0
+            push!(areas_in_zone[z], a)
+        end
     end
-
     hydrosys_to_area = fill(0, NHSys)
     for a in 1:NArea
         for j in 1:NAreaSys[a]
@@ -220,59 +222,12 @@ function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,A
         end
     end
     
-    h2_to_area = Int[]
-    if !isnothing(H2Data) && hasproperty(H2Data, :NArea) && hasproperty(H2Data, :Ind) && H2Data.NArea > 0
-        h2_to_area = fill(0, H2Data.NArea)  # h2_index -> model area
-        for a in 1:NArea
-            iH2 = H2Data.Ind[a]             # 0 hvis ikke H2 i området
-            if iH2 > 0
-                h2_to_area[iH2] = a
-            end
-        end
-    end
+    h2_to_area = Int[] #tas bort
+    pos_by_area = Dict{Int, Set{Int}}() #tas bort
+    neg_by_area = Dict{Int, Set{Int}}() #tas bort
 
-    #Mark reserves
-    lc(s) = lowercase(String(s))
 
-    excluded(navn::String) = begin
-        n = lc(navn)
-        occursin("nucl", n) || occursin("nuclear", n) ||
-        occursin("el-import", n) || occursin("el-export", n) ||
-        occursin("h2-import", n) || occursin("waste", n) ||
-        occursin("a/s union", n)
-    end
-
-    realistic_pos(navn::String) = !excluded(navn) && (
-        occursin("pa. kjop dellast", lc(navn)) ||
-        (occursin("hydro", lc(navn)) && !occursin("ps_hydro_con", lc(navn)))
-    )
-
-    realistic_neg(navn::String) = !excluded(navn) && (
-        occursin("ps_hydro_con", lc(navn)) ||
-        occursin("kraftintensiv", lc(navn)) ||
-        occursin("kjelkraft", lc(navn)) ||
-        occursin("pa. salg dellast", lc(navn))
-    )
-
-    pos_by_area = Dict{Int, Set{Int}}()
-    neg_by_area = Dict{Int, Set{Int}}()
-
-    for a in 1:NArea
-        for iMark in 1:AMData[a].NMStep
-            navn   = AMData[a].MSData[iMark].Name
-            maxcap = maximum(AMData[a].MSData[iMark].Capacity)
-            mincap = minimum(AMData[a].MSData[iMark].Capacity)
-
-            if maxcap > 0 && realistic_pos(navn)
-                push!(get!(pos_by_area, a, Set{Int}()), iMark)
-            end
-            if mincap < 0 && realistic_neg(navn)
-                push!(get!(neg_by_area, a, Set{Int}()), iMark)
-            end
-        end
-    end
-
-    neighboring_zones = Set{Tuple{Int, Int}}()#legge inn i ORData?
+    neighboring_zones = Set{Tuple{Int, Int}}()#
     for iArea in 1:NArea 
         z1 = area_to_zone[iArea]
         for iLine in 1:MCon[iArea].NCon

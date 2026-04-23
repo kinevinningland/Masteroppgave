@@ -168,7 +168,7 @@ module StageProbDet
          if LSharing
             sharing_amount = 0.01 #legge inn i ORData
 
-            lines_between_zones = Dict{Tuple{Int, Int}, Vector{Int}}()
+            lines_between_zones = Dict{Tuple{Int, Int}, Vector{Int}}() #legge inn i ORData
             for a1 in 1:NArea
                z1_a = area_to_zone[a1]
                for iLine in MCon[a1].NCon
