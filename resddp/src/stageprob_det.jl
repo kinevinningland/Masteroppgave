@@ -55,7 +55,7 @@ module StageProbDet
                  +sum(CNS.CSpi*spi[iArea,iMod,k] for iArea=1:NHSys for iMod=1:AHData[iArea].NMod for k=1:NK) 
                  +sum(CNS.CByp*byp[iArea,iMod,k] for iArea=1:NHSys for iMod=1:AHData[iArea].NMod for k=1:NK) 
                  +sum(CNS.CRat*rat[iArea,k] for iArea=1:NArea for k=1:NK) +alpha
-                 + (LOperatingReserves ? sum(CNS.CRat*slackUp[z,k]   for z=1:ORData.NZ-1 for k=1:NK) + sum(CNS.CRat*slackDown[z,k] for z=1:ORData.NZ-1 for k=1:NK) : 0.0))#ADDED
+                 + (LOperatingReserves ? sum(CNS.CRat*slackUp[z,k] for z=1:ORData.NZ for k=1:NK) + sum(CNS.CRat*slackDown[z,k] for z=1:ORData.NZ for k=1:NK) : 0.0))#ADDED
 
       #INITIAL RESERVOIR BALANCE [MM3/DT]
       @constraint(M,resbalReg0[iArea=1:NHSys,iMod=1:AHData[iArea].NMod],res[iArea,iMod,1]
@@ -158,13 +158,13 @@ module StageProbDet
             zone_reqs[z].RI_up * 3 #Fikse at 3 er DT
             + zone_reqs[z].NI_up * sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0) #fikse offshore wind
             #+ 0.03 * sum(AMData[iArea].MLData[iLoad].Load[iWeek,k] for iArea in areas_in_zone[z] for iLoad in 1:AMData[iArea].NLoad; init=0.0)) #fikse 0.03
-            + (sqrt(10*zone_reqs[z].MaxLoad/1000+150^2)-150)/1000)
+            + (sqrt(10*zone_reqs[z].MaxLoad*1000+150^2)-150)/1000)
          
          @expression(M, cap_down_amount[z = 1:NZ, k=1:NK], 
             zone_reqs[z].RI_down * 3 #Fikse at 3 er DT
             + zone_reqs[z].NI_down * sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0) #fikse offshore wind
             #+ 0.03 * sum(AMData[iArea].MLData[iLoad].Load[iWeek,k] for iArea in areas_in_zone[z] for iLoad in 1:AMData[iArea].NLoad; init=0.0)) #fikse 0.03
-            + (sqrt(10*zone_reqs[z].MaxLoad/1000+150^2)-150)/1000)
+            + (sqrt(10*zone_reqs[z].MaxLoad*1000+150^2)-150)/1000)
          
          println("Max last per sone")
          println(zone_reqs[1].MaxLoad)
