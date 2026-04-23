@@ -158,19 +158,19 @@ module StageProbDet
             zone_reqs[z].RI_up * 3 #Fikse at 3 er DT
             + zone_reqs[z].NI_up * sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0) #fikse offshore wind
             #+ 0.03 * sum(AMData[iArea].MLData[iLoad].Load[iWeek,k] for iArea in areas_in_zone[z] for iLoad in 1:AMData[iArea].NLoad; init=0.0)) #fikse 0.03
-            + (sqrt(10*zone_reqs.max_load_per_zone[z]/1000+150^2)-150)/1000)
+            + (sqrt(10*zone_reqs.MaxLoad[z]/1000+150^2)-150)/1000)
          
          @expression(M, cap_down_amount[z = 1:NZ, k=1:NK], 
             zone_reqs[z].RI_down * 3 #Fikse at 3 er DT
             + zone_reqs[z].NI_down * sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0) #fikse offshore wind
             #+ 0.03 * sum(AMData[iArea].MLData[iLoad].Load[iWeek,k] for iArea in areas_in_zone[z] for iLoad in 1:AMData[iArea].NLoad; init=0.0)) #fikse 0.03
-            + (sqrt(10*zone_reqs.max_load_per_zone[z]/1000+150^2)-150)/1000)
+            + (sqrt(10*zone_reqs.MaxLoad[z]/1000+150^2)-150)/1000)
          
          println("Max last per sone")
-         println(zone_reqs.max_load_per_zone[1])
-         println(zone_reqs.max_load_per_zone[2])
-         println(zone_reqs.max_load_per_zone[3])
-         println(zone_reqs.max_load_per_zone[4])
+         println(zone_reqs.MaxLoad[1])
+         println(zone_reqs.MaxLoad[2])
+         println(zone_reqs.MaxLoad[3])
+         println(zone_reqs.MaxLoad[4])
 
          #deling av reserver
          if LSharing
