@@ -171,14 +171,14 @@ module StageProbDet
             lines_between_zones = Dict{Tuple{Int, Int}, Vector{Int}}() #legge inn i ORData
             for a1 in 1:NArea
                z1_a = area_to_zone[a1]
-               for iLine in MCon[a1].NCon
+               for iLine in 1:MCon[a1].NCon
                   lineIdx = MCon[a1].LIndxOut[iLine]
                   for a2 in 1:NArea
                      if lineIdx in MCon[a2].LIndxIn
                         z2_a = area_to_zone[a2]
                         if z1_a != z2_a
                            key = (z1_a,z2_a)
-                           push!(lines_between_zones,key,Int[],lineIdx)
+                           push!(get!(lines_between_zones,key,Int[]),lineIdx)
                         end
                      end
                   end
@@ -205,8 +205,8 @@ module StageProbDet
 
          @constraint(M, reserve_split_up[z=1:NZ, k=1:NK], cap_zone_up[z,k] ==
             sum(sum(cap_hydro_up_mod[iSys, iMod, k] for iMod in 1:AHData[iSys].NMod) for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0)
-            + (LSharing && z <= NZ ? sum(sharing_up[z1, z, k] for z1 in 1:NZ if z1 != z && (min(z1,z),max(z1,z)) in neighboring_zones; init=0.0) : 0.0)
-            - (LSharing && z <= NZ ? sum(sharing_up[z, z2, k] for z2 in 1:NZ if z2 != z && (min(z,z2),max(z,z2)) in neighboring_zones; init=0.0) : 0.0)
+            + (LSharing && z <= NZ ? sum(sharing_up[z1, z, k] for z1 in 1:NZ if z1 != z && (min(z1,z),max(z1,z)) in ORData.neighboring_zones; init=0.0) : 0.0)
+            - (LSharing && z <= NZ ? sum(sharing_up[z, z2, k] for z2 in 1:NZ if z2 != z && (min(z,z2),max(z,z2)) in ORData.neighboring_zones; init=0.0) : 0.0)
          )
 
 
