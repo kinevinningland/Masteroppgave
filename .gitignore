@@ -4,3 +4,4 @@ datasets/
 *.dat
 *.jld2
 .DS_Store
+.claude/worktrees/
