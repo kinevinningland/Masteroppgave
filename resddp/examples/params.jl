@@ -7,13 +7,13 @@ LWindStoch = false
 LDemandResponse = false
 LExtreme = false
 LIgnoreCrossCorr = false
-LOperatingReserves = true #Added
+LOperatingReserves = false #Added
 MaxIter = 80#50
 CCMaxIter = 1
 ConvEps = 1.0E-3
 NScen = 30
 NWindScen = 5
-NScenSim = 1#10#30
+NScenSim = 30#1#10#30
 NResid = NBranch = 7
 NStage = 3*52
 NStageSim =2*52

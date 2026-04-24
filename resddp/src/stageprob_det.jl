@@ -164,38 +164,13 @@ module StageProbDet
             zone_reqs[z].RI_down * 3 #Fikse at 3 er DT
             + zone_reqs[z].NI_down * sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0) #fikse offshore wind
             #+ 0.03 * sum(AMData[iArea].MLData[iLoad].Load[iWeek,k] for iArea in areas_in_zone[z] for iLoad in 1:AMData[iArea].NLoad; init=0.0)) #fikse 0.03
-            + (sqrt(10*zone_reqs[z].MaxLoad*1000+150^2)-150)/1000)
+            + (sqrt(10*zone_reqs[z].MaxLoad*1000+150^2)-150)/1000) #endre konstanter
          
          println("Max last per sone")
          println(zone_reqs[1].MaxLoad)
          println(zone_reqs[2].MaxLoad)
          println(zone_reqs[3].MaxLoad)
          println(zone_reqs[4].MaxLoad)
-
-         #deling av reserver
-         if LSharing
-            sharing_amount = 0.01 #legge inn i ORData
-
-            lines_between_zones = Dict{Tuple{Int, Int}, Vector{Int}}() #legge inn i ORData
-            for a1 in 1:NArea
-               z1_a = area_to_zone[a1]
-               for iLine in 1:MCon[a1].NCon
-                  lineIdx = MCon[a1].LIndxOut[iLine]
-                  for a2 in 1:NArea
-                     if lineIdx in MCon[a2].LIndxIn
-                        z2_a = area_to_zone[a2]
-                        if z1_a != z2_a
-                           key = (z1_a,z2_a)
-                           push!(get!(lines_between_zones,key,Int[]),lineIdx)
-                        end
-                     end
-                  end
-               end
-            end
-            @variable(M, 0 <= sharing_up[z1=1:NZ,z2=1:NZ, k=1:NK], base_name="sharing_up")
-            @constraint(M, sharing_balance_up[z1=1:NZ, z2=1:NZ, k=1:NK; z1 != z2 && (min(z1,z2),max(z1,z2)) in ORData.neighboring_zones], sharing_up[z1,z2,k] <= sharing_amount *cap_up_amount[z2,k]) 
-            @constraint(M, sharing_etran_up[z1=1:NZ, z2=1:NZ, k=1:NK; z1 != z2 && (min(z1,z2),max(z1,z2)) in ORData.neighboring_zones], sharing_up[z1,z2,k] <= sum(WeekFrac * LineCap[l] - etran[l,k] for l in get(lines_between_zones, (z1,z2), Int[]); init=0.0))
-         end
 
          #Opp- og nedreguleringskrav
          @constraint(M, reserve_req_up[z=1:NZ, k=1:NK],
@@ -212,19 +187,16 @@ module StageProbDet
          )
 
          @constraint(M, reserve_split_up[z=1:NZ, k=1:NK], cap_zone_up[z,k] ==
-            sum(sum(cap_hydro_up_mod[iSys, iMod, k] for iMod in 1:AHData[iSys].NMod) for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0)
-            + (LSharing && z <= NZ ? sum(sharing_up[z1, z, k] for z1 in 1:NZ if z1 != z && (min(z1,z),max(z1,z)) in ORData.neighboring_zones; init=0.0) : 0.0)
-            - (LSharing && z <= NZ ? sum(sharing_up[z, z2, k] for z2 in 1:NZ if z2 != z && (min(z,z2),max(z,z2)) in ORData.neighboring_zones; init=0.0) : 0.0)
-         )
+            sum(sum(cap_hydro_up_mod[iSys, iMod, k] for iMod in 1:AHData[iSys].NMod) for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0))
 
 
          #koble hver teknologis cap-variabel til dens egne fysiske grenser
          @constraint(M, hydro_up_mod[iArea=1:NHSys, iMod=1:AHData[iArea].NMod, k=1:NK], cap_hydro_up_mod[iArea,iMod,k] <= WeekFrac * MW2GWHWEEK * sum(AHData[iArea].PQData[iMod].Eff[iSeg] * (AHData[iArea].PQData[iMod].DMax[iSeg] - disSeg[iArea,iMod,iSeg,k]) for iSeg=1:AHData[iArea].PQData[iMod].NSeg))
          @constraint(M, hydro_down_mod[iArea=1:NHSys, iMod=1:AHData[iArea].NMod, k=1:NK], cap_hydro_down_mod[iArea,iMod,k] <= ghy[iArea,iMod,k])
-         @constraint(M, hydro_res_up_mod[iArea=1:NHSys, iMod=1:AHData[iArea].NMod, k=1:NK], cap_hydro_up_mod[iArea,iMod,k] <= AHData[iArea].EffSea[iMod] * MAGEFF2GWH * res[iArea,iMod,k])
-         @constraint(M, hydro_down_mod_res[iArea=1:NHSys, iMod=1:AHData[iArea].NMod, k=1:NK], cap_hydro_down_mod[iArea,iMod,k] <= AHData[iArea].EffSea[iMod] * MAGEFF2GWH * (AHData[iArea].MData[iMod].MaxRes - res[iArea,iMod,k]))
+         @constraint(M, hydro_down_mod[iArea=1:NHSys, iMod=1:AHData[iArea].NMod, k=1:NK], cap_hydro_down_mod[iArea,iMod,k] <= ghy[iArea,iMod,k])
+         @constraint(M, hydro_res_up_mod[iArea=1:NHSys, iMod=1:AHData[iArea].NMod, k=1:NK], cap_hydro_up_mod[iArea,iMod,k] <= AHData[iArea].EffSea[iMod] * MAGEFF2GWH * res[iArea,iMod,k]) #skalere neD?
+         @constraint(M, hydro_down_mod_res[iArea=1:NHSys, iMod=1:AHData[iArea].NMod, k=1:NK], cap_hydro_down_mod[iArea,iMod,k] <= AHData[iArea].EffSea[iMod] * MAGEFF2GWH * (AHData[iArea].MData[iMod].MaxRes - res[iArea,iMod,k])) #ta bort
          @constraint(M, wind_dn[iArea=1:NArea,k=1:NK], wprod[iArea,k] >= cap_wind_down[iArea,k]) #OK
-         @constraint(M, wind_dn2[iArea=1:NArea,k=1:NK], cap_wind_down[iArea,k] <= 0.0) #OK
 
          
          #Går ann å sette cap til null og ta bort dens constraints som allerede ligger i modellen

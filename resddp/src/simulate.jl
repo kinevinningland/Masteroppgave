@@ -62,7 +62,6 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
                             JuMP.set_normalized_rhs(SP_FORW[:wptarget][iArea,k], max(model.WPData[iArea,iScen,sWeek,k],0.0))
                             if parameters.Control.LOperatingReserves #ADDED
                                 JuMP.set_normalized_rhs(SP_FORW[:wp_avail_fix][iArea,k], max(model.WPData[iArea,iScen,sWeek,k],0.0))
-                                JuMP.set_normalized_rhs(SP_FORW[:wind_dn2][iArea,k], max(model.WPData[iArea,iScen,sWeek,k],0.0))
                             end
                         end
                     end
@@ -87,6 +86,7 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
                     t2 = time_ns()
                     optimize!(SP_FORW)
                     dTS2 = dTS2+(time_ns()-t2)/NCluster
+                    write_to_file(SP_FORW, "SPF.lp")
                     if primal_status(SP_FORW) != MOI.FEASIBLE_POINT 
                         write_to_file(SP_FORW, "SPF_err.lp")
                         termstat = termination_status(SP_FORW)
