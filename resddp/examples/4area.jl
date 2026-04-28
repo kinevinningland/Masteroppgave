@@ -27,12 +27,12 @@ datapath = "/cluster/home/kinevin/Masteroppgave/datasets/baseline_2"
 model = load(datapath, parameters) 
 inflow_model = load_inflow(datapath, model, parameters)
 
-Base.invokelatest(Main.LeseData.disable_linecaps_by_area!, model, [21,22,23,24,25,26,27,28,29,30,31,32,43,44,45,46,47,48,49,50,51,52,53,54,55,58,59,60,61,63,64,65,69,70,71,76,77,78,72]; mode=:both) #Added
-Base.invokelatest(Main.LeseData.disable_generation_by_area!, model, [21,22,23,24,25,26,27,28,29,30,31,32,43,44,45,46,47,48,49,50,51,52,53,54,55,58,59,60,61,63,64,65,69,70,71,76,77,78,72])#Added
-Base.invokelatest(Main.LeseData.disable_load_by_area!, model, [21,22,23,24,25,26,27,28,29,30,31,32,43,44,45,46,47,48,49,50,51,52,53,54,55,58,59,60,61,63,64,65,69,70,71,76,77,78,72])#Added
-Base.invokelatest(Main.LeseData.disable_wind_by_area!, model, [21,22,23,24,25,26,27,28,29,30,31,32,43,44,45,46,47,48,49,50,51,52,53,54,55,58,59,60,61,63,64,65,69,70,71,76,77,78,72])#Added
-Base.invokelatest(Main.LeseData.disable_trinn_by_area!, model, [21,22,23,24,25,26,27,28,29,30,31,32,43,44,45,46,47,48,49,50,51,52,53,54,55,58,59,60,61,63,64,65,69,70,71,76,77,78,72])#Added
-Base.invokelatest(Main.LeseData.disable_h2caps_by_area!, model, [21,22,23,24,25,26,27,28,29,30,31,32,43,44,45,46,47,48,49,50,51,52,53,54,55,58,59,60,61,63,64,65,69,70,71,76,77,78,72])  #Added
+#Base.invokelatest(Main.LeseData.disable_linecaps_by_area!, model, [21,22,23,24,25,26,27,28,29,30,31,32,43,44,45,46,47,48,49,50,51,52,53,54,55,58,59,60,61,63,64,65,69,70,71,76,77,78,72]; mode=:both) #Added
+#Base.invokelatest(Main.LeseData.disable_generation_by_area!, model, [21,22,23,24,25,26,27,28,29,30,31,32,43,44,45,46,47,48,49,50,51,52,53,54,55,58,59,60,61,63,64,65,69,70,71,76,77,78,72])#Added
+#Base.invokelatest(Main.LeseData.disable_load_by_area!, model, [21,22,23,24,25,26,27,28,29,30,31,32,43,44,45,46,47,48,49,50,51,52,53,54,55,58,59,60,61,63,64,65,69,70,71,76,77,78,72])#Added
+#Base.invokelatest(Main.LeseData.disable_wind_by_area!, model, [21,22,23,24,25,26,27,28,29,30,31,32,43,44,45,46,47,48,49,50,51,52,53,54,55,58,59,60,61,63,64,65,69,70,71,76,77,78,72])#Added
+#Base.invokelatest(Main.LeseData.disable_trinn_by_area!, model, [21,22,23,24,25,26,27,28,29,30,31,32,43,44,45,46,47,48,49,50,51,52,53,54,55,58,59,60,61,63,64,65,69,70,71,76,77,78,72])#Added
+#Base.invokelatest(Main.LeseData.disable_h2caps_by_area!, model, [21,22,23,24,25,26,27,28,29,30,31,32,43,44,45,46,47,48,49,50,51,52,53,54,55,58,59,60,61,63,64,65,69,70,71,76,77,78,72])  #Added
 
 using JLD2 
 using FileIO 
