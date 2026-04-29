@@ -156,13 +156,13 @@ module StageProbDet
             zone_reqs[z].RI_up * CTI.DT
             + zone_reqs[z].NI_up * sum(wp_avail[a,k] for a in areas_in_zone[z] if !(a in zone_reqs[z].owp_areas_in_zone); init=0.0)
             + zone_reqs[z].NI_up_OWP * sum(wp_avail[a,k] for a in zone_reqs[z].owp_areas_in_zone; init=0.0)
-            + (sqrt(a*zone_reqs[z].MaxLoad/CNS.MW2GW+b^2)-b)*CNS.MW2GW)
+            + (sqrt(a*zone_reqs[z].MaxLoad/(CNS.MW2GW*CTI.DT)+b^2)-b)*CNS.MW2GW*CTI.DT)
          
          @expression(M, cap_down_amount[z = 1:NZ, k=1:NK], 
             zone_reqs[z].RI_down * CTI.DT
             + zone_reqs[z].NI_down * sum(wp_avail[a,k] for a in areas_in_zone[z] if !(a in zone_reqs[z].owp_areas_in_zone); init=0.0)
             + zone_reqs[z].NI_down_OWP * sum(wp_avail[a,k] for a in zone_reqs[z].owp_areas_in_zone; init=0.0)
-            + (sqrt(a*zone_reqs[z].MaxLoad/CNS.MW2GW+b^2)-b)*CNS.MW2GW)
+            + (sqrt(a*zone_reqs[z].MaxLoad/(CNS.MW2GW*CTI.DT)+b^2)-b)*CNS.MW2GW*CTI.DT)
       
          @constraint(M, reserve_req_up[z=1:NZ, k=1:NK], cap_zone_up[z,k] + slackUp[z,k] >= cap_up_amount[z,k])
          @constraint(M, reserve_req_down[z=1:NZ, k=1:NK], cap_zone_down[z,k] + slackDown[z,k] >= cap_down_amount[z,k])

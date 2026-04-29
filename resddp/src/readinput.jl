@@ -285,7 +285,7 @@ function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,A
 end
 =#
 
-function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,AreaName,LOperatingReserves,MCon)
+function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,AreaName,LOperatingReserves)
     #Return dummy object if OR is not included
     if !LOperatingReserves
         return OperatingReserves(0,String[],ReserveZoneReq[],Vector{Vector{Int}}(),Int[],false,0,0)
