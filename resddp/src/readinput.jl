@@ -361,12 +361,12 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,A
     zone_reqs = [
         ReserveZoneReq(
             price_zones[z],
-            zone_reqs_raw[price_zones[z]][1], # RI_up
-            zone_reqs_raw[price_zones[z]][2], # RI_down
-            zone_reqs_raw[price_zones[z]][3], # NI_up
-            zone_reqs_raw[price_zones[z]][4], # NI_down
-            zone_reqs_raw[price_zones[z]][5], # NI_up_OWP
-            zone_reqs_raw[price_zones[z]][6], # NI_down_OWP
+            zone_reqs[price_zones[z]][1], # RI_up
+            zone_reqs[price_zones[z]][2], # RI_down
+            zone_reqs[price_zones[z]][3], # NI_up
+            zone_reqs[price_zones[z]][4], # NI_down
+            zone_reqs[price_zones[z]][5], # NI_up_OWP
+            zone_reqs[price_zones[z]][6], # NI_down_OWP
             max_load_per_zone[z],
             owp_areas_in_zone[z]
         ) for z in 1:NZ
