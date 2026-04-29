@@ -13,7 +13,7 @@ CCMaxIter = 1
 ConvEps = 1.0E-3
 NScen = 30
 NWindScen = 5
-NScenSim = 30
+NScenSim = 1#30
 NResid = NBranch = 7
 NStage = 3*52
 NStageSim =2*52
