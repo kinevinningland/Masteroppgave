@@ -94,7 +94,7 @@ struct ReserveZoneReq #ADDED
     NI_up_OWP::Float64
     NI_down_OWP::Float64
     MaxLoad::Float64
-    owp_areas_in_zone::Vector{Vector{Int}}
+    owp_areas_in_zone::Vector{Int}
 end
 
 struct OperatingReserves #ADDED

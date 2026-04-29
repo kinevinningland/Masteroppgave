@@ -189,19 +189,14 @@ module StageProbFull
          )
 
          #koble hver teknologis cap-variabel til dens egne fysiske grenser
-         @constraint(M, hydro_up[iSys=1:NHSys, k=1:NK], prod[iSys,k] + cap_hydro_up[iSys,k] <= WeekFrac * HSys[iSys].MaxProd)  #OK
-         @constraint(M, hydro_dn[iSys=1:NHSys, k=1:NK], prod[iSys,k] - cap_hydro_down[iSys,k] >= WeekFrac * HSys[iSys].MinProd[iWeek]) #OK
+         @constraint(M, hydro_up[iSys=1:NHSys, k=1:NK], prod[iSys,k] + cap_hydro_up[iSys,k] <= WeekFrac * HSys[iSys].MaxProd)  
+         @constraint(M, hydro_dn[iSys=1:NHSys, k=1:NK], prod[iSys,k] - cap_hydro_down[iSys,k] >= WeekFrac * HSys[iSys].MinProd[iWeek]) 
          @constraint(M, hydroRes_cap_up[iSys=1:NHSys, k=1:NK], res[iSys,k] >= cap_hydro_up[iSys,k])
-         @constraint(M, hydroRes_cap_down[iSys=1:NHSys, k=1:NK], res[iSys,k] + cap_hydro_down[iSys,k] <= HSys[iSys].MaxRes)
-         @constraint(M, wind_dn[iArea=1:NArea,k=1:NK], wprod[iArea,k] >= cap_wind_down[iArea,k]) #OK
+         @constraint(M, wind_dn[iArea=1:NArea,k=1:NK], wprod[iArea,k] >= cap_wind_down[iArea,k]) 
          
 
          #Går ann å sette cap til null og ta bort dens constraints som allerede ligger i modellen
          #Ta else (hvis ikke OR: sette på dens constraints)
-         sharing = false
-         if sharing
-
-         end
       end
 
 
