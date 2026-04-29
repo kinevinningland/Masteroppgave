@@ -94,29 +94,16 @@ struct ReserveZoneReq #ADDED
     NI_up_OWP::Float64
     NI_down_OWP::Float64
     MaxLoad::Float64
+    owp_areas_in_zone::Vector{Vector{Int}}
 end
-
-struct ReserveSystemReq
-    RI_up::Float64          #Reference incident up [GW]
-    RI_down::Float64        #Reference incident down [GW]
-    NI_up::Float64          #Nominal imbalance up [GW]
-    NI_down::Float64        #Nominal imbalance down [GW]
-    NI_up_OWP::Float64
-    NI_down_OWP::Float64
-    MaxLoad::Float64
-end
-
 
 struct OperatingReserves #ADDED
     NZ::Int                 # Total number of price zones, incl "others"
     price_zones::Vector{String}          #price zone names
     zone_reqs::Vector{ReserveZoneReq}
-    system_reqs::Vector{ReserveSystemReq}
-    area_to_zone::Vector{Int}            # Model area index -> zone index (1..NZ)
     areas_in_zone::Vector{Vector{Int}}   # Zone index -> list of model area indices
     hydrosys_to_area::Vector{Int}        # Hydro system index -> model area index
     LMarkReserves::Bool 
-    LZoneReq::Bool
     a::Int
     b::Int
 end

@@ -168,43 +168,64 @@ end
 function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,AreaName,LOperatingReserves,MCon)
     #Return dummy object if OR is not included
     if !LOperatingReserves
-        return OperatingReserves(0,String[],ReserveZoneReq[],ReserveSystemReq[],Int[],Vector{Vector{Int}}(),Int[],false,false,0,0)
+        return OperatingReserves(0,String[],ReserveZoneReq[],Vector{Vector{Int}}(),Int[],false,0,0)
     end
     LMarkReserves = false
     LZoneReq = true
 
-    price_zones = ["NO1", "NO2", "NO3", "NO4"]
-    NZ = length(price_zones)
+    if LZoneReq
+        price_zones = ["NO1", "NO2", "NO3", "NO4"]
+        NZ = length(price_zones)
 
-    area_to_zone = fill(0,NArea) 
-    area_to_zone[33] = findfirst(==("NO3"), price_zones) #OK
-    area_to_zone[34] = findfirst(==("NO2"), price_zones) #OK Var NO5
-    area_to_zone[35] = findfirst(==("NO2"), price_zones) #OK
-    area_to_zone[36] = findfirst(==("NO2"), price_zones) #OK
-    area_to_zone[66] = findfirst(==("NO3"), price_zones) # H2-M?
-    area_to_zone[67] = findfirst(==("NO2"), price_zones) #H2-S?
-    area_to_zone[68] = findfirst(==("NO4"), price_zones) #H2-N?
-    area_to_zone[73] = findfirst(==("NO4"), price_zones) #OK
-    area_to_zone[74] = findfirst(==("NO4"), price_zones) #OK
-    area_to_zone[75] = findfirst(==("NO4"), price_zones) #OK
-    area_to_zone[1] = findfirst(==("NO1"), price_zones) #OK
-    area_to_zone[2] = findfirst(==("NO1"), price_zones) #spørre om NO1 eller NO2, SørØst
-    area_to_zone[3] = findfirst(==("NO1"), price_zones) #spørre, NO1,NO3,NO5? Hallingdal
-    area_to_zone[4] = findfirst(==("NO2"), price_zones) #spørre NO1,NO2? Telemark
-    area_to_zone[5] = findfirst(==("NO2"), price_zones) #OK
-    area_to_zone[6] = findfirst(==("NO2"), price_zones) #OK
-    area_to_zone[8] = findfirst(==("NO3"), price_zones) #OK
-    area_to_zone[9] = findfirst(==("NO4"), price_zones) #OK
-    area_to_zone[10] = findfirst(==("NO4"), price_zones) #OK
-    area_to_zone[11] = findfirst(==("NO4"), price_zones) #OK
-    area_to_zone[7] = findfirst(==("NO2"), price_zones) #OK Var NO5
+        area_to_zone = fill(0,NArea) 
+        area_to_zone[33] = findfirst(==("NO3"), price_zones) #OK
+        area_to_zone[34] = findfirst(==("NO2"), price_zones) #OK Var NO5
+        area_to_zone[35] = findfirst(==("NO2"), price_zones) #OK
+        area_to_zone[36] = findfirst(==("NO2"), price_zones) #OK
+        area_to_zone[66] = findfirst(==("NO3"), price_zones) # H2-M?
+        area_to_zone[67] = findfirst(==("NO2"), price_zones) #H2-S?
+        area_to_zone[68] = findfirst(==("NO4"), price_zones) #H2-N?
+        area_to_zone[73] = findfirst(==("NO4"), price_zones) #OK
+        area_to_zone[74] = findfirst(==("NO4"), price_zones) #OK
+        area_to_zone[75] = findfirst(==("NO4"), price_zones) #OK
+        area_to_zone[1] = findfirst(==("NO1"), price_zones) #OK
+        area_to_zone[2] = findfirst(==("NO1"), price_zones) #spørre om NO1 eller NO2, SørØst
+        area_to_zone[3] = findfirst(==("NO1"), price_zones) #spørre, NO1,NO3,NO5? Hallingdal
+        area_to_zone[4] = findfirst(==("NO2"), price_zones) #spørre NO1,NO2? Telemark
+        area_to_zone[5] = findfirst(==("NO2"), price_zones) #OK
+        area_to_zone[6] = findfirst(==("NO2"), price_zones) #OK
+        area_to_zone[8] = findfirst(==("NO3"), price_zones) #OK
+        area_to_zone[9] = findfirst(==("NO4"), price_zones) #OK
+        area_to_zone[10] = findfirst(==("NO4"), price_zones) #OK
+        area_to_zone[11] = findfirst(==("NO4"), price_zones) #OK
+        area_to_zone[7] = findfirst(==("NO2"), price_zones) #OK Var NO5
+    else
+        price_zones = ["NO"]
+        NZ = length(price_zones)
 
-    areas_in_zone = [Int[] for _ in 1:NZ]
-    for a in 1:NArea
-        z = area_to_zone[a]
-        if z > 0
-            push!(areas_in_zone[z], a)
-        end
+        area_to_zone = fill(0,NArea) 
+        area_to_zone[33] = findfirst(==("NO"), price_zones) 
+        area_to_zone[34] = findfirst(==("NO"), price_zones) 
+        area_to_zone[35] = findfirst(==("NO"), price_zones) 
+        area_to_zone[36] = findfirst(==("NO"), price_zones) 
+        area_to_zone[66] = findfirst(==("NO"), price_zones) 
+        area_to_zone[67] = findfirst(==("NO"), price_zones) 
+        area_to_zone[68] = findfirst(==("NO"), price_zones) 
+        area_to_zone[73] = findfirst(==("NO"), price_zones) 
+        area_to_zone[74] = findfirst(==("NO"), price_zones) 
+        area_to_zone[75] = findfirst(==("NO"), price_zones) 
+        area_to_zone[1] = findfirst(==("NO"), price_zones) 
+        area_to_zone[2] = findfirst(==("NO"), price_zones) 
+        area_to_zone[3] = findfirst(==("NO"), price_zones) 
+        area_to_zone[4] = findfirst(==("NO"), price_zones) 
+        area_to_zone[5] = findfirst(==("NO"), price_zones) 
+        area_to_zone[6] = findfirst(==("NO"), price_zones) 
+        area_to_zone[8] = findfirst(==("NO"), price_zones) 
+        area_to_zone[9] = findfirst(==("NO"), price_zones) 
+        area_to_zone[10] = findfirst(==("NO"), price_zones) 
+        area_to_zone[11] = findfirst(==("NO"), price_zones) 
+        area_to_zone[7] = findfirst(==("NO"), price_zones) 
+
     end
 
     hydrosys_to_area = fill(0, NHSys)
@@ -223,20 +244,35 @@ function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,A
         end
     end
     
-    zone_reqs = [
-        ReserveZoneReq("NO1", 0.344, 0.172, 0.58, 0.56, 0.48, 0.4,max_load_per_zone[1]),
-        ReserveZoneReq("NO2", 1.4, 1.4, 0.37, 0.37, 0.48, 0.4,max_load_per_zone[2]),
-        ReserveZoneReq("NO3", 0.29, 0.145, 0.33, 0.38, 0.48, 0.4,max_load_per_zone[3]),
-        ReserveZoneReq("NO4", 0.35, 0.175, 0.31, 0.33, 0.48, 0.4,max_load_per_zone[4]),
-        #ReserveZoneReq("NO5", 1.4, 1.4, 0.37, 0.37),
-    ]
-    system_reqs = [ReserveSystemReq(1.4,1.4,0.17,0.17,0.48,0.4,max_load_per_zone[1]+max_load_per_zone[2]+max_load_per_zone[3]+max_load_per_zone[4])]
+    owp_areas_in_zone = [Int[] for _ in 1:NZ]
+    for z in 1:NZ
+        for iArea in areas_in_zone[z]
+            if endswith(AreaName[iArea], "-OWP")
+                push!(owp_areas_in_zone[z], iArea)
+            end
+        end
+    end
+    
+    if LZoneReq
+        zone_reqs = [
+            ReserveZoneReq("NO1", 0.344, 0.172, 0.58, 0.56, 0.48, 0.4,max_load_per_zone[1],owp_areas_in_zone[1]),
+            ReserveZoneReq("NO2", 1.4, 1.4, 0.37, 0.37, 0.48, 0.4,max_load_per_zone[2],owp_areas_in_zone[2]),
+            ReserveZoneReq("NO3", 0.29, 0.145, 0.33, 0.38, 0.48, 0.4,max_load_per_zone[3],owp_areas_in_zone[3]),
+            ReserveZoneReq("NO4", 0.35, 0.175, 0.31, 0.33, 0.48, 0.4,max_load_per_zone[4],owp_areas_in_zone[4]),
+            #ReserveZoneReq("NO5", 1.4, 1.4, 0.37, 0.37),
+        ]
+    else
+        zone_reqs = [
+            ReserveZoneReq("NO",1.4,1.4,0.17,0.17,0.48,0.4,max_load_per_zone[1]+max_load_per_zone[2]+max_load_per_zone[3]+max_load_per_zone[4],owp_areas_in_zone[1]),
+        ]
+    end
+    
     a = 10
     b = 150
 
     println("Read ORData.csv")
 
-    return OperatingReserves(NZ,price_zones,zone_reqs,system_reqs,area_to_zone,areas_in_zone,hydrosys_to_area,LMarkReserves,LZoneReq,a,b)
+    return OperatingReserves(NZ,price_zones,zone_reqs,areas_in_zone,hydrosys_to_area,LMarkReserves,a,b)
 end
 
 function ReadCuts(NHSys,NStage,IM,dataset)
