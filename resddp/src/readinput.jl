@@ -228,6 +228,14 @@ function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,A
 
     end
 
+    areas_in_zone = [Int[] for _ in 1:NZ]
+    for a in 1:NArea
+        z = area_to_zone[a]
+        if z > 0
+            push!(areas_in_zone[z], a)
+        end
+    end
+
     hydrosys_to_area = fill(0, NHSys)
     for a in 1:NArea
         for j in 1:NAreaSys[a]

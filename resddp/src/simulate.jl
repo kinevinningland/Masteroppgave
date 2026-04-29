@@ -205,7 +205,6 @@ function simulate_aggregated(model::Model, inflow_model::InflowModel, parameters
                             JuMP.set_normalized_rhs(SP_FORW[:wptarget][iArea,k], max(model.WPData[iArea,wYear,sWeek,k],0.0))
                             if parameters.Control.LOperatingReserves #ADDED
                             JuMP.set_normalized_rhs(SP_FORW[:wp_avail_fix][iArea,k], max(model.WPData[iArea,wYear,sWeek,k],0.0))
-                            JuMP.set_normalized_rhs(SP_FORW[:wind_dn2][iArea,k], max(model.WPData[iArea,wYear,sWeek,k],0.0))
                             end
                         end
                     end
