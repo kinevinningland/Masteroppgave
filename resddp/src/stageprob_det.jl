@@ -130,72 +130,96 @@ module StageProbDet
       end
       
       if LOperatingReserves #ADDED
-         #Ha en hvis zone, hvis sharing og hvis system ... og ha dette som input i ORData
-         
+         LZoneReq = ORData.NZ
          NZ = ORData.NZ
          zone_reqs = ORData.zone_reqs
+         system_reqs = ORData.system_reqs
          area_to_zone = ORData.area_to_zone
          areas_in_zone = ORData.areas_in_zone
          hydrosys_to_area = ORData.hydrosys_to_area
-         LSharing = ORData.LSharing
+         a = ORData.a
+         b = ORData.b
 
 
          #Opp- og nedreguleringsreserver
-         @variable(M, 0 <= cap_zone_up[z=1:NZ, k=1:NK], base_name="cap_zone_up")
-         @variable(M, 0 <= cap_zone_down[z=1:NZ, k=1:NK], base_name="cap_zone_down")
          @variable(M, 0 <= cap_hydro_up_mod[iArea=1:NHSys,iMod=1:AHData[iArea].NMod,k=1:NK], base_name="cap_hydro_up_mod")
          @variable(M, 0 <= cap_hydro_down_mod[iArea=1:NHSys,iMod=1:AHData[iArea].NMod,k=1:NK],base_name="cap_hydro_down_mod")
          @variable(M, 0 <= cap_wind_down[iArea=1:NArea,k=1:NK], base_name="cap_wind_down")
 
-         
          #Diverse
          @variable(M, wp_avail[a=1:NArea, k=1:NK] >= 0, base_name="wp_avail")
          @constraint(M, wp_avail_fix[a=1:NArea, k=1:NK],wp_avail[a,k] == 0.0)
+
+
+         if LZoneReq
+            @variable(M, 0 <= cap_zone_up[z=1:NZ, k=1:NK], base_name="cap_zone_up")
+            @variable(M, 0 <= cap_zone_down[z=1:NZ, k=1:NK], base_name="cap_zone_down")
+
+            #Opp- og nedreguleringskrav
+            @expression(M, cap_up_amount[z = 1:NZ, k=1:NK], 
+               zone_reqs[z].RI_up * CTI_DT
+               + zone_reqs[z].NI_up * sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0) #fikse offshore wind
+               + (sqrt(a*zone_reqs[z].MaxLoad/CNS.MW2GW+b^2)-b)*CNS.MW2GW)
+            
+            @expression(M, cap_down_amount[z = 1:NZ, k=1:NK], 
+               zone_reqs[z].RI_down * CTI_DT
+               + zone_reqs[z].NI_down * sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0) #fikse offshore wind
+               + (sqrt(a*zone_reqs[z].MaxLoad/CNS.MW2GW+b^2)-b)*CNS.MW2GW) 
          
+            @constraint(M, reserve_req_up[z=1:NZ, k=1:NK],
+            cap_zone_up[z,k] + slackUp[z,k] >= cap_up_amount[z,k])
 
-         #Opp- og nedreguleringskrav
-         @expression(M, cap_up_amount[z = 1:NZ, k=1:NK], 
-            zone_reqs[z].RI_up * 3 #Fikse at 3 er DT
-            + zone_reqs[z].NI_up * sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0) #fikse offshore wind
-            #+ 0.03 * sum(AMData[iArea].MLData[iLoad].Load[iWeek,k] for iArea in areas_in_zone[z] for iLoad in 1:AMData[iArea].NLoad; init=0.0)) #fikse 0.03
-            + (sqrt(10*zone_reqs[z].MaxLoad*1000+150^2)-150)/1000)
+            @constraint(M, reserve_req_down[z=1:NZ, k=1:NK],
+            cap_zone_down[z,k] + slackDown[z,k] >= cap_down_amount[z,k])
+
+            
+            #Sammenhengen mellom zonesum av kapasiteter og sum av individuelle kapasiteter
+            @constraint(M, reserve_split_down[z=1:NZ, k=1:NK], cap_zone_down[z,k] ==
+               sum(sum(cap_hydro_down_mod[iSys, iMod, k] for iMod in 1:AHData[iSys].NMod) for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0)
+               + sum(cap_wind_down[a,k] for a in areas_in_zone[z]; init=0.0) 
+            )
+
+            @constraint(M, reserve_split_up[z=1:NZ, k=1:NK], cap_zone_up[z,k] ==
+               sum(sum(cap_hydro_up_mod[iSys, iMod, k] for iMod in 1:AHData[iSys].NMod) for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0))
+            
+         else
+            @variable(M, 0 <= cap_zone_up[k=1:NK], base_name="cap_zone_up")
+            @variable(M, 0 <= cap_zone_down[k=1:NK], base_name="cap_zone_down")
+
+            #Opp- og nedreguleringskrav
+            @expression(M, cap_up_amount[k=1:NK], 
+               system_reqs.RI_up * CTI_DT
+               + system_reqs.NI_up * sum(wp_avail[a,k] for a in areas_in_zone[z] for z in 1:NZ; init=0.0) #fikse offshore wind
+               + (sqrt(a*system_reqs.MaxLoad/CNS.MW2GW+b^2)-b)*CNS.MW2GW) 
+            
+            @expression(M, cap_down_amount[z = 1:NZ, k=1:NK], 
+               system_reqs.RI_down * CTI_DT
+               + system_reqs.NI_down * sum(wp_avail[a,k] for a in areas_in_zone[z] for z in 1:NZ; init=0.0) #fikse offshore wind
+               + (sqrt(a*system_reqs.MaxLoad/CNS.MW2GW+b^2)-b)*CNS.MW2GW) 
          
-         @expression(M, cap_down_amount[z = 1:NZ, k=1:NK], 
-            zone_reqs[z].RI_down * 3 #Fikse at 3 er DT
-            + zone_reqs[z].NI_down * sum(wp_avail[a,k] for a in areas_in_zone[z]; init=0.0) #fikse offshore wind
-            #+ 0.03 * sum(AMData[iArea].MLData[iLoad].Load[iWeek,k] for iArea in areas_in_zone[z] for iLoad in 1:AMData[iArea].NLoad; init=0.0)) #fikse 0.03
-            + (sqrt(10*zone_reqs[z].MaxLoad*1000+150^2)-150)/1000) #endre konstanter
+            @constraint(M, reserve_req_up[z=1:NZ, k=1:NK],
+            cap_zone_up[k] >= cap_up_amount[k])
+
+            @constraint(M, reserve_req_down[z=1:NZ, k=1:NK],
+            cap_zone_down[k] >= cap_down_amount[k])
+
+            #Sammenhengen mellom zonesum av kapasiteter og sum av individuelle kapasiteter
+            @constraint(M, reserve_split_down[k=1:NK], cap_zone_down[k] ==
+               sum(sum(cap_hydro_down_mod[iSys, iMod, k] for iMod in 1:AHData[iSys].NMod) for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]) for z in 1:NZ)
+               + sum(cap_wind_down[a,k] for a in areas_in_zone[z]; init=0.0) 
+            )
+
+            @constraint(M, reserve_split_up[k=1:NK], cap_zone_up[k] ==
+               sum(sum(cap_hydro_up_mod[iSys, iMod, k] for iMod in 1:AHData[iSys].NMod) for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]) for z in 1:NZ))
          
-         println("Max last per sone")
-         println(zone_reqs[1].MaxLoad)
-         println(zone_reqs[2].MaxLoad)
-         println(zone_reqs[3].MaxLoad)
-         println(zone_reqs[4].MaxLoad)
-
-         #Opp- og nedreguleringskrav
-         @constraint(M, reserve_req_up[z=1:NZ, k=1:NK],
-         cap_zone_up[z,k] + slackUp[z,k] >= cap_up_amount[z,k])
-
-         @constraint(M, reserve_req_down[z=1:NZ, k=1:NK],
-         cap_zone_down[z,k] + slackDown[z,k] >= cap_down_amount[z,k])
-
-         
-         #Sammenhengen mellom zonesum av kapasiteter og sum av individuelle kapasiteter
-         @constraint(M, reserve_split_down[z=1:NZ, k=1:NK], cap_zone_down[z,k] ==
-            sum(sum(cap_hydro_down_mod[iSys, iMod, k] for iMod in 1:AHData[iSys].NMod) for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0)
-            + sum(cap_wind_down[a,k] for a in areas_in_zone[z]; init=0.0) 
-         )
-
-         @constraint(M, reserve_split_up[z=1:NZ, k=1:NK], cap_zone_up[z,k] ==
-            sum(sum(cap_hydro_up_mod[iSys, iMod, k] for iMod in 1:AHData[iSys].NMod) for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0))
+         end
 
 
          #koble hver teknologis cap-variabel til dens egne fysiske grenser
          @constraint(M, hydro_up_mod[iArea=1:NHSys, iMod=1:AHData[iArea].NMod, k=1:NK], cap_hydro_up_mod[iArea,iMod,k] <= WeekFrac * MW2GWHWEEK * sum(AHData[iArea].PQData[iMod].Eff[iSeg] * (AHData[iArea].PQData[iMod].DMax[iSeg] - disSeg[iArea,iMod,iSeg,k]) for iSeg=1:AHData[iArea].PQData[iMod].NSeg))
          @constraint(M, hydro_down_mod[iArea=1:NHSys, iMod=1:AHData[iArea].NMod, k=1:NK], cap_hydro_down_mod[iArea,iMod,k] <= ghy[iArea,iMod,k])
          @constraint(M, hydro_res_up_mod[iArea=1:NHSys, iMod=1:AHData[iArea].NMod, k=1:NK], cap_hydro_up_mod[iArea,iMod,k] <= AHData[iArea].EffSea[iMod] * MAGEFF2GWH * res[iArea,iMod,k]) #skalere neD?
-         @constraint(M, hydro_down_mod_res[iArea=1:NHSys, iMod=1:AHData[iArea].NMod, k=1:NK], cap_hydro_down_mod[iArea,iMod,k] <= AHData[iArea].EffSea[iMod] * MAGEFF2GWH * (AHData[iArea].MData[iMod].MaxRes - res[iArea,iMod,k])) #ta bort
-         @constraint(M, wind_dn[iArea=1:NArea,k=1:NK], wprod[iArea,k] >= cap_wind_down[iArea,k]) #OK
+         @constraint(M, wind_dn[iArea=1:NArea,k=1:NK], wprod[iArea,k] >= cap_wind_down[iArea,k]) 
 
          
          #Går ann å sette cap til null og ta bort dens constraints som allerede ligger i modellen

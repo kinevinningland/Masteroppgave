@@ -168,12 +168,10 @@ end
 function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,AreaName,LOperatingReserves,MCon)
     #Return dummy object if OR is not included
     if !LOperatingReserves
-        return OperatingReserves(0,0,String[],ReserveZoneReq[],Int[],Vector{Vector{Int}}(),Int[],Int[],false,false,Dict{Int, Set{Int}}(),Dict{Int, Set{Int}}(),false,Set{Tuple{Int, Int}}())
+        return OperatingReserves(0,String[],ReserveZoneReq[],ReserveSystemReq[],Int[],Vector{Vector{Int}}(),Int[],false,false,0,0)
     end
-
-    LH2Reserves = false
     LMarkReserves = false
-    LSharing = true
+    LZoneReq = true
 
     price_zones = ["NO1", "NO2", "NO3", "NO4"]
     NZ = length(price_zones)
@@ -208,16 +206,13 @@ function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,A
             push!(areas_in_zone[z], a)
         end
     end
+
     hydrosys_to_area = fill(0, NHSys)
     for a in 1:NArea
         for j in 1:NAreaSys[a]
             hydrosys_to_area[AreaSys[a,j]] = a
         end
     end
-    
-    h2_to_area = Int[] #tas bort
-    pos_by_area = Dict{Int, Set{Int}}() #tas bort
-    neg_by_area = Dict{Int, Set{Int}}() #tas bort
 
     max_load_per_zone = zeros(Float64,NZ)
     for z in 1:NZ
@@ -235,27 +230,13 @@ function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,A
         ReserveZoneReq("NO4", 0.35, 0.175, 0.31, 0.33, 0.48, 0.4,max_load_per_zone[4]),
         #ReserveZoneReq("NO5", 1.4, 1.4, 0.37, 0.37),
     ]
-
-
-    neighboring_zones = Set{Tuple{Int, Int}}()#
-    for iArea in 1:NArea 
-        z1 = area_to_zone[iArea]
-        for iLine in 1:MCon[iArea].NCon
-            lineIdx = MCon[iArea].LIndxOut[iLine]
-            for a in 1:NArea
-                if lineIdx in MCon[a].LIndxIn
-                z2 = area_to_zone[a]
-                if z1 != z2
-                push!(neighboring_zones, (min(z1,z2), max(z1,z2)))
-                end
-                end
-            end
-        end
-    end 
+    system_reqs = [ReserveSystemReq(1.4,1.4,0.17,0.17,0.48,0.4,max_load_per_zone[1]+max_load_per_zone[2]+max_load_per_zone[3]+max_load_per_zone[4])]
+    a = 10
+    b = 150
 
     println("Read ORData.csv")
 
-    return OperatingReserves(NZ,NZ-1,price_zones,zone_reqs,area_to_zone,areas_in_zone,hydrosys_to_area,h2_to_area,LH2Reserves,LMarkReserves,pos_by_area,neg_by_area,LSharing,neighboring_zones)
+    return OperatingReserves(NZ,price_zones,zone_reqs,system_reqs,area_to_zone,areas_in_zone,hydrosys_to_area,LMarkReserves,LZoneReq,a,b)
 end
 
 function ReadCuts(NHSys,NStage,IM,dataset)
