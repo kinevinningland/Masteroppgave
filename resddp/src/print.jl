@@ -2,7 +2,7 @@ using HDF5
 
 function print_results_h5(dataset::String,RT::Result,model::Model,parameters::Parameters)
 
-   file = h5open(string(dataset,"AggrSimResults_fixed_Mark.h5"),"w")
+   file = h5open(string(dataset,"AggrSimResults_wRes.h5"),"w")
    
    attrs(file)["NArea"]  = model.NArea
    attrs(file)["NHSys"]  = model.NHSys
@@ -168,20 +168,6 @@ function print_results_h5(dataset::String,RT::Result,model::Model,parameters::Pa
                      end
                   end
                end
-            end
-            if model.H2Data.Ind[a] > 0
-               # dette H2-systemet tilhører område a
-               write(aGroup, "H2CapUpDis", RT.H2CapUpDisTable[a,:,:,:])
-               write(aGroup, "H2CapDownDis", RT.H2CapDownDisTable[a,:,:,:])
-               write(aGroup, "H2CapUpChg", RT.H2CapUpChgTable[a,:,:,:])
-               write(aGroup, "H2CapDownChg", RT.H2CapDownChgTable[a,:,:,:])
-
-               for dset in ["H2CapUpDis", "H2CapDownDis", "H2CapUpChg", "H2CapDownChg"]
-                  attrs(aGroup[dset])["Dim 1"] = "NScen"
-                  attrs(aGroup[dset])["Dim 2"] = "NStage"
-                  attrs(aGroup[dset])["Dim 3"] = "NK"
-               end
-               
             end
 
             if model.ORData.LMarkReserves
@@ -415,22 +401,6 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
             end
          end
       end 
-      if hasproperty(DRT, :SharingUpTable)
-         sharingGroup = create_group(pzGroup, "Sharing")
-         for z1 in 1:NZ
-            for z2 in 1:NZ
-               if z1 != z2
-                  dname = string(price_zones[z1], "_to_", price_zones[z2])
-                  write(sharingGroup, dname, DRT.SharingUpTable[z1,z2,:,:,:])
-                  attrs(sharingGroup[dname])["From"]  = price_zones[z1]
-                  attrs(sharingGroup[dname])["To"]    = price_zones[z2]
-                  attrs(sharingGroup[dname])["Dim 1"] = "NScen"
-                  attrs(sharingGroup[dname])["Dim 2"] = "NStage"
-                  attrs(sharingGroup[dname])["Dim 3"] = "NK"
-               end
-            end
-         end
-      end
    end
 
 

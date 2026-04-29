@@ -165,6 +165,7 @@ function ReadDemandResponse(dataset,NArea,NWeek,AreaName,LDemandResponse)
     return DemandResponse(NLoadRecStep, LoadRec, MaxUpShift, MaxDnShift, LIncludeExtraConstr, ExtraConstrFilter, ExtraConstrSigma)
 end
 
+#=
 function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,AreaName,LOperatingReserves,MCon)
     #Return dummy object if OR is not included
     if !LOperatingReserves
@@ -275,6 +276,102 @@ function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,A
         ]
     end
     
+    a = 10
+    b = 150
+
+    println("Read ORData.csv")
+
+    return OperatingReserves(NZ,price_zones,zone_reqs,areas_in_zone,hydrosys_to_area,LMarkReserves,a,b)
+end
+=#
+
+function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,AreaName,LOperatingReserves,MCon)
+    #Return dummy object if OR is not included
+    if !LOperatingReserves
+        return OperatingReserves(0,String[],ReserveZoneReq[],Vector{Vector{Int}}(),Int[],false,0,0)
+    end
+    LMarkReserves = false
+    LZoneReq = true
+
+    zone_reqs = Dict{String, Vector{Float64}}()
+    price_zones = String[]
+
+    # Read zone requirements
+    filename = LZoneReq ? "ORData_zone_reqs.csv" : "ORData_zone_reqs_system.csv"
+    f = open(joinpath(dataset, filename), "r")
+    readline(f)
+    for line in eachline(f)
+        items = split(line, ",")
+        zone = strip(items[1])
+        push!(price_zones, zone)
+        zone_reqs[zone] = parse.(Float64, items[2:end])
+    end
+    close(f)
+    NZ = length(price_zones)
+
+    # Read area-to-zone mapping
+    area_to_zone = fill(0, NArea)
+    filename = LZoneReq ? "ORData_area_zones.csv" : "ORData_area_system.csv"
+    f = open(joinpath(dataset, filename), "r")
+    readline(f)
+    for line in eachline(f)
+        items = split(line, ",")
+        iArea = parse(Int, items[1])
+        zone = strip(items[2])
+        z = findfirst(==(zone), price_zones)
+        if !isnothing(z)
+            area_to_zone[iArea] = z
+        end
+    end
+    
+    
+    areas_in_zone = [Int[] for _ in 1:NZ]
+    for a in 1:NArea
+        z = area_to_zone[a]
+        if z > 0
+            push!(areas_in_zone[z], a)
+        end
+    end
+
+    hydrosys_to_area = fill(0, NHSys)
+    for a in 1:NArea
+        for j in 1:NAreaSys[a]
+            hydrosys_to_area[AreaSys[a,j]] = a
+        end
+    end
+
+    max_load_per_zone = zeros(Float64,NZ)
+    for z in 1:NZ
+        for a in areas_in_zone[z]
+            for iLoad in 1:AMData[a].NLoad
+                max_load_per_zone[z] += maximum(AMData[a].MLData[iLoad].Load)
+            end
+        end
+    end
+    
+    owp_areas_in_zone = [Int[] for _ in 1:NZ]
+    for z in 1:NZ
+        for iArea in areas_in_zone[z]
+            if endswith(AreaName[iArea], "-OWP")
+                push!(owp_areas_in_zone[z], iArea)
+            end
+        end
+    end
+    
+    zone_reqs = [
+        ReserveZoneReq(
+            price_zones[z],
+            zone_reqs_raw[price_zones[z]][1], # RI_up
+            zone_reqs_raw[price_zones[z]][2], # RI_down
+            zone_reqs_raw[price_zones[z]][3], # NI_up
+            zone_reqs_raw[price_zones[z]][4], # NI_down
+            zone_reqs_raw[price_zones[z]][5], # NI_up_OWP
+            zone_reqs_raw[price_zones[z]][6], # NI_down_OWP
+            max_load_per_zone[z],
+            owp_areas_in_zone[z]
+        ) for z in 1:NZ
+    ]
+
     a = 10
     b = 150
 

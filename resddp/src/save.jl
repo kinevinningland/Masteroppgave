@@ -91,16 +91,6 @@ function save!(RT::Result, SP_FORW,AMData,H2Data,InflowSys,NArea,NHSys,NK,NLine,
                 end
 
             end
-            if H2Data.Ind[iArea] > 0
-                for k = 1:NK
-                    if JuMP.haskey(SP_FORW, :cap_h2dis_up) && JuMP.haskey(SP_FORW, :cap_h2dis_down) && JuMP.haskey(SP_FORW, :cap_h2chg_up) && JuMP.haskey(SP_FORW, :cap_h2chg_down)
-                        RT.H2CapUpDisTable[iArea,s,t,k] = JuMP.value(SP_FORW[:cap_h2dis_up][H2Data.Ind[iArea],k])
-                        RT.H2CapDownDisTable[iArea,s,t,k] = JuMP.value(SP_FORW[:cap_h2dis_down][H2Data.Ind[iArea],k])
-                        RT.H2CapUpChgTable[iArea,s,t,k] = JuMP.value(SP_FORW[:cap_h2chg_up][H2Data.Ind[iArea],k])
-                        RT.H2CapDownChgTable[iArea,s,t,k] = JuMP.value(SP_FORW[:cap_h2chg_down][H2Data.Ind[iArea],k])
-                    end
-                end
-            end
         end     
         
     end
@@ -193,12 +183,6 @@ function save_detailed!(DRT::DetailedResult, SP_FORW,AMData,AHData,NArea,NHSys,N
             czdn = SP_FORW[:slackDown]   # ConstraintRef-array
             for z in axes(czdn,1), k in axes(czdn,2)
                 DRT.SlackDownTable[z,s,t,k] = JuMP.value(czdn[z,k])
-            end
-        end
-        if JuMP.haskey(SP_FORW, :sharing_up)
-            su = SP_FORW[:sharing_up]
-            for z1 in axes(su, 1), z2 in axes(su, 2), k in axes(su, 3)
-                DRT.SharingUpTable[z1, z2, s, t, k] = JuMP.value(su[z1, z2, k])
             end
         end
 

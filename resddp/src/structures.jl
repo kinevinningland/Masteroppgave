@@ -406,10 +406,6 @@ struct Result
     CapDualDownTable::Array{Float64}
     ObjTable::Array{Float64}
     WaterValueTable::Array{Float64}
-    H2CapUpDisTable::Array{Float64}
-    H2CapDownDisTable::Array{Float64}
-    H2CapUpChgTable::Array{Float64}
-    H2CapDownChgTable::Array{Float64}
     MarkCapUpTablePos::Array{Float64}
     MarkCapDownTablePos::Array{Float64}
     MarkCapUpTableNeg::Array{Float64}
@@ -447,5 +443,4 @@ struct DetailedResult
     MarkCapDownTableNeg::Array{Float64}
     SlackUpTable::Array{Float64}
     SlackDownTable::Array{Float64}
-    SharingUpTable::Array{Float64}
 end

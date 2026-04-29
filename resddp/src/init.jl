@@ -120,14 +120,8 @@ function init_result(NArea,NHSys,NMaxMStep,NScen,NStage,NK,NLine,NZ)::Result #NZ
     WindCapDownTable = zeros(Float64, NArea, NScen, NStage, NK)
     CapDualUpTable = zeros(Float64, NZ, NScen, NStage, NK) 
     CapDualDownTable = zeros(Float64, NZ, NScen, NStage, NK) 
-    #CapDualUpTable = zeros(Float64, NScen, NStage, NK) 
-    #CapDualDownTable = zeros(Float64, NScen, NStage, NK) 
     ObjTable = zeros(Float64, NScen, NStage)  
     WaterValueTable = zeros(Float64, NHSys, NScen, NStage)
-    H2CapUpDisTable   = zeros(Float64, NArea, NScen, NStage, NK)
-    H2CapDownDisTable = zeros(Float64, NArea, NScen, NStage, NK)
-    H2CapUpChgTable   = zeros(Float64, NArea, NScen, NStage, NK)
-    H2CapDownChgTable = zeros(Float64, NArea, NScen, NStage, NK)
     MarkCapUpTablePos   = zeros(Float64, NArea, NScen, NStage, NK)
     MarkCapDownTablePos = zeros(Float64, NArea, NScen, NStage, NK)
     MarkCapUpTableNeg   = zeros(Float64, NArea, NScen, NStage, NK)
@@ -135,7 +129,7 @@ function init_result(NArea,NHSys,NMaxMStep,NScen,NStage,NK,NLine,NZ)::Result #NZ
     
     return Result(ReservoirTable,HProdTable,HRampTable,HCapTable,MarkTable,FlowTable,SpillTable,InflowTable,LoadTable,WindTable,PriceTable,
                   RationingTable,DemandUpTable,DemandDnTable,H2StoreTable,H2DisTable,
-                  CapZoneUpTable, CapZoneDownTable, HydroCapUpTable, HydroCapDownTable, WindCapDownTable, CapDualUpTable, CapDualDownTable, ObjTable, WaterValueTable,H2CapUpDisTable,H2CapDownDisTable,H2CapUpChgTable,H2CapDownChgTable,MarkCapUpTablePos,MarkCapDownTablePos,MarkCapUpTableNeg,MarkCapDownTableNeg) #Last line ADDED
+                  CapZoneUpTable, CapZoneDownTable, HydroCapUpTable, HydroCapDownTable, WindCapDownTable, CapDualUpTable, CapDualDownTable, ObjTable, WaterValueTable,MarkCapUpTablePos,MarkCapDownTablePos,MarkCapUpTableNeg,MarkCapDownTableNeg) #Last line ADDED
  end
 
  function init_detailed_result(NArea,NHSys,NMaxMStep,NScen,NStage,NK,NLine,NMaxMod,NZ)::DetailedResult
@@ -162,8 +156,6 @@ function init_result(NArea,NHSys,NMaxMStep,NScen,NStage,NK,NLine,NZ)::Result #NZ
     WindCapDownTable = zeros(Float64, NArea, NScen, NStage, NK)
     CapDualUpTable = zeros(Float64, NZ, NScen, NStage, NK) 
     CapDualDownTable = zeros(Float64, NZ, NScen, NStage, NK) 
-    #CapDualUpTable = zeros(Float64, NScen, NStage, NK) 
-    #CapDualDownTable = zeros(Float64, NScen, NStage, NK) 
     ObjTable = zeros(Float64, NScen, NStage)  
     WaterValueTable = zeros(Float64, NHSys, NScen, NStage)
     MarkCapUpTablePos   = zeros(Float64, NArea, NScen, NStage, NK)
@@ -172,10 +164,9 @@ function init_result(NArea,NHSys,NMaxMStep,NScen,NStage,NK,NLine,NZ)::Result #NZ
     MarkCapDownTableNeg = zeros(Float64, NArea, NScen, NStage, NK)
     SlackUpTable = zeros(Float64,NZ,NScen,NStage,NK)
     SlackDownTable = zeros(Float64,NZ,NScen,NStage,NK)
-    SharingUpTable = zeros(Float64,NZ,NZ,NScen,NStage,NK)
 
     return DetailedResult(ReservoirTable,HProdTable,MarkTable,FlowTable,DischargeTable,SpillTable,BypassTable,LoadTable,WindTable,PriceTable,
                           RationingTable,DemandUpTable,DemandDnTable,H2StoreTable,H2DisTable,
-                          CapZoneUpTable, CapZoneDownTable, HydroCapUpTable, HydroCapDownTable, WindCapDownTable, CapDualUpTable, CapDualDownTable, ObjTable, WaterValueTable,MarkCapUpTablePos,MarkCapDownTablePos,MarkCapUpTableNeg,MarkCapDownTableNeg,SlackUpTable,SlackDownTable,SharingUpTable) #Last line ADDED
+                          CapZoneUpTable, CapZoneDownTable, HydroCapUpTable, HydroCapDownTable, WindCapDownTable, CapDualUpTable, CapDualDownTable, ObjTable, WaterValueTable,MarkCapUpTablePos,MarkCapDownTablePos,MarkCapUpTableNeg,MarkCapDownTableNeg,SlackUpTable,SlackDownTable) #Last line ADDED
  end
 
