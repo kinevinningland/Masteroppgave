@@ -147,7 +147,7 @@ module StageProbFull
          hydrosys_to_area = ORData.hydrosys_to_area
          a = ORData.a
          b = ORData.b
-
+         println("Det er reserver i stageprob")
 
          #Opp- og nedreguleringsreserver
          @variable(M, 0 <= cap_zone_up[z=1:NZ, k=1:NK], base_name="cap_zone_up")
