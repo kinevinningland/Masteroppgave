@@ -101,7 +101,7 @@ struct OperatingReserves #ADDED
     NZ::Int                 # Total number of price zones, incl "others"
     price_zones::Vector{String}          #price zone names
     zone_reqs::Vector{ReserveZoneReq}
-    areas_to_zone::Vector{Int}
+    area_to_zone::Vector{Int}
     areas_in_zone::Vector{Vector{Int}}   # Zone index -> list of model area indices
     hydrosys_to_area::Vector{Int}        # Hydro system index -> model area index
     LMarkReserves::Bool 
