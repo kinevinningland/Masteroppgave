@@ -349,6 +349,20 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,A
         end
     end
     
+    total_load_per_zone = zeros(Float64,NZ)
+    for z in 1:NZ
+        for a in areas_in_zone[z]
+            for iLoad in 1:AMData[a].NLoad
+                total_load_per_zone[z] += sum(AMData[a].MLData[iLoad].Load)
+            end
+        end
+    end
+    println("total last per sone")
+    println(total_load_per_zone[1])
+    println(total_load_per_zone[2])
+    println(total_load_per_zone[3])
+    println(total_load_per_zone[4])
+
     owp_areas_in_zone = [Int[] for _ in 1:NZ]
     for z in 1:NZ
         for iArea in areas_in_zone[z]
