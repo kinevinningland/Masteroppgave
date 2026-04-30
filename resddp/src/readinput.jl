@@ -291,7 +291,7 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,A
         return OperatingReserves(0,String[],ReserveZoneReq[],Vector{Int}(),Vector{Vector{Int}}(),Int[],false,0,0)
     end
     LMarkReserves = false
-    LZoneReq = true
+    LZoneReq = false
 
     zone_reqs = Dict{String, Vector{Float64}}()
     price_zones = String[]
@@ -357,11 +357,6 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,A
             end
         end
     end
-    println("total last per sone")
-    println(total_load_per_zone[1])
-    println(total_load_per_zone[2])
-    println(total_load_per_zone[3])
-    println(total_load_per_zone[4])
 
     owp_areas_in_zone = [Int[] for _ in 1:NZ]
     for z in 1:NZ
