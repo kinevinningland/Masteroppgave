@@ -46,8 +46,8 @@ module StageProbDet
       @variable(M,0.0 <= rat[iArea=1:NArea,k=1:NK] <= CNS.Big,base_name="rat")                                                      # GWh
       @variable(M,-CNS.AlphaMax <= alpha <= CNS.AlphaMax,base_name="alp")                                                           # 10E3 EUR
 
-      @variable(M, 0 <= slackDown[z=1:ORData.NZ, k=1:NK], base_name="slackDown")
-      @variable(M, 0 <= slackUp[z=1:ORData.NZ, k=1:NK],   base_name="slackUp")
+      @variable(M, 0 <= slackDown[z=1:ORData.NZ, k=1:NK], base_name="slackDown")#added
+      @variable(M, 0 <= slackUp[z=1:ORData.NZ, k=1:NK],   base_name="slackUp")#added
 
       #Min Cost [10E3 EUR]
       @objective(M,MathOptInterface.MIN_SENSE,
@@ -184,9 +184,6 @@ module StageProbDet
          @constraint(M, hydro_res_up_mod[iArea=1:NHSys, iMod=1:AHData[iArea].NMod, k=1:NK], cap_hydro_up_mod[iArea,iMod,k] <= AHData[iArea].EffSea[iMod] * MAGEFF2GWH * res[iArea,iMod,k]) #skalere neD?
          @constraint(M, wind_dn[iArea=1:NArea,k=1:NK], wprod[iArea,k] >= cap_wind_down[iArea,k]) 
 
-         
-         #Går ann å sette cap til null og ta bort dens constraints som allerede ligger i modellen
-         #Ta else (hvis ikke OR: sette på dens constraints)
       end   
             
 
