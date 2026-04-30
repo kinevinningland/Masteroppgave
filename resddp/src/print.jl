@@ -117,7 +117,7 @@ function print_results_h5(dataset::String,RT::Result,model::Model,parameters::Pa
    end
 
    if parameters.Control.LOperatingReserves #ADDED, mangler mark
-
+      println("vi er inne i reserveblokk printing")
       NZ = model.ORData.NZ
       price_zones = model.ORData.price_zones
       area_to_zone = model.ORData.area_to_zone
