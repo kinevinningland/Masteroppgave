@@ -130,15 +130,13 @@ module StageProbDet
       end
       
       if LOperatingReserves #ADDED
-         NZ = ORData.NZ
-         zone_reqs = ORData.zone_reqs
-         areas_in_zone = ORData.areas_in_zone
-         hydrosys_to_area = ORData.hydrosys_to_area
-         a = ORData.a
-         b = ORData.b
+         NZ = ORData.NZ #antall prissoner
+         zone_reqs = ORData.zone_reqs #reservemengder
+         areas_in_zone = ORData.areas_in_zone #map over områdene i hver sone
+         hydrosys_to_area = ORData.hydrosys_to_area #map over 
+         a = ORData.a #empirisk konstant fra Entso-E
+         b = ORData.b #empirisk konstant fra Entso-E
          
-
-
          #Opp- og nedreguleringsreserver
          @variable(M, 0 <= cap_zone_up[z=1:NZ, k=1:NK], base_name="cap_zone_up")
          @variable(M, 0 <= cap_zone_down[z=1:NZ, k=1:NK], base_name="cap_zone_down")
@@ -148,27 +146,27 @@ module StageProbDet
 
          #Diverse
          @variable(M, wp_avail[a=1:NArea, k=1:NK] >= 0, base_name="wp_avail")
-         @constraint(M, wp_avail_fix[a=1:NArea, k=1:NK],wp_avail[a,k] == 0.0)
+         @constraint(M, wp_avail_fix[a=1:NArea, k=1:NK],wp_avail[a,k] == 0.0) #RHS endres i simulate
 
 
          #Opp- og nedreguleringskrav
          @expression(M, cap_up_amount[z = 1:NZ, k=1:NK], 
-            zone_reqs[z].RI_up * CTI.DT
-            + zone_reqs[z].NI_up * sum(wp_avail[a,k] for a in areas_in_zone[z] if !(a in zone_reqs[z].owp_areas_in_zone); init=0.0)
-            + zone_reqs[z].NI_up_OWP * sum(wp_avail[a,k] for a in zone_reqs[z].owp_areas_in_zone; init=0.0)
-            + (sqrt(a*zone_reqs[z].MaxLoad/(CNS.MW2GW*CTI.DT)+b^2)-b)*CNS.MW2GW*CTI.DT)
+            zone_reqs[z].RI_up * CTI.DT                                                                                                   #RI ledd
+            + zone_reqs[z].NI_up * sum(wp_avail[a,k] for a in areas_in_zone[z] if !(a in zone_reqs[z].owp_areas_in_zone); init=0.0)       #NI onshore ledd
+            + zone_reqs[z].NI_up_OWP * sum(wp_avail[a,k] for a in zone_reqs[z].owp_areas_in_zone; init=0.0)                               #NI offshore ledd
+            + (sqrt(a*zone_reqs[z].MaxLoad/(CNS.MW2GW*CTI.DT)+b^2)-b)*CNS.MW2GW*CTI.DT)                                                   #Last ledd
          
          @expression(M, cap_down_amount[z = 1:NZ, k=1:NK], 
-            zone_reqs[z].RI_down * CTI.DT
-            + zone_reqs[z].NI_down * sum(wp_avail[a,k] for a in areas_in_zone[z] if !(a in zone_reqs[z].owp_areas_in_zone); init=0.0)
-            + zone_reqs[z].NI_down_OWP * sum(wp_avail[a,k] for a in zone_reqs[z].owp_areas_in_zone; init=0.0)
-            + (sqrt(a*zone_reqs[z].MaxLoad/(CNS.MW2GW*CTI.DT)+b^2)-b)*CNS.MW2GW*CTI.DT)
+            zone_reqs[z].RI_down * CTI.DT                                                                                                 #RI ledd
+            + zone_reqs[z].NI_down * sum(wp_avail[a,k] for a in areas_in_zone[z] if !(a in zone_reqs[z].owp_areas_in_zone); init=0.0)     #NI onshore ledd
+            + zone_reqs[z].NI_down_OWP * sum(wp_avail[a,k] for a in zone_reqs[z].owp_areas_in_zone; init=0.0)                             #NI offshore ledd
+            + (sqrt(a*zone_reqs[z].MaxLoad/(CNS.MW2GW*CTI.DT)+b^2)-b)*CNS.MW2GW*CTI.DT)                                                   #Last ledd
       
          @constraint(M, reserve_req_up[z=1:NZ, k=1:NK], cap_zone_up[z,k] + slackUp[z,k] >= cap_up_amount[z,k])
          @constraint(M, reserve_req_down[z=1:NZ, k=1:NK], cap_zone_down[z,k] + slackDown[z,k] >= cap_down_amount[z,k])
 
 
-         #Sammenhengen mellom zonesum av kapasiteter og sum av individuelle kapasiteter
+         #Sammenhengen mellom total sonesum og bidrag fra kraftverkene i sonen
          @constraint(M, reserve_split_down[z=1:NZ, k=1:NK], cap_zone_down[z,k] ==
             sum(sum(cap_hydro_down_mod[iSys, iMod, k] for iMod in 1:AHData[iSys].NMod) for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0)
             + sum(cap_wind_down[a,k] for a in areas_in_zone[z]; init=0.0) 

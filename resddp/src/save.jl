@@ -70,6 +70,7 @@ function save!(RT::Result, SP_FORW,AMData,H2Data,InflowSys,NArea,NHSys,NK,NLine,
             for k = 1:NK
                 RT.HydroCapDownTable[iSys,s,t,k] = JuMP.value(SP_FORW[:cap_hydro_down][iSys,k])
                 RT.HydroCapUpTable[iSys,s,t,k] = JuMP.value(SP_FORW[:cap_hydro_up][iSys,k])
+                println("Det er ingen reserver")
             end
         end
 
