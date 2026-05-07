@@ -407,7 +407,7 @@ function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,A
             end
         end
     end
-    #=
+    
     tidsserie_path = joinpath(dataset, "TidsserieData.h5")
 
     clean_str(x) = strip(replace(String(x), '\0' => ' ')) |>
@@ -490,7 +490,7 @@ function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,A
             end
         end
     end
-    =#
+    
 
 
     println("Read ORData.csv")
