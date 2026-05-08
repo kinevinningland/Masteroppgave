@@ -107,6 +107,8 @@ struct OperatingReserves #ADDED
     LMarkReserves::Bool 
     a::Int
     b::Int
+    pos_by_area::Dict{Int, Set{Int}}
+    neg_by_area::Dict{Int, Set{Int}}
 end
 
 struct Parameters

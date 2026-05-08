@@ -290,7 +290,7 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,A
     if !LOperatingReserves
         return OperatingReserves(0,String[],ReserveZoneReq[],Vector{Int}(),Vector{Vector{Int}}(),Int[],false,0,0)
     end
-    LMarkReserves = false
+    LMarkReserves = true
     LZoneReq = true
 
     zone_reqs = Dict{String, Vector{Float64}}()
@@ -384,9 +384,54 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,A
     a = 10
     b = 150
 
+    # Read reserve CSV
+    f = open(joinpath(dataset, "ORData_mark.csv"), "r")
+    readline(f)  # skip header
+    reserve_rules = Dict{String, Vector{Tuple{Int,Bool,Bool}}}()  # zone -> [(power_cat, pos, neg)]
+    for line in eachline(f)
+        items = split(line, ",")
+        power_cat = parse(Int, strip(items[1]))
+        zone      = strip(items[2])
+        pos       = strip(items[3]) == "true"
+        neg       = strip(items[4]) == "true"
+        push!(get!(reserve_rules, zone, []), (power_cat, pos, neg))
+    end
+    close(f)
+
+    # Read market data from HDF5
+    pos_by_area = Dict{Int, Set{Int}}()
+    neg_by_area = Dict{Int, Set{Int}}()
+
+    h5open(joinpath(dataset, "model.h5"), "r") do f
+        g = f["market_data/power_type"]
+        pt      = read(g["power_type"])
+        ids     = read(g["id"])
+        area_ids = read(g["area_id"])
+
+        for (zone, rules) in reserve_rules
+            zone_idx = findfirst(==(zone), price_zones)
+            zone_idx === nothing && continue
+            areas = Set(areas_in_zone[zone_idx])
+
+            for i in eachindex(pt)
+                area_ids[i] in areas || continue
+                for (power_cat, pos, neg) in rules
+                    if pt[i] == power_cat
+                        if pos
+                            push!(get!(pos_by_area, area_ids[i], Set{Int}()), ids[i])
+                        end
+                        if neg
+                            push!(get!(neg_by_area, area_ids[i], Set{Int}()), ids[i])
+                        end
+                    end
+                end
+            end
+        end
+    end
+
     println("Read ORData.csv")
 
-    return OperatingReserves(NZ,price_zones,zone_reqs,area_to_zone,areas_in_zone,hydrosys_to_area,LMarkReserves,a,b)
+    return OperatingReserves(NZ,price_zones,zone_reqs,area_to_zone,areas_in_zone,hydrosys_to_area,LMarkReserves,a,b,pos_by_area,neg_by_area)
 end
 
 function ReadCuts(NHSys,NStage,IM,dataset)
