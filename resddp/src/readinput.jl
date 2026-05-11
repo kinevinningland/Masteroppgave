@@ -165,126 +165,6 @@ function ReadDemandResponse(dataset,NArea,NWeek,AreaName,LDemandResponse)
     return DemandResponse(NLoadRecStep, LoadRec, MaxUpShift, MaxDnShift, LIncludeExtraConstr, ExtraConstrFilter, ExtraConstrSigma)
 end
 
-#=
-function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,AreaName,LOperatingReserves,MCon)
-    #Return dummy object if OR is not included
-    if !LOperatingReserves
-        return OperatingReserves(0,String[],ReserveZoneReq[],Vector{Vector{Int}}(),Int[],false,0,0)
-    end
-    LMarkReserves = false
-    LZoneReq = true
-
-    if LZoneReq
-        price_zones = ["NO1", "NO2", "NO3", "NO4"]
-        NZ = length(price_zones)
-
-        area_to_zone = fill(0,NArea) 
-        area_to_zone[33] = findfirst(==("NO3"), price_zones) #OK
-        area_to_zone[34] = findfirst(==("NO2"), price_zones) #OK Var NO5
-        area_to_zone[35] = findfirst(==("NO2"), price_zones) #OK
-        area_to_zone[36] = findfirst(==("NO2"), price_zones) #OK
-        area_to_zone[66] = findfirst(==("NO3"), price_zones) # H2-M?
-        area_to_zone[67] = findfirst(==("NO2"), price_zones) #H2-S?
-        area_to_zone[68] = findfirst(==("NO4"), price_zones) #H2-N?
-        area_to_zone[73] = findfirst(==("NO4"), price_zones) #OK
-        area_to_zone[74] = findfirst(==("NO4"), price_zones) #OK
-        area_to_zone[75] = findfirst(==("NO4"), price_zones) #OK
-        area_to_zone[1] = findfirst(==("NO1"), price_zones) #OK
-        area_to_zone[2] = findfirst(==("NO1"), price_zones) #spørre om NO1 eller NO2, SørØst
-        area_to_zone[3] = findfirst(==("NO1"), price_zones) #spørre, NO1,NO3,NO5? Hallingdal
-        area_to_zone[4] = findfirst(==("NO2"), price_zones) #spørre NO1,NO2? Telemark
-        area_to_zone[5] = findfirst(==("NO2"), price_zones) #OK
-        area_to_zone[6] = findfirst(==("NO2"), price_zones) #OK
-        area_to_zone[8] = findfirst(==("NO3"), price_zones) #OK
-        area_to_zone[9] = findfirst(==("NO4"), price_zones) #OK
-        area_to_zone[10] = findfirst(==("NO4"), price_zones) #OK
-        area_to_zone[11] = findfirst(==("NO4"), price_zones) #OK
-        area_to_zone[7] = findfirst(==("NO2"), price_zones) #OK Var NO5
-    else
-        price_zones = ["NO"]
-        NZ = length(price_zones)
-
-        area_to_zone = fill(0,NArea) 
-        area_to_zone[33] = findfirst(==("NO"), price_zones) 
-        area_to_zone[34] = findfirst(==("NO"), price_zones) 
-        area_to_zone[35] = findfirst(==("NO"), price_zones) 
-        area_to_zone[36] = findfirst(==("NO"), price_zones) 
-        area_to_zone[66] = findfirst(==("NO"), price_zones) 
-        area_to_zone[67] = findfirst(==("NO"), price_zones) 
-        area_to_zone[68] = findfirst(==("NO"), price_zones) 
-        area_to_zone[73] = findfirst(==("NO"), price_zones) 
-        area_to_zone[74] = findfirst(==("NO"), price_zones) 
-        area_to_zone[75] = findfirst(==("NO"), price_zones) 
-        area_to_zone[1] = findfirst(==("NO"), price_zones) 
-        area_to_zone[2] = findfirst(==("NO"), price_zones) 
-        area_to_zone[3] = findfirst(==("NO"), price_zones) 
-        area_to_zone[4] = findfirst(==("NO"), price_zones) 
-        area_to_zone[5] = findfirst(==("NO"), price_zones) 
-        area_to_zone[6] = findfirst(==("NO"), price_zones) 
-        area_to_zone[8] = findfirst(==("NO"), price_zones) 
-        area_to_zone[9] = findfirst(==("NO"), price_zones) 
-        area_to_zone[10] = findfirst(==("NO"), price_zones) 
-        area_to_zone[11] = findfirst(==("NO"), price_zones) 
-        area_to_zone[7] = findfirst(==("NO"), price_zones) 
-
-    end
-
-    areas_in_zone = [Int[] for _ in 1:NZ]
-    for a in 1:NArea
-        z = area_to_zone[a]
-        if z > 0
-            push!(areas_in_zone[z], a)
-        end
-    end
-
-    hydrosys_to_area = fill(0, NHSys)
-    for a in 1:NArea
-        for j in 1:NAreaSys[a]
-            hydrosys_to_area[AreaSys[a,j]] = a
-        end
-    end
-
-    max_load_per_zone = zeros(Float64,NZ)
-    for z in 1:NZ
-        for a in areas_in_zone[z]
-            for iLoad in 1:AMData[a].NLoad
-                max_load_per_zone[z] += maximum(AMData[a].MLData[iLoad].Load)
-            end
-        end
-    end
-    
-    owp_areas_in_zone = [Int[] for _ in 1:NZ]
-    for z in 1:NZ
-        for iArea in areas_in_zone[z]
-            if endswith(AreaName[iArea], "-OWP")
-                push!(owp_areas_in_zone[z], iArea)
-            end
-        end
-    end
-    
-    if LZoneReq
-        zone_reqs = [
-            ReserveZoneReq("NO1", 0.344, 0.172, 0.58, 0.56, 0.48, 0.4,max_load_per_zone[1],owp_areas_in_zone[1]),
-            ReserveZoneReq("NO2", 1.4, 1.4, 0.37, 0.37, 0.48, 0.4,max_load_per_zone[2],owp_areas_in_zone[2]),
-            ReserveZoneReq("NO3", 0.29, 0.145, 0.33, 0.38, 0.48, 0.4,max_load_per_zone[3],owp_areas_in_zone[3]),
-            ReserveZoneReq("NO4", 0.35, 0.175, 0.31, 0.33, 0.48, 0.4,max_load_per_zone[4],owp_areas_in_zone[4]),
-            #ReserveZoneReq("NO5", 1.4, 1.4, 0.37, 0.37),
-        ]
-    else
-        zone_reqs = [
-            ReserveZoneReq("NO",1.4,1.4,0.17,0.17,0.48,0.4,max_load_per_zone[1]+max_load_per_zone[2]+max_load_per_zone[3]+max_load_per_zone[4],owp_areas_in_zone[1]),
-        ]
-    end
-    
-    a = 10
-    b = 150
-
-    println("Read ORData.csv")
-
-    return OperatingReserves(NZ,price_zones,zone_reqs,areas_in_zone,hydrosys_to_area,LMarkReserves,a,b)
-end
-=#
-
 function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,AreaName,LOperatingReserves)
     #Return dummy object if OR is not included
     if !LOperatingReserves
@@ -400,9 +280,9 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,A
     close(f)
 
     # Read market data from HDF5
+    #=
     pos_by_area = Dict{Int, Set{Int}}()
     neg_by_area = Dict{Int, Set{Int}}()
-
     h5open(joinpath(dataset, "model.h5"), "r") do f
         data     = read(f["market_data/power_type"])
         pt       = [row.power_type for row in data]
@@ -429,6 +309,65 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,A
             end
         end
     end
+    =#
+
+    pos_by_area = Dict{Int, Set{Int}}()
+    neg_by_area = Dict{Int, Set{Int}}()
+    pos_names_by_area = Dict{Int, Set{String}}()
+    neg_names_by_area = Dict{Int, Set{String}}()
+    h5open(joinpath(dataset, "model.h5"), "r") do f
+        data     = read(f["market_data/power_type"])
+        pt       = [row.power_type for row in data]
+        ids      = [row.id for row in data]
+        area_ids = [row.area_id for row in data]
+
+        for (zone, rules) in reserve_rules
+            zone_idx = findfirst(==(zone), price_zones)
+            zone_idx === nothing && continue
+            areas = Set(areas_in_zone[zone_idx])
+            for i in eachindex(pt)
+                area_ids[i] in areas || continue
+                for (power_cat, pos, neg) in rules
+                    if pt[i] == power_cat
+                        if pos
+                            push!(get!(pos_by_area, area_ids[i], Set{Int}()), ids[i])
+                        end
+                        if neg
+                            push!(get!(neg_by_area, area_ids[i], Set{Int}()), ids[i])
+                        end
+                    end
+                end
+            end
+        end
+
+        for row in data
+            a = Int(row.area_id)
+            name = strip(row.name)
+            if haskey(pos_by_area, a) && row.id in pos_by_area[a]
+                push!(get!(pos_names_by_area, a, Set{String}()), name)
+            end
+            if haskey(neg_by_area, a) && row.id in neg_by_area[a]
+                push!(get!(neg_names_by_area, a, Set{String}()), name)
+            end
+        end
+    end
+
+    pos_by_area_local = Dict{Int, Set{Int}}()
+    neg_by_area_local = Dict{Int, Set{Int}}()
+    for a in 1:NArea
+        for iMark in 1:AMData[a].NMStep
+            name = strip(AMData[a].MSData[iMark].Name)
+            if haskey(pos_names_by_area, a) && name in pos_names_by_area[a]
+                push!(get!(pos_by_area_local, a, Set{Int}()), iMark)
+            end
+            if haskey(neg_names_by_area, a) && name in neg_names_by_area[a]
+                push!(get!(neg_by_area_local, a, Set{Int}()), iMark)
+            end
+        end
+    end
+    pos_by_area = pos_by_area_local
+    neg_by_area = neg_by_area_local
+
 
     println("Read ORData.csv")
 
