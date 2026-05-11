@@ -34,7 +34,7 @@ function SolveBWD(model::Model, inflow_model::InflowModel, feas_space::Feasibili
             parameters.Constants, strategy.NCut, model.NArea, model.NLine,
             model.LineCap,model.LineLoss, parameters.Time, t_bwd==NStage,
             parameters.Control.LFeasSpace, feas_space.NFeasCut, feas_space.FCC,
-            parameters.Control.CapReqFrac, MyWPData, parameters.Control.LDemandResponse, model.DRData, model.H2Data, optimizer)
+            parameters.Control.CapReqFrac, MyWPData, parameters.Control.LDemandResponse, model.DRData, model.H2Data,false,model.ORData,optimizer) #ADDED, parameters.Control.LOperatingReserves = false &ORData
     end
        
     cCnt = 1
