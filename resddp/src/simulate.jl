@@ -11,7 +11,7 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
     DetailedResultTable = init_detailed_result(model.NArea, model.NHSys, NMaxMStep, parameters.Control.NScenSim, parameters.Control.NStageSim, parameters.Time.NK, model.NLine, NMaxMod, model.ORData.NZ) #ADDED NZ
 
     ResInit0 = zeros(Float64,model.NHSys,NMaxMod)
-    H2Init = zeros(Float64,model.H2Data.NArea) #Added
+    H2Init0 = zeros(Float64,model.H2Data.NArea) #Added
 
     for iSys = 1:model.NHSys
        for iMod = 1:model.AHData[iSys].NMod
