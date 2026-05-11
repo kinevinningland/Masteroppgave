@@ -404,10 +404,10 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,A
     neg_by_area = Dict{Int, Set{Int}}()
 
     h5open(joinpath(dataset, "model.h5"), "r") do f
-        g = f["market_data/power_type"]
-        pt      = read(g["power_type"])
-        ids     = read(g["id"])
-        area_ids = read(g["area_id"])
+        data     = read(f["market_data/power_type"])
+        pt       = data["power_type"]
+        ids      = data["id"]
+        area_ids = data["area_id"]
 
         for (zone, rules) in reserve_rules
             zone_idx = findfirst(==(zone), price_zones)
