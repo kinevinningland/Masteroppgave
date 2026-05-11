@@ -107,6 +107,9 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
                         termstat = termination_status(SP_FORW)
                         error(println("Solver terminated with status $termstat in forward iteration (stage,scen): ",t," ",iScen))
                     end
+                    if t==1
+                        write_to_file(SP_FORW, "SPF_H2.lp")
+                    end
                     save_detailed!(DetailedResultTable, SP_FORW, model.AMData, model.H2Data,model.AHData, model.NArea, model.NHSys, parameters.Time.NK, model.NLine, iScen, t,parameters.Control.LOperatingReserves) #ADDED LOperatingReserves,H2Data   
 
                     for iSys = 1:model.NHSys
