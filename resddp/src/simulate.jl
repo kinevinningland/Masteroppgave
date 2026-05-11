@@ -18,7 +18,7 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
           ResInit0[iSys,iMod] = parameters.Control.ResInitFrac*parameters.Control.MaxResScale*model.AHData[iSys].MData[iMod].MaxRes
        end
     end
-    for iSys=1:H2Data.NArea #ADDED
+    for iSys=1:model.H2Data.NArea #ADDED
         H2Init0[iSys] = parameters.Control.ResInitFrac*parameters.Control.MaxResScale*model.H2Data.Areas[iSys].MaxRes
     end
 
