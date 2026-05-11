@@ -206,7 +206,7 @@ end
 
 function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Model,parameters::Parameters)
 
-   file = h5open(string(dataset,"DetSimResults_withRes_30scen_system.h5"),"w")
+   file = h5open(string(dataset,"DetSimResults_with_h2.h5"),"w")
    
    attrs(file)["NArea"]  = model.NArea
    attrs(file)["NHSys"]  = model.NHSys
@@ -282,6 +282,20 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
          attrs(marketGroup[dset])["Dim 2"] = "NStage"
          attrs(marketGroup[dset])["Dim 3"] = "NK"
       end
+   
+      #H2 results
+      if model.H2Data.Ind[iArea] > 0 #ADDED
+          H2Group = create_group(areaGroup, "H2")
+          write(H2Group, "Storage", RT.H2StoreTable[iArea,:,:,:])
+          write(H2Group, "Discharge", RT.H2DisTable[iArea,:,:,:])
+
+          for dset in keys(H2Group)
+              attrs(H2Group[dset])["Dim 1"] = "NScen"
+              attrs(H2Group[dset])["Dim 2"] = "NStage"
+              attrs(H2Group[dset])["Dim 3"] = "NK"
+          end
+      end
+
    end
 
    #Flow results

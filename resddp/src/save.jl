@@ -97,7 +97,7 @@ function save!(RT::Result, SP_FORW,AMData,H2Data,InflowSys,NArea,NHSys,NK,NLine,
     
 end
 
-function save_detailed!(DRT::DetailedResult, SP_FORW,AMData,AHData,NArea,NHSys,NK,NLine,s,t,LOperatingReserves)#ADDED LOperatingReserves
+function save_detailed!(DRT::DetailedResult, SP_FORW,AMData,H2Data,AHData,NArea,NHSys,NK,NLine,s,t,LOperatingReserves)#ADDED LOperatingReserves,H2Data
     DRT.ObjTable[s, t] = JuMP.objective_value(SP_FORW) - JuMP.value(SP_FORW[:alpha]) #ADDED
 
 
@@ -132,6 +132,12 @@ function save_detailed!(DRT::DetailedResult, SP_FORW,AMData,AHData,NArea,NHSys,N
             DRT.WindTable[iArea,s,t,k] = JuMP.value(SP_FORW[:wprod][iArea,k])
             DRT.DemandUpTable[iArea,s,t,k] = JuMP.haskey(SP_FORW, :dr_up) ?  JuMP.value(SP_FORW[:dr_up][iArea,k]) : 0
             DRT.DemandDnTable[iArea,s,t,k] = JuMP.haskey(SP_FORW, :dr_dn) ?  (JuMP.value(SP_FORW[:dr_up][iArea,k]) - JuMP.value(SP_FORW[:dr_tot][iArea,k])) : 0
+        end
+        if H2Data.Ind[iArea] > 0 #ADDED
+            for k = 1:NK
+                RT.H2StoreTable[iArea,s,t,k] = JuMP.value(SP_FORW[:h2res][H2Data.Ind[iArea],k])
+                RT.H2DisTable[iArea,s,t,k] = -(1.0-H2Data.Areas[H2Data.Ind[iArea]].CompLoss)*JuMP.value(SP_FORW[:h2chg][H2Data.Ind[iArea],k])+JuMP.value(SP_FORW[:h2dis][H2Data.Ind[iArea],k])
+            end
         end
     end
     for iLine = 1:NLine

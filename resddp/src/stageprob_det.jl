@@ -5,13 +5,14 @@ module StageProbDet
    using MathOptInterface
    const MOI = MathOptInterface
 
-   function Build(t,iWeek,USMod,AHData,AMData,HSys,MCon,EV,CCR,CCH,CNS,NCut,NHSys,NArea,NLine,LineCap,LineLoss,CTI,LEndVal,LDemandResponse,DR,LOperatingReserves,ORData,optimizer)
+   function Build(t,iWeek,USMod,AHData,AMData,HSys,MCon,EV,CCR,CCH,CNS,NCut,NHSys,NArea,NLine,LineCap,LineLoss,CTI,LEndVal,LDemandResponse,DR,H2Data,LOperatingReserves,ORData,optimizer) #H2Data Added
 
       M = Model(optimizer)
 
       NK = CTI.NK
       DT = CTI.DT
       WeekFrac = CTI.WeekFrac
+      NH2Area = H2Data.NArea #ADDED
 
       M3S2MM3 = CNS.M3S2MM3
       MAGEFF2GWH = CNS.MAGEFF2GWH
@@ -29,6 +30,11 @@ module StageProbDet
       @variable(M,0.0 <= ghy[iArea=1:NHSys,iMod=1:AHData[iArea].NMod,k=1:NK] <= InfUB, base_name="ghy")                             #GWh/step
       @variable(M,0.0 <= rstate[iArea=1:NHSys] <= InfUB, base_name="rstate")                                                        #GWh/step
       @variable(M,0.0 <= wprod[iArea=1:NArea,k=1:NK] <= CNS.Big,base_name="wprod")                                                  # GWh/step
+      @variable(M,0.0 <= h2dis[iArea=1:NH2Area,k=1:NK] <= H2Data.Areas[iArea].MaxDis, base_name="h2dis")       # GWh/step ADDED
+      @variable(M,0.0 <= h2chg[iArea=1:NH2Area,k=1:NK] <= H2Data.Areas[iArea].MaxDis, base_name="h2chg")       # GWh/step ADDED
+      @variable(M,0.0 <= h2res[iSys=1:NH2Area,k=1:NK] <= H2Data.Areas[iSys].MaxRes, base_name="h2res")         # GWh ADDED
+      @variable(M,h2init[iArea=1:NH2Area],base_name="h2init")                                                  # GWh ADDED
+
 
 
       #Demand response variables
@@ -90,6 +96,8 @@ module StageProbDet
                   +rat[iArea,k]+sum(mark[iArea,iMark,k] for iMark=1:AMData[iArea].NMStep)+wprod[iArea,k]
                   -sum(etran[MCon[iArea].LIndxOut[iLine],k] for iLine=1:MCon[iArea].NCon)
                   +sum((1.0-LineLoss[MCon[iArea].LIndxIn[iLine]])*etran[MCon[iArea].LIndxIn[iLine],k] for iLine=1:MCon[iArea].NCon)
+                  - (H2Data.Ind[iArea] > 0 ? h2chg[H2Data.Ind[iArea],k] : 0.0) #ADDED
+                  + (H2Data.Ind[iArea] > 0 ? h2dis[H2Data.Ind[iArea],k] : 0.0) #ADDED
                   - (LDemandResponse ? dr_tot[iArea,k] : 0) #Include dr_tot in power balance only if LDemandResponse is true
                   == (AMData[iArea].NLoad > 0 ? sum(AMData[iArea].MLData[iLoad].Load[iWeek,k] for iLoad=1:AMData[iArea].NLoad) : 0.0))
 
@@ -97,6 +105,8 @@ module StageProbDet
       @constraint(M,pbalTerm[iArea=(NHSys+1):NArea,k=1:NK],rat[iArea,k]+sum(mark[iArea,iMark,k] for iMark=1:AMData[iArea].NMStep)+wprod[iArea,k]
                   -sum(etran[MCon[iArea].LIndxOut[iLine],k] for iLine=1:MCon[iArea].NCon)
                   +sum((1.0-LineLoss[MCon[iArea].LIndxIn[iLine]])*etran[MCon[iArea].LIndxIn[iLine],k] for iLine=1:MCon[iArea].NCon)
+                  - (H2Data.Ind[iArea] > 0 ? h2chg[H2Data.Ind[iArea],k] : 0.0) #ADDED
+                  + (H2Data.Ind[iArea] > 0 ? h2dis[H2Data.Ind[iArea],k] : 0.0) #ADDED
                   - (LDemandResponse ? dr_tot[iArea,k] : 0) #Include dr_tot in power balance only if LDemandResponse is true
                   == (AMData[iArea].NLoad > 0 ? sum(AMData[iArea].MLData[iLoad].Load[iWeek,k] for iLoad=1:AMData[iArea].NLoad) : 0.0))
 
@@ -202,6 +212,13 @@ module StageProbDet
          @constraint(M, wind_dn[iArea=1:NArea,k=1:NK], wprod[iArea,k] >= cap_wind_down[iArea,k]) 
 
       end   
+
+      #H2 STORAGE INIT [GWh]
+      @constraint(M,h2storage0[iArea=1:NH2Area,k=[1]],h2res[iArea,k]-(1.0-H2Data.Areas[iArea].CompLoss)*h2chg[iArea,k]+h2dis[iArea,k]-h2init[iArea]== 0.0) # ADDED
+      #H2 STORAGE [GWh]
+      @constraint(M,h2storage[iArea=1:NH2Area,k=2:NK],h2res[iArea,k]-(1.0-H2Data.Areas[iArea].CompLoss)*h2chg[iArea,k]+h2dis[iArea,k]-h2res[iArea,k-1] == 0.0) # ADDED
+      #H2 storage state: s_{t-1}
+      @constraint(M,h2state[iArea=1:NH2Area],h2init[iArea] == 0.0) # ADDED
             
 
       #WIND POWER TARGET [GWh/step]

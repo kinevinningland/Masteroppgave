@@ -3,6 +3,7 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
     NMaxMod = maximum([model.AHData[iSys].NMod for iSys in 1:model.NHSys])
 
     SimulatedStateTraj = zeros(Float64,model.NHSys, NMaxMod, parameters.Control.NScenSim, parameters.Control.NStageSim)
+    SimulatedH2Traj = zeros(Float64,model.H2Data.NArea, parameters.Control.NScenSim, parameters.Control.NStageSim) #Added
     SimulatedCost = zeros(Float64, parameters.Control.NScenSim)
 
     NMaxMStep = maximum([model.AMData[iArea].NMStep for iArea in 1:model.NArea])
@@ -10,11 +11,15 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
     DetailedResultTable = init_detailed_result(model.NArea, model.NHSys, NMaxMStep, parameters.Control.NScenSim, parameters.Control.NStageSim, parameters.Time.NK, model.NLine, NMaxMod, model.ORData.NZ) #ADDED NZ
 
     ResInit0 = zeros(Float64,model.NHSys,NMaxMod)
+    H2Init = zeros(Float64,model.H2Data.NArea) #Added
 
     for iSys = 1:model.NHSys
        for iMod = 1:model.AHData[iSys].NMod
           ResInit0[iSys,iMod] = parameters.Control.ResInitFrac*parameters.Control.MaxResScale*model.AHData[iSys].MData[iMod].MaxRes
        end
+    end
+    for iSys=1:H2Data.NArea #ADDED
+        H2Init0[iSys] = parameters.Control.ResInitFrac*parameters.Control.MaxResScale*model.H2Data.Areas[iSys].MaxRes
     end
 
     NCluster = min(Threads.nthreads(), parameters.Control.NScenSim) # Never more threads than scenarios in simulation
@@ -38,13 +43,15 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
                 SP_FORW = StageProbDet.Build(t,sWeek,model.USMod,model.AHData,model.AMData,model.HSys,model.MCon,
                 model.EV,strategy.CCR,strategy.CCH,parameters.Constants,strategy.NCut,model.NHSys,model.NArea,
                 model.NLine,model.LineCap,model.LineLoss,parameters.Time,t==parameters.Control.NStageSim,
-                parameters.Control.LDemandResponse,model.DRData,parameters.Control.LOperatingReserves,model.ORData,optimizer) #ADDED, LOperatingReserves & ORData
+                parameters.Control.LDemandResponse,model.DRData,model.H2Data,parameters.Control.LOperatingReserves,model.ORData,optimizer) #ADDED, LOperatingReserves & ORData &H2Data
 
                 for iScen = start_scen:end_scen
                     if t > 1
                         ResInit[1:model.NHSys,1:NMaxMod] = SimulatedStateTraj[1:model.NHSys,1:NMaxMod,iScen,t-1] 
+                        H2Init[1:model.H2Data.NArea] = SimulatedH2Traj[1:model.H2Data.NArea,iScen,t-1,end] #Added
                     else
                         ResInit[1:model.NHSys,1:NMaxMod] = ResInit0[1:model.NHSys,1:NMaxMod]
+                        H2Init[1:model.H2Data.NArea] = H2Init0[1:model.H2Data.NArea] #ADDED
                     end
 
                     for iArea=1:model.NHSys
@@ -56,6 +63,9 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
                                 JuMP.set_normalized_rhs(SP_FORW[:resbalReg][iArea,iMod,k], CurrInf)
                             end
                         end
+                    end
+                    for iH2a = 1:model.H2Data.NArea #ADDED
+                        JuMP.set_normalized_rhs(SP_FORW[:h2storage0][iH2a,1],H2Init[iH2a])
                     end
                     for iArea=1:model.NArea
                         for k=1:parameters.Time.NK
@@ -95,7 +105,7 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
                         termstat = termination_status(SP_FORW)
                         error(println("Solver terminated with status $termstat in forward iteration (stage,scen): ",t," ",iScen))
                     end
-                    save_detailed!(DetailedResultTable, SP_FORW, model.AMData, model.AHData, model.NArea, model.NHSys, parameters.Time.NK, model.NLine, iScen, t,parameters.Control.LOperatingReserves) #ADDED LOperatingReserves   
+                    save_detailed!(DetailedResultTable, SP_FORW, model.AMData, model.H2Data,model.AHData, model.NArea, model.NHSys, parameters.Time.NK, model.NLine, iScen, t,parameters.Control.LOperatingReserves) #ADDED LOperatingReserves,H2Data   
 
                     for iSys = 1:model.NHSys
                         for iMod = 1:model.AHData[iSys].NMod
