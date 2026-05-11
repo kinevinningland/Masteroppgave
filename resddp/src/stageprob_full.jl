@@ -147,6 +147,8 @@ module StageProbFull
          hydrosys_to_area = ORData.hydrosys_to_area
          a = ORData.a
          b = ORData.b
+         pos_by_area = ORData.pos_by_area
+         neg_by_area = ORData.neg_by_area
 
          #Opp- og nedreguleringsreserver
          @variable(M, 0 <= cap_zone_up[z=1:NZ, k=1:NK], base_name="cap_zone_up")
