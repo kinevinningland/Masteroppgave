@@ -21,6 +21,7 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
     for iSys=1:model.H2Data.NArea #ADDED
         H2Init0[iSys] = parameters.Control.ResInitFrac*parameters.Control.MaxResScale*model.H2Data.Areas[iSys].MaxRes
     end
+    H2Init = zeros(Float64,model.H2Data.NArea)
 
     NCluster = min(Threads.nthreads(), parameters.Control.NScenSim) # Never more threads than scenarios in simulation
     NScenPerCluster = Int(ceil(parameters.Control.NScenSim/NCluster)) # Maximum number of scenario per thread
