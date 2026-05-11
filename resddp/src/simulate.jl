@@ -18,10 +18,11 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
           ResInit0[iSys,iMod] = parameters.Control.ResInitFrac*parameters.Control.MaxResScale*model.AHData[iSys].MData[iMod].MaxRes
        end
     end
-    for iSys=1:model.H2Data.NArea #ADDED
+    for iSys=1:model.H2Data.NArea #ADDED, kunne lagt inn initial_value
         H2Init0[iSys] = parameters.Control.ResInitFrac*parameters.Control.MaxResScale*model.H2Data.Areas[iSys].MaxRes
     end
-    H2Init = zeros(Float64,model.H2Data.NArea)
+
+    H2Init = zeros(Float64,model.H2Data.NArea) #Added
 
     NCluster = min(Threads.nthreads(), parameters.Control.NScenSim) # Never more threads than scenarios in simulation
     NScenPerCluster = Int(ceil(parameters.Control.NScenSim/NCluster)) # Maximum number of scenario per thread
@@ -112,6 +113,9 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
                         for iMod = 1:model.AHData[iSys].NMod
                             SimulatedStateTraj[iSys,iMod,iScen,t] = JuMP.value(SP_FORW[:res][iSys,iMod,parameters.Time.NK])
                         end
+                    end
+                    for iH2a = 1:model.H2Data.NArea #Added
+                        SimulatedH2Traj[iH2a,iScen,t] = JuMP.value(SP_FORW[:h2res][iH2a,end])
                     end
 
                     if t < parameters.Control.NStageSim
