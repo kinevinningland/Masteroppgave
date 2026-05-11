@@ -6,7 +6,6 @@ module ReSDDP
     using HDF5
     
     include("./structures.jl")
-    include("./reserves.jl") #Added
     include("./reademps.jl")
     include("./aggregate.jl")
     include("./readinput.jl")
