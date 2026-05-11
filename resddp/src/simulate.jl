@@ -50,7 +50,7 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
                 for iScen = start_scen:end_scen
                     if t > 1
                         ResInit[1:model.NHSys,1:NMaxMod] = SimulatedStateTraj[1:model.NHSys,1:NMaxMod,iScen,t-1] 
-                        H2Init[1:model.H2Data.NArea] = SimulatedH2Traj[1:model.H2Data.NArea,iScen,t-1,end] #Added
+                        H2Init[1:model.H2Data.NArea] = SimulatedH2Traj[1:model.H2Data.NArea,iScen,t-1] #Added
                     else
                         ResInit[1:model.NHSys,1:NMaxMod] = ResInit0[1:model.NHSys,1:NMaxMod]
                         H2Init[1:model.H2Data.NArea] = H2Init0[1:model.H2Data.NArea] #ADDED
