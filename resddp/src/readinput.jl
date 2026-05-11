@@ -389,6 +389,7 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,A
     readline(f)  # skip header
     reserve_rules = Dict{String, Vector{Tuple{Int,Bool,Bool}}}()  # zone -> [(power_cat, pos, neg)]
     for line in eachline(f)
+        isempty(strip(line)) && continue
         items = split(line, ",")
         power_cat = parse(Int, strip(items[1]))
         zone      = strip(items[2])
