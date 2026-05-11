@@ -286,8 +286,8 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
       #H2 results
       if model.H2Data.Ind[iArea] > 0 #ADDED
           H2Group = create_group(areaGroup, "H2")
-          write(H2Group, "Storage", RT.H2StoreTable[iArea,:,:,:])
-          write(H2Group, "Discharge", RT.H2DisTable[iArea,:,:,:])
+          write(H2Group, "Storage", DRT.H2StoreTable[iArea,:,:,:])
+          write(H2Group, "Discharge", DRT.H2DisTable[iArea,:,:,:])
 
           for dset in keys(H2Group)
               attrs(H2Group[dset])["Dim 1"] = "NScen"

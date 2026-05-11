@@ -50,7 +50,7 @@ function SolveFWD(model::Model, inflow_model::InflowModel, feas_spaces::Vector{F
                 parameters.Constants, strategy.NCut, model.NArea, model.NLine,
                 model.LineCap,model.LineLoss, parameters.Time, t==NStage,
                 parameters.Control.LFeasSpace, feas_spaces[fWeek].NFeasCut, feas_spaces[fWeek].FCC,
-                parameters.Control.CapReqFrac,MyWPData, parameters.Control.LDemandResponse, model.DRData, model.H2Data, optimizer)
+                parameters.Control.CapReqFrac,MyWPData, parameters.Control.LDemandResponse, model.DRData, model.H2Data,false,model.ORData,optimizer) #ADDED, parameters.Control.LOperatingReserves = false & ORData &H2Data
         end
     
         iScen = 0
