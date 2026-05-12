@@ -170,8 +170,8 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,A
     if !LOperatingReserves
         return OperatingReserves(0,String[],ReserveZoneReq[],Vector{Int}(),Vector{Vector{Int}}(),Int[],false,0,0, Dict{Int, Set{Int}}(), Dict{Int, Set{Int}}())
     end
-    LMarkReserves = false
-    LZoneReq = false
+    LMarkReserves = true
+    LZoneReq = true
 
     zone_reqs = Dict{String, Vector{Float64}}()
     price_zones = String[]
