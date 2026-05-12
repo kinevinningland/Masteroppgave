@@ -303,13 +303,33 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,A
     # Convert name sets → local iMark indices used by the optimisation model (could also have changed MSData to include a plant ID matching model.h5, and this name-matching step would not be needed)
     pos_by_area = Dict{Int, Set{Int}}()
     neg_by_area = Dict{Int, Set{Int}}()
+
     for a in 1:NArea, iMark in 1:AMData[a].NMStep
-        name = strip(AMData[a].MSData[iMark].Name)  # name of the iMark-th market step in area a
-        # if the name appears in the reserve-eligible set, record its local index
-        haskey(pos_names_by_area, a) && name in pos_names_by_area[a] &&
+        name = strip(AMData[a].MSData[iMark].Name)
+        cap  = AMData[a].MSData[iMark].Capacity[iWeek]
+
+        eligible_pos_name =
+            haskey(pos_names_by_area, a) &&
+            name in pos_names_by_area[a]
+
+        eligible_neg_name =
+            haskey(neg_names_by_area, a) &&
+            name in neg_names_by_area[a]
+
+        # Positive Mark-trinn
+        if cap > 0.0 && eligible_pos_name
             push!(get!(pos_by_area, a, Set{Int}()), iMark)
-        haskey(neg_names_by_area, a) && name in neg_names_by_area[a] &&
+        end
+
+        # Negative Mark-trinn
+        if cap < 0.0 && eligible_neg_name
             push!(get!(neg_by_area, a, Set{Int}()), iMark)
+        end
+    end
+    for a in 1:NArea
+        overlap = intersect(get(pos_by_area, a, Set{Int}()),
+                            get(neg_by_area, a, Set{Int}()))
+        !isempty(overlap) && error("Mark reserve overlap in area $a: $overlap")
     end
 
     println("Read ORData.csv")
