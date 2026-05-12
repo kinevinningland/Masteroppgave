@@ -144,7 +144,8 @@ function simulate_aggregated(model::Model, inflow_model::InflowModel, parameters
     SimulatedCost = zeros(Float64, parameters.Control.NScenSim)
 
     SS = SampleScenario(parameters.Control.NScenSim, parameters.Control.NStageSim, parameters.Time.NWeek, inflow_model, parameters.Control.LExtreme; fixed_seed = fixed_seed)
-    SampledWindYears = fill(1, parameters.Control.NScenSim) #Added
+    #SampledWindYears = fill(1, parameters.Control.NScenSim) #Added
+    SampledWindYears = collect(1:parameters.Control.NScenSim)#Added
 
     NMaxMStep = maximum([model.AMData[iArea].NMStep for iArea in 1:model.NArea])
     
@@ -226,6 +227,8 @@ function simulate_aggregated(model::Model, inflow_model::InflowModel, parameters
                             end
                         end
                     end
+                    
+                    println("Scenario $iScen: wind year index $wYear")
 
                     #Solve problem
                     t2 = time_ns()
