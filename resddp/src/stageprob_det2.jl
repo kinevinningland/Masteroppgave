@@ -497,3 +497,109 @@ function ReadOperatingReserves(NArea, NHSys, NAreaSys, AreaSys, H2Data, AMData,A
 
     return OperatingReserves(NZ,NZ-1,price_zones,zone_reqs,area_to_zone,areas_in_zone,hydrosys_to_area,h2_to_area,LH2Reserves,LMarkReserves,pos_by_area,neg_by_area)
 end
+
+
+# Read market data from HDF5
+    #=
+    pos_by_area = Dict{Int, Set{Int}}()
+    neg_by_area = Dict{Int, Set{Int}}()
+    h5open(joinpath(dataset, "model.h5"), "r") do f
+        data     = read(f["market_data/power_type"])
+        pt       = [row.power_type for row in data]
+        ids      = [row.id for row in data]
+        area_ids = [row.area_id for row in data]
+
+        for (zone, rules) in reserve_rules
+            zone_idx = findfirst(==(zone), price_zones)
+            zone_idx === nothing && continue
+            areas = Set(areas_in_zone[zone_idx])
+
+            for i in eachindex(pt)
+                area_ids[i] in areas || continue
+                for (power_cat, pos, neg) in rules
+                    if pt[i] == power_cat
+                        if pos
+                            push!(get!(pos_by_area, area_ids[i], Set{Int}()), ids[i])
+                        end
+                        if neg
+                            push!(get!(neg_by_area, area_ids[i], Set{Int}()), ids[i])
+                        end
+                    end
+                end
+            end
+        end
+    end
+    =#
+
+
+    # Read reserve CSV
+    f = open(joinpath(dataset, "ORData_mark.csv"), "r")
+    readline(f)  # skip header
+    reserve_rules = Dict{String, Vector{Tuple{Int,Bool,Bool}}}()  # zone -> [(power_cat, pos, neg)]
+    for line in eachline(f)
+        isempty(strip(line)) && continue
+        items = split(line, ",")
+        power_cat = parse(Int, strip(items[1]))
+        zone      = strip(items[2])
+        pos       = strip(items[3]) == "true"
+        neg       = strip(items[4]) == "true"
+        push!(get!(reserve_rules, zone, []), (power_cat, pos, neg))
+    end
+    close(f)
+
+    pos_by_area = Dict{Int, Set{Int}}()
+    neg_by_area = Dict{Int, Set{Int}}()
+    pos_names_by_area = Dict{Int, Set{String}}()
+    neg_names_by_area = Dict{Int, Set{String}}()
+    h5open(joinpath(dataset, "model.h5"), "r") do f
+        data     = read(f["market_data/power_type"])
+        pt       = [row.power_type for row in data]
+        ids      = [row.id for row in data]
+        area_ids = [row.area_id for row in data]
+
+        for (zone, rules) in reserve_rules
+            zone_idx = findfirst(==(zone), price_zones)
+            zone_idx === nothing && continue
+            areas = Set(areas_in_zone[zone_idx])
+            for i in eachindex(pt)
+                area_ids[i] in areas || continue
+                for (power_cat, pos, neg) in rules
+                    if pt[i] == power_cat
+                        if pos
+                            push!(get!(pos_by_area, area_ids[i], Set{Int}()), ids[i])
+                        end
+                        if neg
+                            push!(get!(neg_by_area, area_ids[i], Set{Int}()), ids[i])
+                        end
+                    end
+                end
+            end
+        end
+
+        for row in data
+            a = Int(row.area_id)
+            name = strip(row.name)
+            if haskey(pos_by_area, a) && row.id in pos_by_area[a]
+                push!(get!(pos_names_by_area, a, Set{String}()), name)
+            end
+            if haskey(neg_by_area, a) && row.id in neg_by_area[a]
+                push!(get!(neg_names_by_area, a, Set{String}()), name)
+            end
+        end
+    end
+
+    pos_by_area_local = Dict{Int, Set{Int}}()
+    neg_by_area_local = Dict{Int, Set{Int}}()
+    for a in 1:NArea
+        for iMark in 1:AMData[a].NMStep
+            name = strip(AMData[a].MSData[iMark].Name)
+            if haskey(pos_names_by_area, a) && name in pos_names_by_area[a]
+                push!(get!(pos_by_area_local, a, Set{Int}()), iMark)
+            end
+            if haskey(neg_names_by_area, a) && name in neg_names_by_area[a]
+                push!(get!(neg_by_area_local, a, Set{Int}()), iMark)
+            end
+        end
+    end
+    pos_by_area = pos_by_area_local
+    neg_by_area = neg_by_area_local

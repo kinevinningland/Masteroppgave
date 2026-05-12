@@ -279,95 +279,38 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,A
     end
     close(f)
 
-    # Read market data from HDF5
-    #=
-    pos_by_area = Dict{Int, Set{Int}}()
-    neg_by_area = Dict{Int, Set{Int}}()
-    h5open(joinpath(dataset, "model.h5"), "r") do f
-        data     = read(f["market_data/power_type"])
-        pt       = [row.power_type for row in data]
-        ids      = [row.id for row in data]
-        area_ids = [row.area_id for row in data]
-
-        for (zone, rules) in reserve_rules
-            zone_idx = findfirst(==(zone), price_zones)
-            zone_idx === nothing && continue
-            areas = Set(areas_in_zone[zone_idx])
-
-            for i in eachindex(pt)
-                area_ids[i] in areas || continue
-                for (power_cat, pos, neg) in rules
-                    if pt[i] == power_cat
-                        if pos
-                            push!(get!(pos_by_area, area_ids[i], Set{Int}()), ids[i])
-                        end
-                        if neg
-                            push!(get!(neg_by_area, area_ids[i], Set{Int}()), ids[i])
-                        end
-                    end
-                end
-            end
-        end
-    end
-    =#
-
-    pos_by_area = Dict{Int, Set{Int}}()
-    neg_by_area = Dict{Int, Set{Int}}()
+    # Names of market steps that provide positive/negative reserves, keyed by area index
     pos_names_by_area = Dict{Int, Set{String}}()
     neg_names_by_area = Dict{Int, Set{String}}()
     h5open(joinpath(dataset, "model.h5"), "r") do f
-        data     = read(f["market_data/power_type"])
-        pt       = [row.power_type for row in data]
-        ids      = [row.id for row in data]
-        area_ids = [row.area_id for row in data]
-
-        for (zone, rules) in reserve_rules
-            zone_idx = findfirst(==(zone), price_zones)
-            zone_idx === nothing && continue
-            areas = Set(areas_in_zone[zone_idx])
-            for i in eachindex(pt)
-                area_ids[i] in areas || continue
-                for (power_cat, pos, neg) in rules
-                    if pt[i] == power_cat
-                        if pos
-                            push!(get!(pos_by_area, area_ids[i], Set{Int}()), ids[i])
-                        end
-                        if neg
-                            push!(get!(neg_by_area, area_ids[i], Set{Int}()), ids[i])
-                        end
-                    end
+        data = read(f["market_data/power_type"])
+        for row in data
+            a = Int(row.area_id)
+            (a < 1 || a > length(area_to_zone)) && continue  # skip areas outside model
+            z = area_to_zone[a]
+            z == 0 && continue                               # skip areas with no price zone
+            # check if this market step's power_type matches any reserve rule for the zone
+            for (power_cat, pos, neg) in get(reserve_rules, price_zones[z], [])
+                if row.power_type == power_cat
+                    name = strip(row.name)
+                    pos && push!(get!(pos_names_by_area, a, Set{String}()), name)  # eligible for upward reserve
+                    neg && push!(get!(neg_names_by_area, a, Set{String}()), name)  # eligible for downward reserve
                 end
             end
         end
-
-        for row in data
-            a = Int(row.area_id)
-            name = strip(row.name)
-            if haskey(pos_by_area, a) && row.id in pos_by_area[a]
-                push!(get!(pos_names_by_area, a, Set{String}()), name)
-            end
-            if haskey(neg_by_area, a) && row.id in neg_by_area[a]
-                push!(get!(neg_names_by_area, a, Set{String}()), name)
-            end
-        end
     end
 
-    pos_by_area_local = Dict{Int, Set{Int}}()
-    neg_by_area_local = Dict{Int, Set{Int}}()
-    for a in 1:NArea
-        for iMark in 1:AMData[a].NMStep
-            name = strip(AMData[a].MSData[iMark].Name)
-            if haskey(pos_names_by_area, a) && name in pos_names_by_area[a]
-                push!(get!(pos_by_area_local, a, Set{Int}()), iMark)
-            end
-            if haskey(neg_names_by_area, a) && name in neg_names_by_area[a]
-                push!(get!(neg_by_area_local, a, Set{Int}()), iMark)
-            end
-        end
+    # Convert name sets → local iMark indices used by the optimisation model (could also have changed MSData to include a plant ID matching model.h5, and this name-matching step would not be needed)
+    pos_by_area = Dict{Int, Set{Int}}()
+    neg_by_area = Dict{Int, Set{Int}}()
+    for a in 1:NArea, iMark in 1:AMData[a].NMStep
+        name = strip(AMData[a].MSData[iMark].Name)  # name of the iMark-th market step in area a
+        # if the name appears in the reserve-eligible set, record its local index
+        haskey(pos_names_by_area, a) && name in pos_names_by_area[a] &&
+            push!(get!(pos_by_area, a, Set{Int}()), iMark)
+        haskey(neg_names_by_area, a) && name in neg_names_by_area[a] &&
+            push!(get!(neg_by_area, a, Set{Int}()), iMark)
     end
-    pos_by_area = pos_by_area_local
-    neg_by_area = neg_by_area_local
-
 
     println("Read ORData.csv")
 
