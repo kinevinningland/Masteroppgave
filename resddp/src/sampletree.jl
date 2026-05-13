@@ -70,8 +70,9 @@ function SampleScenario(NScen,NStage,NWeek,IM,LExtreme; fixed_seed = false)
     Zscen = zeros(Float64,NScen,NStage,IM.NSer)
     PossibleSamples = collect(1:IM.NResid)
     for iScen = 1:NScen
-        SScen[iScen,1:NStage] = sample(PossibleSamples,NStage,replace=true)
-        SScen[iScen,1] = Int(ceil(IM.NResid/2)) #Assumption: fixed starting point
+        SScen[iScen, 1:NStage] .= iScen  # bruk historisk år iScen for alle steg
+        #SScen[iScen,1:NStage] = sample(PossibleSamples,NStage,replace=true)
+        #SScen[iScen,1] = Int(ceil(IM.NResid/2)) #Assumption: fixed starting point
         for iStage = 1:NStage
             iWeek = mod1(iStage,NWeek)
             mySample = SScen[iScen,iStage]

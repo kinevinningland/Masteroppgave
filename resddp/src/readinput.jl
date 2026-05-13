@@ -305,8 +305,8 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,A
     neg_by_area = Dict{Int, Set{Int}}()
 
     for a in 1:NArea, iMark in 1:AMData[a].NMStep
-        name = strip(AMData[a].MSData[iMark].Name)
-        cap  = AMData[a].MSData[iMark].Capacity[iWeek]
+        name     = strip(AMData[a].MSData[iMark].Name)
+        cap_vec  = AMData[a].MSData[iMark].Capacity
 
         eligible_pos_name =
             haskey(pos_names_by_area, a) &&
@@ -317,12 +317,12 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,A
             name in neg_names_by_area[a]
 
         # Positive Mark-trinn
-        if cap > 0.0 && eligible_pos_name
+        if maximum(cap_vec) > 0.0 && eligible_pos_name
             push!(get!(pos_by_area, a, Set{Int}()), iMark)
         end
 
         # Negative Mark-trinn
-        if cap < 0.0 && eligible_neg_name
+        if minimum(cap_vec) < 0.0 && eligible_neg_name
             push!(get!(neg_by_area, a, Set{Int}()), iMark)
         end
     end
