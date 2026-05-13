@@ -157,6 +157,7 @@ module StageProbFull
          @variable(M, 0 <= cap_hydro_down[iSys=1:NHSys, k=1:NK], base_name="cap_hydro_down")
          @variable(M, 0 <= cap_wind_down[iArea=1:NArea, k=1:NK],  base_name="cap_wind_down")
 
+         #=
          if ORData.LMarkReserves
             @variable(M, 0 <= cap_mark_up_pos[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK], base_name="cap_mark_up_pos")
             @variable(M, 0 <= cap_mark_down_pos[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK], base_name="cap_mark_down_pos")
@@ -174,8 +175,9 @@ module StageProbFull
             @constraint(M, cap_mark_up_neg_zero[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK; !(iMark in get(neg_by_area, a, Set{Int}()))], cap_mark_up_neg[a,iMark,k] == 0.0)
             @constraint(M, cap_mark_down_neg_zero[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK;!(iMark in get(neg_by_area, a, Set{Int}()))], cap_mark_down_neg[a,iMark,k] == 0.0)
          end
+         =#
 
-         #=
+         
          if ORData.LMarkReserves
             @variable(M, 0 <= cap_mark_up_pos[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK],   base_name="cap_mark_up_pos")
             @variable(M, 0 <= cap_mark_down_pos[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK], base_name="cap_mark_down_pos")
@@ -186,7 +188,7 @@ module StageProbFull
             @constraint(M, mark_up_neg[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK; iMark in get(neg_by_area, a, Set{Int}())], -mark[a,iMark,k] >= cap_mark_up_neg[a,iMark,k]) #OK
             @constraint(M, mark_dn_pos[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK; iMark in get(pos_by_area, a, Set{Int}())], mark[a,iMark,k] >= cap_mark_down_pos[a,iMark,k]) #OK     
          end
-         =#
+         
 
          #Diverse
          @variable(M, wp_avail[a=1:NArea, k=1:NK] >= 0, base_name="wp_avail")
@@ -209,7 +211,6 @@ module StageProbFull
          @constraint(M, reserve_req_down[z=1:NZ, k=1:NK], cap_zone_down[z,k] >= cap_down_amount[z,k])
 
          #Sammenhengen mellom zonesum av kapasiteter og sum av individuelle kapasiteter
-         #=
          @constraint(M, reserve_split_down[z=1:NZ, k=1:NK],
          cap_zone_down[z,k] ==
             sum(cap_hydro_down[iSys, k] for iSys in 1:NHSys if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0) 
@@ -224,11 +225,10 @@ module StageProbFull
             + (ORData.LMarkReserves ? sum(cap_mark_up_pos[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.pos_by_area, a, Set{Int}()); init=0.0) : 0.0)
             + (ORData.LMarkReserves ? sum(cap_mark_up_neg[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.neg_by_area, a, Set{Int}()); init=0.0) : 0.0)
          )
-         =#
+         #=
          @constraint(M, reserve_split_down[z=1:NZ, k=1:NK],
             cap_zone_down[z,k] ==
-               sum(cap_hydro_down[iSys, k] for iSys in 1:NHSys
-                     if hydrosys_to_area[iSys] in areas_in_zone[z]; init=0.0)
+               sum(cap_hydro_down[iSys, k] for iSys in 1:NHSys if hydrosys_to_area[iSys] in areas_in_zone[z]; init=0.0)
                + sum(cap_wind_down[a,k] for a in areas_in_zone[z]; init=0.0)
                + (ORData.LMarkReserves ? sum(cap_mark_down_pos[a,iMark,k] + cap_mark_down_neg[a,iMark,k] for a in areas_in_zone[z] for iMark in 1:AMData[a].NMStep; init=0.0) : 0.0)
          )
@@ -238,7 +238,7 @@ module StageProbFull
                sum(cap_hydro_up[iSys, k] for iSys in 1:NHSys if hydrosys_to_area[iSys] in areas_in_zone[z]; init=0.0)
                + (ORData.LMarkReserves ? sum(cap_mark_up_pos[a,iMark,k] + cap_mark_up_neg[a,iMark,k] for a in areas_in_zone[z] for iMark in 1:AMData[a].NMStep; init=0.0) : 0.0)
          )
-         
+         =#
          #koble hver teknologis cap-variabel til dens egne fysiske grenser
          @constraint(M, hydro_up[iSys=1:NHSys, k=1:NK], prod[iSys,k] + cap_hydro_up[iSys,k] <= WeekFrac * HSys[iSys].MaxProd)  
          @constraint(M, hydro_dn[iSys=1:NHSys, k=1:NK], prod[iSys,k] - cap_hydro_down[iSys,k] >= WeekFrac * HSys[iSys].MinProd[iWeek]) 
