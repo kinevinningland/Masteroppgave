@@ -1,6 +1,7 @@
 function save!(RT::Result, SP_FORW,AMData,H2Data,InflowSys,NArea,NHSys,NK,NLine,s,t,LOperatingReserves,ORData) #NZ, LOperatingReserves ADDED
     RT.ObjTable[s, t] = JuMP.objective_value(SP_FORW) - JuMP.value(SP_FORW[:alpha])
     for iSys = 1:NHSys
+        println("vannkraftområde:", iSys)
         for k = 1:NK
             RT.ReservoirTable[iSys,s,t,k] = JuMP.value(SP_FORW[:res][iSys,k])
             RT.SpillTable[iSys,s,t,k] = JuMP.value(SP_FORW[:spi][iSys,k])
