@@ -44,11 +44,13 @@ function IdentifyCascades(AHData,NArea,USMod,ModInfReg,ModInfUReg,CTR,CTI,CNS)
     HydroCascade = Vector{HydroSystemArea}()
     NCascadeTot = 0
     for iArea = 1:NArea
+        println("Sjekker område ", iArea) #ta bort
         #Count number of "root nodes", i.e., all waterways to sea. Require inflow.
         NCascade = 0
         StartNodes = Vector{Int}()
         sumInf = 0.0
         for iMod = 1:AHData[iArea].NMod
+            println("Sjekker modul ", iMod, " i område ", iArea) #ta bort
             MyCnt = AHData[iArea].MData[iMod].ModCnt
             sumInf = sumInf+sum(ModInfReg[MyCnt,1:CTI.NWeek,1:CTI.NInflowYear]+ModInfUReg[MyCnt,1:CTI.NWeek,1:CTI.NInflowYear])
             if sumInf > 0.1 && AHData[iArea].MData[iMod].DischargeTo == 0 && AHData[iArea].MData[iMod].BypassTo == 0 && AHData[iArea].MData[iMod].SpillTo == 0
