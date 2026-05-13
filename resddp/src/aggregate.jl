@@ -54,7 +54,7 @@ function IdentifyCascades(AHData,NArea,USMod,ModInfReg,ModInfUReg,CTR,CTI,CNS)
             MyCnt = AHData[iArea].MData[iMod].ModCnt
             sumInf = sumInf+sum(ModInfReg[MyCnt,1:CTI.NWeek,1:CTI.NInflowYear]+ModInfUReg[MyCnt,1:CTI.NWeek,1:CTI.NInflowYear])
             if sumInf > 0.1 && AHData[iArea].MData[iMod].DischargeTo == 0 && AHData[iArea].MData[iMod].BypassTo == 0 && AHData[iArea].MData[iMod].SpillTo == 0
-                #println("Sjekker område ", iArea, "nummer av cascader øker i dette området") #ta bort
+                #println("Sjekker område ", iArea, "nummer av cascader øker i dette området") #ta squeue -u $USER
                 NCascade += 1
                 push!(StartNodes,iMod)
                 sumInf = 0.0
@@ -125,7 +125,6 @@ function AggrSystems(HCascade,AHData,NArea,ModInfReg,ModInfUReg,CTR,CTI,CNS,CAGR
                 MaxProd = MyCasc.MaxProd*1000.0/CTI.NHoursWeek # in MW
                 
                 if (MaxProd > CAGR.ProdCutoff ||  MyCasc.MaxRes > CAGR.ResCutoff) && iArea <= 11 &&  MyCasc.NMod > CAGR.ModCutoff 
-                    println("Beholder cascade ", iSys, " i område ", iArea) #ta bort
                     push!(KeepCascade,iSys)
                 end
                 #if MyCasc.NMod > CAGR.ModCutoff && MyCasc.MaxRes > CAGR.ResCutoff && MaxProd > CAGR.ProdCutoff && Depletion > CAGR.DeplCutoff

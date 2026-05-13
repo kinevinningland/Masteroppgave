@@ -14,6 +14,7 @@ function load(dataset::String, parameters::Parameters)::Model
 
     NCascade,HCascade = IdentifyCascades(AHData,NArea,USMod,ModInfReg,ModInfUReg,CTR,CTI,CNS)
     NHSys,HSys,NAreaSys,AreaSys,USModSys = AggrSystems(HCascade,AHData,NArea,ModInfReg,ModInfUReg,CTR,CTI,CNS,CAGR)
+    println("antall hydroområder:", NHSys)
     InfReg,RegFrac = AggrInflow(NHSys,HSys,ModInfReg,ModInfUReg,AHData,CTR,CTI,CNS)
 
     ORData = ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys,AreaSys, AMData,AreaName,CTR.LOperatingReserves) #Added
