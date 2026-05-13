@@ -273,63 +273,85 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,A
         items = split(line, ",")
         power_cat = parse(Int, strip(items[1]))
         zone      = strip(items[2])
-        pos       = strip(items[3]) == "true"
-        neg       = strip(items[4]) == "true"
-        push!(get!(reserve_rules, zone, []), (power_cat, pos, neg))
+        pos       = lowercase(strip(items[3])) == "true"
+        neg       = lowercase(strip(items[4])) == "true"
+        push!(get!(reserve_rules, zone, Vector{Tuple{Int,Bool,Bool}}()), (power_cat, pos, neg))
     end
     close(f)
 
-    # Names of market steps that provide positive/negative reserves, keyed by area index
+
+    # Names of market steps where positive/negative Mark are reserve-eligible
     pos_names_by_area = Dict{Int, Set{String}}()
     neg_names_by_area = Dict{Int, Set{String}}()
     h5open(joinpath(dataset, "model.h5"), "r") do f
         data = read(f["market_data/power_type"])
         for row in data
             a = Int(row.area_id)
-            (a < 1 || a > length(area_to_zone)) && continue  # skip areas outside model
+            (a < 1 || a > length(area_to_zone)) && continue
             z = area_to_zone[a]
-            z == 0 && continue                               # skip areas with no price zone
-            # check if this market step's power_type matches any reserve rule for the zone
-            for (power_cat, pos, neg) in get(reserve_rules, price_zones[z], [])
+            z == 0 && continue
+            zone_name = price_zones[z]
+            for (power_cat, pos, neg) in get(reserve_rules, zone_name, Vector{Tuple{Int,Bool,Bool}}())
                 if row.power_type == power_cat
                     name = strip(row.name)
-                    pos && push!(get!(pos_names_by_area, a, Set{String}()), name)  # eligible for upward reserve
-                    neg && push!(get!(neg_names_by_area, a, Set{String}()), name)  # eligible for downward reserve
+                    # pos=true means positive Mark of this type may provide reserves
+                    if pos
+                        push!(get!(pos_names_by_area, a, Set{String}()), name)
+                    end
+                    # neg=true means negative Mark of this type may provide reserves
+                    if neg
+                        push!(get!(neg_names_by_area, a, Set{String}()), name)
+                    end
                 end
             end
         end
     end
 
-    # Convert name sets → local iMark indices used by the optimisation model (could also have changed MSData to include a plant ID matching model.h5, and this name-matching step would not be needed)
+    # Convert name sets -> local iMark indices used by the optimisation model.
+    # Important:
+    # pos_by_area = positive Mark capacity steps only
+    # neg_by_area = negative Mark capacity steps only
     pos_by_area = Dict{Int, Set{Int}}()
     neg_by_area = Dict{Int, Set{Int}}()
 
-    for a in 1:NArea, iMark in 1:AMData[a].NMStep
-        name     = strip(AMData[a].MSData[iMark].Name)
-        cap_vec  = AMData[a].MSData[iMark].Capacity
+    for a in 1:NArea
+        for iMark in 1:AMData[a].NMStep
+            name = strip(AMData[a].MSData[iMark].Name)
 
-        eligible_pos_name =
-            haskey(pos_names_by_area, a) &&
-            name in pos_names_by_area[a]
+            # Use the actual sign of this market step.
+            # Since the time series do not mix signs, maximum/minimum is OK here.
+            cap_vec = AMData[a].MSData[iMark].Capacity
+            is_positive_mark = maximum(cap_vec) > 0.0
+            is_negative_mark = minimum(cap_vec) < 0.0
 
-        eligible_neg_name =
-            haskey(neg_names_by_area, a) &&
-            name in neg_names_by_area[a]
+            eligible_pos_name =
+                haskey(pos_names_by_area, a) &&
+                name in pos_names_by_area[a]
 
-        # Positive Mark-trinn
-        if maximum(cap_vec) > 0.0 && eligible_pos_name
-            push!(get!(pos_by_area, a, Set{Int}()), iMark)
-        end
+            eligible_neg_name =
+                haskey(neg_names_by_area, a) &&
+                name in neg_names_by_area[a]
 
-        # Negative Mark-trinn
-        if minimum(cap_vec) < 0.0 && eligible_neg_name
-            push!(get!(neg_by_area, a, Set{Int}()), iMark)
+            if is_positive_mark && eligible_pos_name
+                push!(get!(pos_by_area, a, Set{Int}()), iMark)
+            end
+
+            if is_negative_mark && eligible_neg_name
+                push!(get!(neg_by_area, a, Set{Int}()), iMark)
+            end
         end
     end
+
+    # Safety check: one local iMark must never be both positive and negative
     for a in 1:NArea
-        overlap = intersect(get(pos_by_area, a, Set{Int}()),
-                            get(neg_by_area, a, Set{Int}()))
-        !isempty(overlap) && error("Mark reserve overlap in area $a: $overlap")
+        overlap = intersect(
+            get(pos_by_area, a, Set{Int}()),
+            get(neg_by_area, a, Set{Int}())
+        )
+
+        if !isempty(overlap)
+            error("Mark reserve overlap in area $a: $overlap")
+        end
     end
 
     println("Read ORData.csv")

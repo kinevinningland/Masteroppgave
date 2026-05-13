@@ -228,7 +228,13 @@ function simulate_aggregated(model::Model, inflow_model::InflowModel, parameters
                         end
                     end
                     
-                    println("Scenario $iScen: wind year index $wYear")
+                    println(
+                        "Stage=", t,
+                        " Week=", sWeek,
+                        " Scenario=", iScen,
+                        " InflowScenario=", SS.SScen[iScen,t],
+                        " WindYear=", wYear
+                    )
 
                     #Solve problem
                     t2 = time_ns()
