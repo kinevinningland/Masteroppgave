@@ -83,7 +83,7 @@ function IdentifyCascades(AHData,NArea,USMod,ModInfReg,ModInfUReg,CTR,CTI,CNS)
                         if iArea == 50
                              println("Modul ", MyId, " er i cascade ", iCascade) #ta bort
                         end
-                        println(MyId," ") #ta bort    
+                        #println(MyId," ") #ta bort    
                         MyCnt = AHData[iArea].MData[iMod].ModCnt
                         MaxRes += CTR.MaxResScale*AHData[iArea].MData[iMod].MaxRes*AHData[iArea].EffSea[iMod]*CNS.MAGEFF2GWH
                         MaxProd += AHData[iArea].MData[iMod].ProdCap*CNS.MW2GWHWEEK #GWh per week
@@ -145,6 +145,7 @@ function AggrSystems(HCascade,AHData,NArea,ModInfReg,ModInfUReg,CTR,CTI,CNS,CAGR
             for iSys = 1:NSys
                 if !(iSys in KeepCascade)
                     MyCasc = HCascade[iArea].Systems[iSys]
+                    println("er ikke i keepCascade ", iSys, " i område ", iArea) #ta bort
                     for iMod = 1:MyCasc.NMod
                         MyMod = MyCasc.ModNo[iMod] 
                         MyId = AHData[iArea].MData[MyMod].ModId
@@ -158,6 +159,7 @@ function AggrSystems(HCascade,AHData,NArea,ModInfReg,ModInfUReg,CTR,CTI,CNS,CAGR
                         push!(myModNos,MyMod)
                         push!(myModIds,MyId)
                         push!(myModCnts,MyCnt)
+                        println("Legger til modul ", MyId, " i aggr. system i område ", iArea) #ta bort
                         cMod += 1
                     end
                 end
