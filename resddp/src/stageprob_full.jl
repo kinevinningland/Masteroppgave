@@ -39,6 +39,11 @@ module StageProbFull
       @variable(M,h2init[iArea=1:NH2Area],base_name="h2init")                                                  # GWh
       @variable(M,-CNS.AlphaMax <= alpha <= CNS.AlphaMax,base_name="alp")                                      # 10E3 EUR
 
+      println("StageProbFull: NHSys=$NHSys, NArea=$NArea")
+      for iSys in 1:NHSys
+         println("  HydroSys $iSys: MaxRes=$(HSys[iSys].MaxRes), MaxProd=$(HSys[iSys].MaxProd)")
+      end
+
       #Demand response variables
       if LDemandResponse      
          @variable(M,-CNS.Big <= dr_tot[iArea=1:NArea, k=1:NK] <= CNS.Big, base_name="dr_tot")
