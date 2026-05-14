@@ -340,7 +340,7 @@ function ReadHDF5(dataset,CNS,CTI,CTR)
                 end
             end
             close(rampfid)
-            println("Antall hydro-moduler i area ",iArea,": ",NMod)
+            println("Antall hydro-moduler i area ",iArea,": ",NMod) #ta bort
 
             push!(AHData,AreaDataHydro(NMod,EffSea,RegDegComp,MagShare,RegShare,URegShare,RampFrac,MData,PQCData,RCData))
         

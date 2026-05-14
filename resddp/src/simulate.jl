@@ -26,6 +26,8 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
 
     NCluster = min(Threads.nthreads(), parameters.Control.NScenSim) # Never more threads than scenarios in simulation
     NScenPerCluster = Int(ceil(parameters.Control.NScenSim/NCluster)) # Maximum number of scenario per thread
+
+    println("antall hydro-områder i system: ", model.NHSys) #ta bort
     
     dTS1 = dTS2 = 0.0
     t1 = time_ns()
@@ -228,7 +230,7 @@ function simulate_aggregated(model::Model, inflow_model::InflowModel, parameters
                         end
                     end
                     
-                    println(
+                    println( #ta bort
                         "Stage=", t,
                         " Week=", sWeek,
                         " Scenario=", iScen,
