@@ -35,7 +35,14 @@ module StageProbDet
       @variable(M,0.0 <= h2res[iSys=1:NH2Area,k=1:NK] <= H2Data.Areas[iSys].MaxRes, base_name="h2res")         # GWh ADDED
       @variable(M,h2init[iArea=1:NH2Area],base_name="h2init")                                                  # GWh ADDED
 
+      println("StageProbDet: NHSys=$NHSys, NArea=$NArea")
+      for iSys in 1:NHSys
+         println("  HydroSys $iSys: MaxRes=$(HSys[iSys].MaxRes), MaxProd=$(HSys[iSys].MaxProd)")
+      end
 
+      for iArea in 1:NH2Area
+         println("  H2Area $iArea: MaxRes=$(H2Data.Areas[iArea].MaxRes), MaxDis=$(H2Data.Areas[iArea].MaxDis)")
+      end
 
       #Demand response variables
       if LDemandResponse      
