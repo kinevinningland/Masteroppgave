@@ -28,6 +28,7 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
     NScenPerCluster = Int(ceil(parameters.Control.NScenSim/NCluster)) # Maximum number of scenario per thread
 
     println("antall hydro-områder i system: ", model.NHSys) #ta bort
+    println("antall hydro-områder i system: ", length(model.AHData)) #ta bort
     
     dTS1 = dTS2 = 0.0
     t1 = time_ns()
