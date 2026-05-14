@@ -38,6 +38,7 @@ module StageProbDet
       println("StageProbDet: NHSys=$NHSys, NArea=$NArea")
       for iSys in 1:NHSys
          println("  HydroSys $iSys: MaxRes=$(HSys[iSys].MaxRes), MaxProd=$(HSys[iSys].MaxProd)")
+         println("maksres mod 1: $(AHData[iSys].MData[1].MaxRes) i hydrosystem $iSys") #ta bort
       end
 
       for iArea in 1:NH2Area
