@@ -1,5 +1,5 @@
 function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::Parameters, strategy::Strategy; optimizer=JuMP.optimizer_with_attributes(Clp.Optimizer, "SolveType" => 0, "PresolveType" => 1, "LogLevel" => 0))::DetailedResult
-
+    NHSys2 = length(model.AHData)
     NMaxMod = maximum([model.AHData[iSys].NMod for iSys in 1:NHSys2])
 
     SimulatedStateTraj = zeros(Float64,NHSys2, NMaxMod, parameters.Control.NScenSim, parameters.Control.NStageSim)
@@ -30,7 +30,6 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
     println("antall hydro-områder i system: ", model.NHSys) #ta bort
     println("antall hydro-områder i system: ", length(model.AHData)) #ta bort
 
-    NHSys2 = length(model.AHData)
     
     dTS1 = dTS2 = 0.0
     t1 = time_ns()
