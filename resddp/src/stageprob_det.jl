@@ -244,8 +244,8 @@ module StageProbDet
             @constraint(M,endset,alpha == 0)
          end
       else
-         #@constraint(M,cut[c=1:NCut],alpha-sum(CCR[iSys,t,c]*rstate[iSys] for iSys=1:NHSys) >= 0.0)
-         @constraint(M,cut[c=1:NCut],alpha- sum(CCR[iSys,t,c]*rstate[iSys] for iSys=1:NHSys) - sum(CCH[iArea,t,c]*h2res[iArea,end] for iArea=1:NH2Area)>= 0.0) #h2res Added   
+         @constraint(M,cut[c=1:NCut],alpha-sum(CCR[iSys,t,c]*rstate[iSys] for iSys=1:NHSys) >= 0.0)
+         #@constraint(M,cut[c=1:NCut],alpha- sum(CCR[iSys,t,c]*rstate[iSys] for iSys=1:NHSys) - sum(CCH[iArea,t,c]*h2res[iArea,end] for iArea=1:NH2Area)>= 0.0) #h2res Added   
       end
 
       return M
