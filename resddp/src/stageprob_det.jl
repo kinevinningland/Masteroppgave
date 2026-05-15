@@ -7,7 +7,6 @@ module StageProbDet
 
    function Build(t,iWeek,USMod,AHData,AMData,HSys,MCon,EV,CCR,CCH,CNS,NCut,NHSys,NArea,NLine,LineCap,LineLoss,CTI,LEndVal,LDemandResponse,DR,H2Data,LOperatingReserves,ORData,optimizer) #H2Data Added
 
-      NHSys = length(AHData)
       M = Model(optimizer)
 
       NK = CTI.NK
