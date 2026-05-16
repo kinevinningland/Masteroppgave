@@ -104,7 +104,7 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
                     dTS2 = dTS2+(time_ns()-t2)/NCluster
                     #write_to_file(SP_FORW, "SPF.lp") #ta bort
                     if t == 1 && iScen == start_scen
-                        write_to_file(SP_FORW, "SPF.lp")
+                        write_to_file(SP_FORW, "SPF_h230.lp")
                     end
                     if primal_status(SP_FORW) != MOI.FEASIBLE_POINT 
                         write_to_file(SP_FORW, "SPF_err.lp")
