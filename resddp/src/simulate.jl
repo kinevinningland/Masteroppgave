@@ -30,7 +30,7 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
     println("antall hydro-områder i system: ", model.NHSys) #ta bort
     println("antall hydro-områder i system: ", length(model.AHData)) #ta bort
 
-    
+    HydroAreas = findall(model.NAreaSys .> 0)
     dTS1 = dTS2 = 0.0
     t1 = time_ns()
     for t = 1:parameters.Control.NStageSim
@@ -60,6 +60,16 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
                         H2Init[1:model.H2Data.NArea] = H2Init0[1:model.H2Data.NArea] #ADDED
                     end
 
+                    for (i, iArea) in enumerate(HydroAreas)
+                        for iMod=1:model.AHData[iArea].NMod
+                            CurrInf = parameters.Time.WeekFrac*(model.ModInfReg[model.AHData[iArea].MData[iMod].ModCnt,sWeek,iScen] + model.ModInfUReg[model.AHData[iArea].MData[iMod].ModCnt,sWeek,iScen])
+                            JuMP.set_normalized_rhs(SP_FORW[:resbalReg0][iArea,iMod], max(0.0, ResInit[i,iMod] + CurrInf))
+                            for k=2:parameters.Time.NK
+                                JuMP.set_normalized_rhs(SP_FORW[:resbalReg][iArea,iMod,k], CurrInf)
+                            end
+                        end
+                    end
+                    #=
                     for iArea=1:model.NHSys 
                         for iMod=1:model.AHData[iArea].NMod
                             CurrInf = parameters.Time.WeekFrac*(model.ModInfReg[model.AHData[iArea].MData[iMod].ModCnt,sWeek,iScen] + model.ModInfUReg[model.AHData[iArea].MData[iMod].ModCnt,sWeek,iScen])
@@ -70,6 +80,7 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
                             end
                         end
                     end
+                    =#
                     for iH2a = 1:model.H2Data.NArea #ADDED
                         JuMP.set_normalized_rhs(SP_FORW[:h2storage0][iH2a,1],H2Init[iH2a])
                     end
@@ -114,13 +125,21 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
                     if t==1
                         write_to_file(SP_FORW, "SPF_H2.lp")
                     end
+
                     save_detailed!(DetailedResultTable, SP_FORW, model.AMData, model.H2Data,model.AHData, model.NArea, model.NHSys, parameters.Time.NK, model.NLine, iScen, t,parameters.Control.LOperatingReserves) #ADDED LOperatingReserves,H2Data   
 
+                    for (i, iSys) in enumerate(HydroAreas)
+                        for iMod = 1:model.AHData[iSys].NMod
+                            SimulatedStateTraj[i,iMod,iScen,t] = JuMP.value(SP_FORW[:res][iSys,iMod,parameters.Time.NK])
+                        end
+                    end
+                    #=
                     for iSys = 1:model.NHSys
                         for iMod = 1:model.AHData[iSys].NMod
                             SimulatedStateTraj[iSys,iMod,iScen,t] = JuMP.value(SP_FORW[:res][iSys,iMod,parameters.Time.NK])
                         end
                     end
+                    =#
                     for iH2a = 1:model.H2Data.NArea #Added
                         SimulatedH2Traj[iH2a,iScen,t] = JuMP.value(SP_FORW[:h2res][iH2a,end])
                     end
