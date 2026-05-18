@@ -215,10 +215,13 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
    attrs(file)["NK"]     = parameters.Time.NK
 
    write(file, "ObjectiveValue", DRT.ObjTable) #Added
+   HydroAreas = findall(model.NAreaSys .> 0)
 
    for iArea = 1:model.NArea
       areaGroup = create_group(file, model.AreaName[iArea])
-      if iArea <= model.NHSys
+      hydro_idx = findfirst(==(iArea), HydroAreas)
+      if hydro_idx !== nothing
+      #if iArea <= model.NHSys
          #Hydro results
          hydroGroup = create_group(areaGroup, "Hydro")
 
@@ -227,11 +230,11 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
          for iMod=1:model.AHData[iArea].NMod
             moduleGroup = create_group(hydroGroup, "Module "*string(iMod))
 
-            write(moduleGroup, "Reservoir", DRT.ReservoirTable[iArea,iMod,:,:,:])
-            write(moduleGroup, "Production", DRT.HProdTable[iArea,iMod,:,:,:])
-            write(moduleGroup, "Discharge", DRT.DischargeTable[iArea,iMod,:,:,:])
-            write(moduleGroup, "Spillage", DRT.SpillTable[iArea,iMod,:,:,:])
-            write(moduleGroup, "Bypass", DRT.BypassTable[iArea,iMod,:,:,:])
+            write(moduleGroup, "Reservoir", DRT.ReservoirTable[hydro_idx, iMod,:,:,:])
+            write(moduleGroup, "Production", DRT.HProdTable[hydro_idx, iMod,:,:,:])
+            write(moduleGroup, "Discharge", DRT.DischargeTable[hydro_idx, iMod,:,:,:])
+            write(moduleGroup, "Spillage", DRT.SpillTable[hydro_idx, iMod,:,:,:])
+            write(moduleGroup, "Bypass", DRT.BypassTable[hydro_idx, iMod,:,:,:])
    
             for dset in keys(moduleGroup)
                attrs(moduleGroup[dset])["Dim 1"] = "NScen"
@@ -239,7 +242,7 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
                attrs(moduleGroup[dset])["Dim 3"] = "NK"
             end
          end
-         write(hydroGroup, "WaterValue", DRT.WaterValueTable[iArea,:,:]) #Added
+         write(hydroGroup, "WaterValue", DRT.WaterValueTable[hydro_idx,:,:]) #Added
          attrs(hydroGroup["WaterValue"])["Dim 1"] = "NScen" #Added
          attrs(hydroGroup["WaterValue"])["Dim 2"] = "NStage" #Added
       end
