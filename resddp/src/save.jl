@@ -131,11 +131,12 @@ function save_detailed!(DRT::DetailedResult, SP_FORW,AMData,H2Data,AHData,NArea,
             end
             if iArea in HydroAreas
                 DRT.PriceTable[iArea,s,t,k] = -JuMP.shadow_price(SP_FORW[:pbalHyd][iArea,k])
-                DRT.LoadTable[iArea,s,t,k] = JuMP.normalized_rhs(SP_FORW[:pbalTerm][iArea,k]) + (JuMP.haskey(SP_FORW, :dr_tot) ? JuMP.value(SP_FORW[:dr_tot][iArea,k]) : 0)
+                DRT.LoadTable[iArea,s,t,k] = JuMP.normalized_rhs(SP_FORW[:pbalHyd][iArea,k]) + (JuMP.haskey(SP_FORW, :dr_tot) ? JuMP.value(SP_FORW[:dr_tot][iArea,k]) : 0)
             else
                 DRT.PriceTable[iArea,s,t,k] = -JuMP.shadow_price(SP_FORW[:pbalTerm][iArea,k])
-                DRT.LoadTable[iArea,s,t,k] = JuMP.normalized_rhs(SP_FORW[:pbalHyd][iArea,k]) + (JuMP.haskey(SP_FORW, :dr_tot) ? JuMP.value(SP_FORW[:dr_tot][iArea,k]) : 0)
+                DRT.LoadTable[iArea,s,t,k] = JuMP.normalized_rhs(SP_FORW[:pbalTerm][iArea,k]) + (JuMP.haskey(SP_FORW, :dr_tot) ? JuMP.value(SP_FORW[:dr_tot][iArea,k]) : 0)
             end
+            
             #=
             if iArea > NHSys
                 DRT.PriceTable[iArea,s,t,k] = -JuMP.shadow_price(SP_FORW[:pbalTerm][iArea,k])
