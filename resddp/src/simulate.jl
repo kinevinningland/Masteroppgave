@@ -49,7 +49,7 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
                 SP_FORW = StageProbDet.Build(t,sWeek,model.USMod,model.AHData,model.AMData,model.HSys,model.MCon,
                 model.EV,strategy.CCR,strategy.CCH,parameters.Constants,strategy.NCut,model.NHSys,model.NArea,
                 model.NLine,model.LineCap,model.LineLoss,parameters.Time,t==parameters.Control.NStageSim,
-                parameters.Control.LDemandResponse,model.DRData,model.H2Data,parameters.Control.LOperatingReserves,model.ORData,optimizer) #ADDED, LOperatingReserves & ORData &H2Data
+                parameters.Control.LDemandResponse,model.DRData,model.H2Data,parameters.Control.LOperatingReserves,model.ORData,model.NAreaSys,optimizer) #ADDED, LOperatingReserves & ORData &H2Data
 
                 for iScen = start_scen:end_scen
                     if t > 1

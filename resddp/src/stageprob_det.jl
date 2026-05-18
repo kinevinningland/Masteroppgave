@@ -5,7 +5,7 @@ module StageProbDet
    using MathOptInterface
    const MOI = MathOptInterface
 
-   function Build(t,iWeek,USMod,AHData,AMData,HSys,MCon,EV,CCR,CCH,CNS,NCut,NHSys,NArea,NLine,LineCap,LineLoss,CTI,LEndVal,LDemandResponse,DR,H2Data,LOperatingReserves,ORData,optimizer) #H2Data Added
+   function Build(t,iWeek,USMod,AHData,AMData,HSys,MCon,EV,CCR,CCH,CNS,NCut,NHSys,NArea,NLine,LineCap,LineLoss,CTI,LEndVal,LDemandResponse,DR,H2Data,LOperatingReserves,ORData,NAreaSys,optimizer) #H2Data Added
 
       M = Model(optimizer)
 
@@ -13,6 +13,7 @@ module StageProbDet
       DT = CTI.DT
       WeekFrac = CTI.WeekFrac
       NH2Area = H2Data.NArea #ADDED
+      NHSys = length(AHData) #ta bort
 
       M3S2MM3 = CNS.M3S2MM3
       MAGEFF2GWH = CNS.MAGEFF2GWH
@@ -22,28 +23,21 @@ module StageProbDet
       NLoadRecStep = DR.NLoadRecStep
       MaxLoadRec = DR.LoadRec[NLoadRecStep]
 
-      @variable(M,0.0 <= res[iArea=1:NHSys,iMod=1:AHData[iArea].NMod,k=1:NK] <= AHData[iArea].MData[iMod].MaxRes, base_name="res")  #Mm3
-      @variable(M,0.0 <= disSeg[iArea=1:NHSys,iMod=1:AHData[iArea].NMod,iSeg=1:AHData[iArea].PQData[iMod].NSeg,k=1:NK] <= AHData[iArea].PQData[iMod].DMax[iSeg], base_name="disSeg") #m3s
-      @variable(M,0.0 <= dis[iArea=1:NHSys,iMod=1:AHData[iArea].NMod,k=1:NK] <= InfUB, base_name="dis")                             #m3s                                
-      @variable(M,0.0 <= spi[iArea=1:NHSys,iMod=1:AHData[iArea].NMod,k=1:NK] <= InfUB, base_name="spi")                             #m3s
-      @variable(M,0.0 <= byp[iArea=1:NHSys,iMod=1:AHData[iArea].NMod,k=1:NK] <= InfUB, base_name="byp")                             #m3s
-      @variable(M,0.0 <= ghy[iArea=1:NHSys,iMod=1:AHData[iArea].NMod,k=1:NK] <= InfUB, base_name="ghy")                             #GWh/step
-      @variable(M,0.0 <= rstate[iArea=1:NHSys] <= InfUB, base_name="rstate")                                                        #GWh/step
+      HydroAreas = findall(NAreaSys .> 0) #ADDED
+      #byttet ut alle 1:NHSys til HydroAreas
+
+      @variable(M,0.0 <= res[iArea=HydroAreas,iMod=1:AHData[iArea].NMod,k=1:NK] <= AHData[iArea].MData[iMod].MaxRes, base_name="res")  #Mm3
+      @variable(M,0.0 <= disSeg[iArea=HydroAreas,iMod=1:AHData[iArea].NMod,iSeg=1:AHData[iArea].PQData[iMod].NSeg,k=1:NK] <= AHData[iArea].PQData[iMod].DMax[iSeg], base_name="disSeg") #m3s
+      @variable(M,0.0 <= dis[iArea=HydroAreas,iMod=1:AHData[iArea].NMod,k=1:NK] <= InfUB, base_name="dis")                             #m3s                                
+      @variable(M,0.0 <= spi[iArea=HydroAreas,iMod=1:AHData[iArea].NMod,k=1:NK] <= InfUB, base_name="spi")                             #m3s
+      @variable(M,0.0 <= byp[iArea=HydroAreas,iMod=1:AHData[iArea].NMod,k=1:NK] <= InfUB, base_name="byp")                             #m3s
+      @variable(M,0.0 <= ghy[iArea=HydroAreas,iMod=1:AHData[iArea].NMod,k=1:NK] <= InfUB, base_name="ghy")                             #GWh/step
+      @variable(M,0.0 <= rstate[iArea=HydroAreas] <= InfUB, base_name="rstate")                                                        #GWh/step
       @variable(M,0.0 <= wprod[iArea=1:NArea,k=1:NK] <= CNS.Big,base_name="wprod")                                                  # GWh/step
       @variable(M,0.0 <= h2dis[iArea=1:NH2Area,k=1:NK] <= H2Data.Areas[iArea].MaxDis, base_name="h2dis")       # GWh/step ADDED
       @variable(M,0.0 <= h2chg[iArea=1:NH2Area,k=1:NK] <= H2Data.Areas[iArea].MaxDis, base_name="h2chg")       # GWh/step ADDED
-      @variable(M,0.0 <= h2res[iSys=1:NH2Area,k=1:NK] <= H2Data.Areas[iSys].MaxRes, base_name="h2res")         # GWh ADDED
-      @variable(M,h2init[iArea=1:NH2Area],base_name="h2init")                                                  # GWh ADDED
-
-      println("StageProbDet: NHSys=$NHSys, NArea=$NArea")
-      for iSys in 1:NHSys
-         #println("  HydroSys $iSys: MaxRes=$(HSys[iSys].MaxRes), MaxProd=$(HSys[iSys].MaxProd)")
-         println("maksres mod 1: $(AHData[iSys].MData[1].MaxRes) i hydrosystem $iSys") #ta bort
-      end
-
-      for iArea in 1:NH2Area
-         println("  H2Area $iArea: MaxRes=$(H2Data.Areas[iArea].MaxRes), MaxDis=$(H2Data.Areas[iArea].MaxDis)")
-      end
+      @variable(M,0.0 <= h2res[iArea=1:NH2Area,k=1:NK] <= H2Data.Areas[iArea].MaxRes, base_name="h2res")         # GWh ADDED
+      @variable(M,h2init[iArea=1:NH2Area],base_name="h2init")     # GWh ADDED
 
       #Demand response variables
       if LDemandResponse      
@@ -66,13 +60,13 @@ module StageProbDet
       #Min Cost [10E3 EUR]
       @objective(M,MathOptInterface.MIN_SENSE,
                  sum(AMData[iArea].MSData[iMark].Price[iWeek]*mark[iArea,iMark,k] for iArea=1:NArea for iMark=1:AMData[iArea].NMStep for k=1:NK)
-                 +sum(CNS.CSpi*spi[iArea,iMod,k] for iArea=1:NHSys for iMod=1:AHData[iArea].NMod for k=1:NK) 
-                 +sum(CNS.CByp*byp[iArea,iMod,k] for iArea=1:NHSys for iMod=1:AHData[iArea].NMod for k=1:NK) 
+                 +sum(CNS.CSpi*spi[iArea,iMod,k] for iArea=HydroAreas for iMod=1:AHData[iArea].NMod for k=1:NK) 
+                 +sum(CNS.CByp*byp[iArea,iMod,k] for iArea=HydroAreas for iMod=1:AHData[iArea].NMod for k=1:NK) 
                  +sum(CNS.CRat*rat[iArea,k] for iArea=1:NArea for k=1:NK) +alpha
                  + (LOperatingReserves ? sum(CNS.CRat*slackUp[z,k] for z=1:ORData.NZ for k=1:NK) + sum(CNS.CRat*slackDown[z,k] for z=1:ORData.NZ for k=1:NK) : 0.0))#ADDED
 
       #INITIAL RESERVOIR BALANCE [MM3/DT]
-      @constraint(M,resbalReg0[iArea=1:NHSys,iMod=1:AHData[iArea].NMod],res[iArea,iMod,1]
+      @constraint(M,resbalReg0[iArea=HydroAreas,iMod=1:AHData[iArea].NMod],res[iArea,iMod,1]
                 +DT*M3S2MM3*(dis[iArea,iMod,1]+byp[iArea,iMod,1]+spi[iArea,iMod,1]) 
                 -DT*M3S2MM3*(sum(dis[iArea,USMod[iArea].USModA[iMod].Dis[iDisUS],1] for iDisUS=1:USMod[iArea].USModA[iMod].NDis))
                 -DT*M3S2MM3*(sum(byp[iArea,USMod[iArea].USModA[iMod].Byp[iBypUS],1] for iBypUS=1:USMod[iArea].USModA[iMod].NByp))
@@ -80,7 +74,7 @@ module StageProbDet
                 == 0.0)
 
       #RESERVOIR BALANCE [MM3/DT]
-      @constraint(M,resbalReg[iArea=1:NHSys,iMod=1:AHData[iArea].NMod,k=2:NK],res[iArea,iMod,k]-res[iArea,iMod,k-1]
+      @constraint(M,resbalReg[iArea=HydroAreas,iMod=1:AHData[iArea].NMod,k=2:NK],res[iArea,iMod,k]-res[iArea,iMod,k-1]
                 +DT*M3S2MM3*(dis[iArea,iMod,k]+byp[iArea,iMod,k]+spi[iArea,iMod,k]) 
                 -DT*M3S2MM3*(sum(dis[iArea,USMod[iArea].USModA[iMod].Dis[iDisUS],k] for iDisUS=1:USMod[iArea].USModA[iMod].NDis))
                 -DT*M3S2MM3*(sum(byp[iArea,USMod[iArea].USModA[iMod].Byp[iBypUS],k] for iBypUS=1:USMod[iArea].USModA[iMod].NByp))
@@ -88,19 +82,19 @@ module StageProbDet
                 == 0.0)
 
       #DEFINE DISCHARGE [m3s]
-      @constraint(M,discharge[iArea=1:NHSys,iMod=1:AHData[iArea].NMod,k=1:NK], 
+      @constraint(M,discharge[iArea=HydroAreas,iMod=1:AHData[iArea].NMod,k=1:NK], 
                   dis[iArea,iMod,k]-sum(disSeg[iArea,iMod,iSeg,k] for iSeg=1:AHData[iArea].PQData[iMod].NSeg) == 0.0)
 
       #HYDROPOWER GENERATION [GWh/Step]
-      @constraint(M,prodfunc[iArea=1:NHSys,iMod=1:AHData[iArea].NMod,k=1:NK],ghy[iArea,iMod,k]
+      @constraint(M,prodfunc[iArea=HydroAreas,iMod=1:AHData[iArea].NMod,k=1:NK],ghy[iArea,iMod,k]
                   -WeekFrac*MW2GWHWEEK*sum(AHData[iArea].PQData[iMod].Eff[iSeg]*disSeg[iArea,iMod,iSeg,k] for iSeg=1:AHData[iArea].PQData[iMod].NSeg) == 0.0)
 
       #Reservoir state: V_{t}
-      @constraint(M,endvol[iArea=1:NHSys], rstate[iArea] - sum(AHData[iArea].EffSea[iMod]*MAGEFF2GWH*res[iArea,iMod,NK] for iMod=1:AHData[iArea].NMod) == 0.0)
+      @constraint(M,endvol[iArea=HydroAreas], rstate[iArea] - sum(AHData[iArea].EffSea[iMod]*MAGEFF2GWH*res[iArea,iMod,NK] for iMod=1:AHData[iArea].NMod) == 0.0)
 
 
       #POWER BALANCE [GWh/step]
-      @constraint(M,pbalHyd[iArea=1:NHSys,k=1:NK],sum(ghy[iArea,iMod,k] for iMod=1:AHData[iArea].NMod) 
+      @constraint(M,pbalHyd[iArea=HydroAreas,k=1:NK],sum(ghy[iArea,iMod,k] for iMod=1:AHData[iArea].NMod) 
                   +rat[iArea,k]+sum(mark[iArea,iMark,k] for iMark=1:AMData[iArea].NMStep)+wprod[iArea,k]
                   -sum(etran[MCon[iArea].LIndxOut[iLine],k] for iLine=1:MCon[iArea].NCon)
                   +sum((1.0-LineLoss[MCon[iArea].LIndxIn[iLine]])*etran[MCon[iArea].LIndxIn[iLine],k] for iLine=1:MCon[iArea].NCon)
@@ -110,14 +104,16 @@ module StageProbDet
                   == (AMData[iArea].NLoad > 0 ? sum(AMData[iArea].MLData[iLoad].Load[iWeek,k] for iLoad=1:AMData[iArea].NLoad) : 0.0))
 
       #POWER BALANCE [GWh/step]
-      @constraint(M,pbalTerm[iArea=(NHSys+1):NArea,k=1:NK],rat[iArea,k]+sum(mark[iArea,iMark,k] for iMark=1:AMData[iArea].NMStep)+wprod[iArea,k]
+      NonHydroAreas = setdiff(1:NArea, HydroAreas)
+      
+      @constraint(M,pbalTerm[iArea=NonHydroAreas,k=1:NK],rat[iArea,k]+sum(mark[iArea,iMark,k] for iMark=1:AMData[iArea].NMStep)+wprod[iArea,k]
                   -sum(etran[MCon[iArea].LIndxOut[iLine],k] for iLine=1:MCon[iArea].NCon)
                   +sum((1.0-LineLoss[MCon[iArea].LIndxIn[iLine]])*etran[MCon[iArea].LIndxIn[iLine],k] for iLine=1:MCon[iArea].NCon)
                   - (H2Data.Ind[iArea] > 0 ? h2chg[H2Data.Ind[iArea],k] : 0.0) #ADDED
                   + (H2Data.Ind[iArea] > 0 ? h2dis[H2Data.Ind[iArea],k] : 0.0) #ADDED
                   - (LDemandResponse ? dr_tot[iArea,k] : 0) #Include dr_tot in power balance only if LDemandResponse is true
                   == (AMData[iArea].NLoad > 0 ? sum(AMData[iArea].MLData[iLoad].Load[iWeek,k] for iLoad=1:AMData[iArea].NLoad) : 0.0))
-
+      
       if LDemandResponse      
          #Demand balance per time step
          @constraint(M,drbal[iArea=1:NArea, k=1:NK],dr_tot[iArea, k]-dr_up[iArea, k]+sum(dr_dn[iArea, kk,k] for kk = max(1,MaxLoadRec+2-k):min(2*MaxLoadRec+1,MaxLoadRec+1+NK-k)) == 0.0)
@@ -244,8 +240,8 @@ module StageProbDet
             @constraint(M,endset,alpha == 0)
          end
       else
-         @constraint(M,cut[c=1:NCut],alpha-sum(CCR[iSys,t,c]*rstate[iSys] for iSys=1:NHSys) >= 0.0)
-         #@constraint(M,cut[c=1:NCut],alpha- sum(CCR[iSys,t,c]*rstate[iSys] for iSys=1:NHSys) - sum(CCH[iArea,t,c]*h2res[iArea,end] for iArea=1:NH2Area)>= 0.0) #h2res Added   
+         #@constraint(M,cut[c=1:NCut],alpha-sum(CCR[iSys,t,c]*rstate[iSys] for iSys=1:NHSys) >= 0.0)
+         @constraint(M,cut[c=1:NCut],alpha- sum(CCR[iSys,t,c]*rstate[iSys] for iSys=HydroAreas) - sum(CCH[iArea,t,c]*h2res[iArea,end] for iArea=1:NH2Area)>= 0.0) #h2res Added   
       end
 
       return M
