@@ -230,18 +230,24 @@ module StageProbDet
 
       if LEndVal
          if EV.NEndCut > 0
-            @constraint(M,endc[c=1:EV.NEndCut],alpha+sum(EV.EndCutCoef[c,iSys]*rstate[iSys] for iSys=1:NHSys) >= EV.EndCutRHS[c])
+            #@constraint(M,endc[c=1:EV.NEndCut],alpha+sum(EV.EndCutCoef[c,iSys]*rstate[iSys] for iSys=1:NHSys) >= EV.EndCutRHS[c])
+            @constraint(M,endc[c=1:EV.NEndCut],alpha+sum(EV.EndCutCoef[c,i]*rstate[HydroAreas[i]] for i in eachindex(HydroAreas)) >= EV.EndCutRHS[c])
+
          elseif EV.NEndSeg > 0
              SegFrac = 1.0/Float64(EV.NEndSeg)
              @variable(M,0.0 <= res_seg[iSys=1:NHSys,iSeg=1:EV.NEndSeg] <= SegFrac*HSys[iSys].MaxRes, base_name="res_seg") 
              @constraint(M,endsegval,alpha+sum(EV.EndSegCoef[iSeg]*res_seg[iSys,iSeg] for iSys=1:NHSys for iSeg=1:EV.NEndSeg) >= 0.0)
-             @constraint(M,endsegbal[iSys=1:NHSys],sum(res_seg[iSys,iSeg] for iSeg=1:EV.NEndSeg) - rstate[iSys] == 0.0)
+             #@constraint(M,endsegbal[iSys=1:NHSys],sum(res_seg[iSys,iSeg] for iSeg=1:EV.NEndSeg) - rstate[iSys] == 0.0)
+             @constraint(M,endsegbal[iSys=1:NHSys],sum(res_seg[iSys,iSeg] for iSeg=1:EV.NEndSeg) - rstate[HydroAreas[iSys]] == 0.0)
+
          else
             @constraint(M,endset,alpha == 0)
          end
       else
          #@constraint(M,cut[c=1:NCut],alpha-sum(CCR[iSys,t,c]*rstate[iSys] for iSys=1:NHSys) >= 0.0)
-         @constraint(M,cut[c=1:NCut],alpha- sum(CCR[iSys,t,c]*rstate[iSys] for iSys=HydroAreas) - sum(CCH[iArea,t,c]*h2res[iArea,end] for iArea=1:NH2Area)>= 0.0) #h2res Added   
+         #@constraint(M,cut[c=1:NCut],alpha- sum(CCR[iSys,t,c]*rstate[iSys] for iSys=HydroAreas) - sum(CCH[iArea,t,c]*h2res[iArea,end] for iArea=1:NH2Area)>= 0.0) #h2res Added   
+         @constraint(M,cut[c=1:NCut],alpha- sum(CCR[i,t,c]*rstate[HydroAreas[i]] for i in eachindex(HydroAreas)) - sum(CCH[iArea,t,c]*h2res[iArea,end] for iArea=1:NH2Area) >= 0.0)
+
       end
 
       return M
