@@ -235,7 +235,7 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
                             end
                         end
                     end
-                    
+                    #=
                     #TROR NOE MÅ ENDRES HER!!!
                     if t < parameters.Control.NStageSim
                         Ztilst = zeros(Float64,model.NHSys)
@@ -250,6 +250,25 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
                         adjust = transpose(strategy.CCI[1:inflow_model.NSer,t,1:strategy.NCut])*Ztilst[1:inflow_model.NSer]
                         for iCut = 1:strategy.NCut
                             JuMP.set_normalized_rhs(SP_FORW[:cut][iCut],strategy.CRHS[t,iCut]+adjust[iCut])
+                        end
+                    end
+                    =#
+
+                    if t < parameters.Control.NStageSim
+                        Ztilst = zeros(Float64, model.NHSys)
+                        for iSys = 1:model.NHSys
+                            iArea = model.HSys[iSys].AreaNo
+                            qSys = 0.0
+                            for iMod = 1:model.AHData[iArea].NMod
+                                myNr = model.AHData[iArea].MData[iMod].ModCnt
+                                qSys += (model.ModInfReg[myNr,sWeek,iScen] + model.ModInfUReg[myNr,sWeek,iScen]) *
+                                        model.AHData[iArea].EffSea[iMod] * parameters.Constants.MAGEFF2GWH
+                            end
+                            Ztilst[iSys] = (qSys - inflow_model.InflowMean[iSys,sWeek]) / inflow_model.InflowSDev[iSys,sWeek]
+                        end
+                        adjust = transpose(strategy.CCI[1:inflow_model.NSer,t,1:strategy.NCut]) * Ztilst[1:inflow_model.NSer]
+                        for iCut = 1:strategy.NCut
+                            JuMP.set_normalized_rhs(SP_FORW[:cut][iCut], strategy.CRHS[t,iCut] + adjust[iCut])
                         end
                     end
 
