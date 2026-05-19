@@ -797,7 +797,7 @@ function ReadDynmod(dataset,AHData,NArea,AreaName,MyKeys,MaxModArea,NWeek)
     QfoMinTD = zeros(Float64,NArea,MaxModArea,NWeek)
     ModNrTD = zeros(Int,NArea,MaxModArea)
     for iArea = 1:NArea
-        if AreaName[iArea] in MyKeys
+        if AreaName[iArea] in MyKeys && !contains(AreaName[iArea], "H2") #ADDED:,  && !contains(AreaName[iArea], "H2")
             if iArea < 10
                 fname = joinpath(dataset,"DYNMODELL.OM0$iArea")
             else
