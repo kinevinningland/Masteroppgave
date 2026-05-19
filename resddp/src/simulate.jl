@@ -1,5 +1,6 @@
+#=
 function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::Parameters, strategy::Strategy; optimizer=JuMP.optimizer_with_attributes(Clp.Optimizer, "SolveType" => 0, "PresolveType" => 1, "LogLevel" => 0))::DetailedResult
-    #NHSys2 = length(model.AHData)
+    
     NMaxMod = maximum([model.AHData[iSys].NMod for iSys in 1:model.NHSys])
 
     SimulatedStateTraj = zeros(Float64,model.NHSys, NMaxMod, parameters.Control.NScenSim, parameters.Control.NStageSim)
@@ -26,9 +27,6 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
 
     NCluster = min(Threads.nthreads(), parameters.Control.NScenSim) # Never more threads than scenarios in simulation
     NScenPerCluster = Int(ceil(parameters.Control.NScenSim/NCluster)) # Maximum number of scenario per thread
-
-    println("antall hydro-områder i system: ", model.NHSys) #ta bort
-    println("antall hydro-områder i system: ", length(model.AHData)) #ta bort
 
     HydroAreas = findall(model.NAreaSys .> 0)
     dTS1 = dTS2 = 0.0
@@ -140,6 +138,146 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
                         end
                     end
                     =#
+                    for iH2a = 1:model.H2Data.NArea #Added
+                        SimulatedH2Traj[iH2a,iScen,t] = JuMP.value(SP_FORW[:h2res][iH2a,end])
+                    end
+
+                    if t < parameters.Control.NStageSim
+                        SimulatedCost[iScen] += (JuMP.objective_value(SP_FORW)-JuMP.value(SP_FORW[:alpha]))
+                    else
+                        SimulatedCost[iScen] += JuMP.objective_value(SP_FORW)
+                    end
+                end
+            end
+        end
+    end
+    @printf("%s %6.2f \n"," Time - Total : ",(time_ns()-t1)*1.0E-9)
+    @printf("%s %6.2f \n"," Time - Solver: ",dTS2*1.0E-9)
+
+    return DetailedResultTable
+end
+=#
+
+function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::Parameters, strategy::Strategy; optimizer=JuMP.optimizer_with_attributes(Clp.Optimizer, "SolveType" => 0, "PresolveType" => 1, "LogLevel" => 0))::DetailedResult
+    
+    NMaxMod = maximum([model.AHData[iSys].NMod for iSys in 1:model.NArea])
+
+    SimulatedStateTraj = zeros(Float64,model.NArea, NMaxMod, parameters.Control.NScenSim, parameters.Control.NStageSim)
+    SimulatedH2Traj = zeros(Float64,model.H2Data.NArea, parameters.Control.NScenSim, parameters.Control.NStageSim) #Added
+    SimulatedCost = zeros(Float64, parameters.Control.NScenSim)
+
+    NMaxMStep = maximum([model.AMData[iArea].NMStep for iArea in 1:model.NArea])
+
+    DetailedResultTable = init_detailed_result(model.NArea, model.NHSys, NMaxMStep, parameters.Control.NScenSim, parameters.Control.NStageSim, parameters.Time.NK, model.NLine, NMaxMod, model.ORData.NZ) #ADDED NZ
+
+    ResInit0 = zeros(Float64,model.NArea,NMaxMod)
+    H2Init0 = zeros(Float64,model.H2Data.NArea) #Added
+
+    for iSys = 1:model.NArea
+       for iMod = 1:model.AHData[iSys].NMod
+          ResInit0[iSys,iMod] = parameters.Control.ResInitFrac*parameters.Control.MaxResScale*model.AHData[iSys].MData[iMod].MaxRes
+       end
+    end
+    for iSys=1:model.H2Data.NArea #ADDED, kunne lagt inn initial_value
+        H2Init0[iSys] = parameters.Control.ResInitFrac*parameters.Control.MaxResScale*model.H2Data.Areas[iSys].MaxRes
+    end
+
+    NCluster = min(Threads.nthreads(), parameters.Control.NScenSim) # Never more threads than scenarios in simulation
+    NScenPerCluster = Int(ceil(parameters.Control.NScenSim/NCluster)) # Maximum number of scenario per thread
+
+    dTS1 = dTS2 = 0.0
+    t1 = time_ns()
+    for t = 1:parameters.Control.NStageSim
+        println("Stage ",t)
+        sWeek = mod1(t,parameters.Time.NWeek)
+
+        Threads.@threads for sCluster = 1:NCluster
+            start_scen = (sCluster-1) * NScenPerCluster + 1
+            if start_scen <= parameters.Control.NScenSim
+
+                end_scen = min(sCluster * NScenPerCluster, parameters.Control.NScenSim)
+                ResInit = zeros(Float64,model.NArea,NMaxMod)
+                H2Init = zeros(Float64,model.H2Data.NArea) #Added
+
+                SP_FORW = StageProbDet.Build(t,sWeek,model.USMod,model.AHData,model.AMData,model.HSys,model.MCon,
+                model.EV,strategy.CCR,strategy.CCH,parameters.Constants,strategy.NCut,model.NHSys,model.NArea,
+                model.NLine,model.LineCap,model.LineLoss,parameters.Time,t==parameters.Control.NStageSim,
+                parameters.Control.LDemandResponse,model.DRData,model.H2Data,parameters.Control.LOperatingReserves,model.ORData,optimizer) #ADDED, LOperatingReserves & ORData &H2Data
+
+                for iScen = start_scen:end_scen
+                    if t > 1
+                        ResInit[1:model.NArea,1:NMaxMod] = SimulatedStateTraj[1:model.NArea,1:NMaxMod,iScen,t-1] 
+                        H2Init[1:model.H2Data.NArea] = SimulatedH2Traj[1:model.H2Data.NArea,iScen,t-1] #Added
+                    else
+                        ResInit[1:model.NArea,1:NMaxMod] = ResInit0[1:model.NArea,1:NMaxMod]
+                        H2Init[1:model.H2Data.NArea] = H2Init0[1:model.H2Data.NArea] #ADDED
+                    end
+                    
+                    for iArea=1:model.NArea
+                        for iMod=1:model.AHData[iArea].NMod
+                            CurrInf = parameters.Time.WeekFrac*(model.ModInfReg[model.AHData[iArea].MData[iMod].ModCnt,sWeek,iScen] + model.ModInfUReg[model.AHData[iArea].MData[iMod].ModCnt,sWeek,iScen])
+
+                            JuMP.set_normalized_rhs(SP_FORW[:resbalReg0][iArea,iMod], max(0.0,ResInit[iArea,iMod] + CurrInf)) #ADDED max(0.0,...) to avoid negative reservoir levels
+                            for k=2:parameters.Time.NK
+                                JuMP.set_normalized_rhs(SP_FORW[:resbalReg][iArea,iMod,k], CurrInf)
+                            end
+                        end
+                    end
+                    
+                    for iH2a = 1:model.H2Data.NArea #ADDED
+                        JuMP.set_normalized_rhs(SP_FORW[:h2storage0][iH2a,1],H2Init[iH2a])
+                    end
+                    for iArea=1:model.NArea
+                        for k=1:parameters.Time.NK
+                            JuMP.set_normalized_rhs(SP_FORW[:wptarget][iArea,k], max(model.WPData[iArea,iScen,sWeek,k],0.0))
+                            if parameters.Control.LOperatingReserves #ADDED
+                                JuMP.set_normalized_rhs(SP_FORW[:wp_avail_fix][iArea,k], max(model.WPData[iArea,iScen,sWeek,k],0.0))
+                            end
+                        end
+                    end
+                    
+                    #TROR NOE MÅ ENDRES HER!!!
+                    if t < parameters.Control.NStageSim
+                        Ztilst = zeros(Float64,model.NHSys)
+                        for iSys = 1:model.NHSys
+                            qSys = 0.0
+                            for iMod = 1:model.AHData[iSys].NMod
+                                myNr = model.AHData[iSys].MData[iMod].ModCnt
+                                qSys += (model.ModInfReg[myNr,sWeek,iScen]+ model.ModInfUReg[myNr,sWeek,iScen])*model.AHData[iSys].EffSea[iMod]*parameters.Constants.MAGEFF2GWH
+                            end
+                            Ztilst[iSys] = (qSys-inflow_model.InflowMean[iSys,sWeek])/inflow_model.InflowSDev[iSys,sWeek]
+                        end
+                        adjust = transpose(strategy.CCI[1:inflow_model.NSer,t,1:strategy.NCut])*Ztilst[1:inflow_model.NSer]
+                        for iCut = 1:strategy.NCut
+                            JuMP.set_normalized_rhs(SP_FORW[:cut][iCut],strategy.CRHS[t,iCut]+adjust[iCut])
+                        end
+                    end
+
+                    #Solve problem
+                    t2 = time_ns()
+                    optimize!(SP_FORW)
+                    dTS2 = dTS2+(time_ns()-t2)/NCluster
+                    #write_to_file(SP_FORW, "SPF.lp") #ta bort
+                    if t == 1 && iScen == start_scen
+                        write_to_file(SP_FORW, "SPF_h230.lp")
+                    end
+                    if primal_status(SP_FORW) != MOI.FEASIBLE_POINT 
+                        write_to_file(SP_FORW, "SPF_err.lp")
+                        termstat = termination_status(SP_FORW)
+                        error(println("Solver terminated with status $termstat in forward iteration (stage,scen): ",t," ",iScen))
+                    end
+                    if t==1
+                        write_to_file(SP_FORW, "SPF_H2.lp")
+                    end
+
+                    save_detailed!(DetailedResultTable, SP_FORW, model.AMData, model.H2Data,model.AHData, model.NArea, model.NHSys, parameters.Time.NK, model.NLine, iScen, t,parameters.Control.LOperatingReserves) #ADDED LOperatingReserves,H2Data   
+
+                    for iSys = 1:model.NArea
+                        for iMod = 1:model.AHData[iSys].NMod
+                            SimulatedStateTraj[iSys,iMod,iScen,t] = JuMP.value(SP_FORW[:res][iSys,iMod,parameters.Time.NK])
+                        end
+                    end
+                    
                     for iH2a = 1:model.H2Data.NArea #Added
                         SimulatedH2Traj[iH2a,iScen,t] = JuMP.value(SP_FORW[:h2res][iH2a,end])
                     end

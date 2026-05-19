@@ -83,7 +83,7 @@ function ReadHDF5(dataset,CNS,CTI,CTR)
     WMData = []
     for iArea = 1:NArea
         MData = []
-        if AreaName[iArea] in MyKeys
+        if AreaName[iArea] in MyKeys && !contains(AreaName[iArea], "H2") #ADDED && !contains(AreaName[iArea], "H2")
             helptag = string("hydro_data/",AreaName[iArea])
 
             #INFLOW WATERMARKS#
@@ -340,7 +340,6 @@ function ReadHDF5(dataset,CNS,CTI,CTR)
                 end
             end
             close(rampfid)
-            println("Antall hydro-moduler i area ",iArea,": ",NMod) #ta bort
 
             push!(AHData,AreaDataHydro(NMod,EffSea,RegDegComp,MagShare,RegShare,URegShare,RampFrac,MData,PQCData,RCData))
         
@@ -858,4 +857,53 @@ function ReadDynmod(dataset,AHData,NArea,AreaName,MyKeys,MaxModArea,NWeek)
     println("Read DYNMODELL.OM")
     
     return DMData
+end
+
+function collectHydro(AHData,NAreaSys) #Ta bort
+    HydroAreas = findall(NAreaSys .> 0)
+    Hydro = []
+    for iArea = HydroAreas
+        push!(Hydro,AreaDataHydro(AHData[iArea].NMod,AHData[iArea].EffSea,AHData[iArea].RegDegComp,AHData[iArea].MagShare,
+            AHData[iArea].RegShare,AHData[iArea].URegShare,AHData[iArea].RampFrac,AHData[iArea].MData,
+            AHData[iArea].PQData,AHData[iArea].RCData))
+    end
+    return Hydro
+end
+
+function collectHydro(AHData, NAreaSys, HydroCascade,MyKeys)
+    Hydro = []
+    for iArea in 1:length(AHData)
+         if !contains(MyKeys[iArea], "H2")
+            push!(Hydro, AHData[iArea])
+        end
+    end
+    return Hydro
+    #=
+    HydroAreas = findall(NAreaSys .> 0)
+    Hydro = []
+    for iArea in HydroAreas
+        # Hent alle modulnummer som finnes i kaskader for dette området
+        validMods = Set{Int}()
+        for iSys in 1:HydroCascade[iArea].NSys
+            for iMod in 1:HydroCascade[iArea].Systems[iSys].NMod
+                push!(validMods, HydroCascade[iArea].Systems[iSys].ModNo[iMod])
+            end
+        end
+        validMods = sort(collect(validMods))
+
+        push!(Hydro, AreaDataHydro(
+            length(validMods),
+            AHData[iArea].EffSea[validMods],
+            AHData[iArea].RegDegComp[validMods],
+            AHData[iArea].MagShare[validMods],
+            AHData[iArea].RegShare[validMods],
+            AHData[iArea].URegShare[validMods],
+            AHData[iArea].RampFrac[validMods],
+            AHData[iArea].MData[validMods],
+            AHData[iArea].PQData,
+            AHData[iArea].RCData
+        ))
+    end
+    return Hydro
+    =#
 end

@@ -98,28 +98,20 @@ function save!(RT::Result, SP_FORW,AMData,H2Data,InflowSys,NArea,NHSys,NK,NLine,
     
 end
 
-function save_detailed!(DRT::DetailedResult, SP_FORW,AMData,H2Data,AHData,NArea,NHSys,NK,NLine,s,t,LOperatingReserves,HydroAreas)#ADDED LOperatingReserves,H2Data
+function save_detailed!(DRT::DetailedResult, SP_FORW,AMData,H2Data,AHData,NArea,NHSys,NK,NLine,s,t,LOperatingReserves)#ADDED LOperatingReserves,H2Data
     DRT.ObjTable[s, t] = JuMP.objective_value(SP_FORW) - JuMP.value(SP_FORW[:alpha]) #ADDED
 
-
-    #for iSys = 1:NHSys
-    for (i, iSys) in enumerate(HydroAreas)
+    for iSys = 1:NArea
         for iMod = 1:AHData[iSys].NMod
             for k = 1:NK
-                #DRT.ReservoirTable[iSys,iMod,s,t,k] = JuMP.value(SP_FORW[:res][iSys,iMod,k])
-                #DRT.DischargeTable[iSys,iMod,s,t,k] = JuMP.value(SP_FORW[:dis][iSys,iMod,k])
-                #DRT.SpillTable[iSys,iMod,s,t,k] = JuMP.value(SP_FORW[:spi][iSys,iMod,k])
-                #DRT.BypassTable[iSys,iMod,s,t,k] = JuMP.value(SP_FORW[:byp][iSys,iMod,k])
-                #DRT.HProdTable[iSys,iMod,s,t,k] = JuMP.value(SP_FORW[:ghy][iSys,iMod,k])
-                DRT.ReservoirTable[i,iMod,s,t,k] = JuMP.value(SP_FORW[:res][iSys,iMod,k])
-                DRT.DischargeTable[i,iMod,s,t,k] = JuMP.value(SP_FORW[:dis][iSys,iMod,k])
-                DRT.SpillTable[i,iMod,s,t,k]     = JuMP.value(SP_FORW[:spi][iSys,iMod,k])
-                DRT.BypassTable[i,iMod,s,t,k]    = JuMP.value(SP_FORW[:byp][iSys,iMod,k])
-                DRT.HProdTable[i,iMod,s,t,k]     = JuMP.value(SP_FORW[:ghy][iSys,iMod,k])
+                DRT.ReservoirTable[iSys,iMod,s,t,k] = JuMP.value(SP_FORW[:res][iSys,iMod,k])
+                DRT.DischargeTable[iSys,iMod,s,t,k] = JuMP.value(SP_FORW[:dis][iSys,iMod,k])
+                DRT.SpillTable[iSys,iMod,s,t,k] = JuMP.value(SP_FORW[:spi][iSys,iMod,k])
+                DRT.BypassTable[iSys,iMod,s,t,k] = JuMP.value(SP_FORW[:byp][iSys,iMod,k])
+                DRT.HProdTable[iSys,iMod,s,t,k] = JuMP.value(SP_FORW[:ghy][iSys,iMod,k])
             end
         end
-        #DRT.WaterValueTable[iSys,s,t] = JuMP.shadow_price(SP_FORW[:endvol][iSys]) #Added
-        DRT.WaterValueTable[i,s,t] = JuMP.shadow_price(SP_FORW[:endvol][iSys])
+        DRT.WaterValueTable[iSys,s,t] = JuMP.shadow_price(SP_FORW[:endvol][iSys]) #Added
         
     end
     for iArea = 1:NArea
@@ -129,23 +121,10 @@ function save_detailed!(DRT::DetailedResult, SP_FORW,AMData,H2Data,AHData,NArea,
                     DRT.MarkTable[iArea,iMark,s,t,k] = JuMP.value(SP_FORW[:mark][iArea,iMark,k])
                 end
             end
-            if iArea in HydroAreas
-                DRT.PriceTable[iArea,s,t,k] = -JuMP.shadow_price(SP_FORW[:pbalHyd][iArea,k])
-                DRT.LoadTable[iArea,s,t,k] = JuMP.normalized_rhs(SP_FORW[:pbalHyd][iArea,k]) + (JuMP.haskey(SP_FORW, :dr_tot) ? JuMP.value(SP_FORW[:dr_tot][iArea,k]) : 0)
-            else
-                DRT.PriceTable[iArea,s,t,k] = -JuMP.shadow_price(SP_FORW[:pbalTerm][iArea,k])
-                DRT.LoadTable[iArea,s,t,k] = JuMP.normalized_rhs(SP_FORW[:pbalTerm][iArea,k]) + (JuMP.haskey(SP_FORW, :dr_tot) ? JuMP.value(SP_FORW[:dr_tot][iArea,k]) : 0)
-            end
+
+            DRT.PriceTable[iArea,s,t,k] = -JuMP.shadow_price(SP_FORW[:pbal][iArea,k])
+            DRT.LoadTable[iArea,s,t,k] = JuMP.normalized_rhs(SP_FORW[:pbal][iArea,k]) + (JuMP.haskey(SP_FORW, :dr_tot) ? JuMP.value(SP_FORW[:dr_tot][iArea,k]) : 0)
             
-            #=
-            if iArea > NHSys
-                DRT.PriceTable[iArea,s,t,k] = -JuMP.shadow_price(SP_FORW[:pbalTerm][iArea,k])
-                DRT.LoadTable[iArea,s,t,k] = JuMP.normalized_rhs(SP_FORW[:pbalTerm][iArea,k]) + (JuMP.haskey(SP_FORW, :dr_tot) ? JuMP.value(SP_FORW[:dr_tot][iArea,k]) : 0)
-            else
-                DRT.PriceTable[iArea,s,t,k] = -JuMP.shadow_price(SP_FORW[:pbalHyd][iArea,k])
-                DRT.LoadTable[iArea,s,t,k] = JuMP.normalized_rhs(SP_FORW[:pbalHyd][iArea,k]) + (JuMP.haskey(SP_FORW, :dr_tot) ? JuMP.value(SP_FORW[:dr_tot][iArea,k]) : 0)
-            end
-            =#
             DRT.RationingTable[iArea,s,t,k] = JuMP.value(SP_FORW[:rat][iArea,k])
             DRT.WindTable[iArea,s,t,k] = JuMP.value(SP_FORW[:wprod][iArea,k])
             DRT.DemandUpTable[iArea,s,t,k] = JuMP.haskey(SP_FORW, :dr_up) ?  JuMP.value(SP_FORW[:dr_up][iArea,k]) : 0

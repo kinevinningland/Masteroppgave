@@ -54,7 +54,6 @@ function IdentifyCascades(AHData,NArea,USMod,ModInfReg,ModInfUReg,CTR,CTI,CNS)
             MyCnt = AHData[iArea].MData[iMod].ModCnt
             sumInf = sumInf+sum(ModInfReg[MyCnt,1:CTI.NWeek,1:CTI.NInflowYear]+ModInfUReg[MyCnt,1:CTI.NWeek,1:CTI.NInflowYear])
             if sumInf > 0.1 && AHData[iArea].MData[iMod].DischargeTo == 0 && AHData[iArea].MData[iMod].BypassTo == 0 && AHData[iArea].MData[iMod].SpillTo == 0
-                #println("Sjekker område ", iArea, "nummer av cascader øker i dette området") #ta squeue -u $USER
                 NCascade += 1
                 push!(StartNodes,iMod)
                 sumInf = 0.0
@@ -79,11 +78,7 @@ function IdentifyCascades(AHData,NArea,USMod,ModInfReg,ModInfUReg,CTR,CTI,CNS)
                 AveInflow = 0.0
                 for iMod = 1:AHData[iArea].NMod
                     if (iMod in Visited)
-                        MyId = AHData[iArea].MData[iMod].ModId
-                        if iArea == 50
-                             println("Modul ", MyId, " er i cascade ", iCascade) #ta bort
-                        end
-                        #println(MyId," ") #ta bort    
+                        MyId = AHData[iArea].MData[iMod].ModId   
                         MyCnt = AHData[iArea].MData[iMod].ModCnt
                         MaxRes += CTR.MaxResScale*AHData[iArea].MData[iMod].MaxRes*AHData[iArea].EffSea[iMod]*CNS.MAGEFF2GWH
                         MaxProd += AHData[iArea].MData[iMod].ProdCap*CNS.MW2GWHWEEK #GWh per week

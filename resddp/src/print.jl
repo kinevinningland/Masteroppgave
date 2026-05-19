@@ -215,37 +215,35 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
    attrs(file)["NK"]     = parameters.Time.NK
 
    write(file, "ObjectiveValue", DRT.ObjTable) #Added
-   HydroAreas = findall(model.NAreaSys .> 0)
 
    for iArea = 1:model.NArea
       areaGroup = create_group(file, model.AreaName[iArea])
-      hydro_idx = findfirst(==(iArea), HydroAreas)
-      if hydro_idx !== nothing
-      #if iArea <= model.NHSys
-         #Hydro results
-         hydroGroup = create_group(areaGroup, "Hydro")
+      
+      #Hydro results
+      hydroGroup = create_group(areaGroup, "Hydro")
+      
+      attrs(hydroGroup)["NMod"] = model.AHData[iArea].NMod
 
-         attrs(hydroGroup)["NMod"] = model.AHData[iArea].NMod
+      for iMod=1:model.AHData[iArea].NMod
+         moduleGroup = create_group(hydroGroup, "Module "*string(iMod))
 
-         for iMod=1:model.AHData[iArea].NMod
-            moduleGroup = create_group(hydroGroup, "Module "*string(iMod))
+         write(moduleGroup, "Reservoir", DRT.ReservoirTable[iArea, iMod,:,:,:])
+         write(moduleGroup, "Production", DRT.HProdTable[iArea, iMod,:,:,:])
+         write(moduleGroup, "Discharge", DRT.DischargeTable[iArea, iMod,:,:,:])
+         write(moduleGroup, "Spillage", DRT.SpillTable[iArea, iMod,:,:,:])
+         write(moduleGroup, "Bypass", DRT.BypassTable[iArea, iMod,:,:,:])
 
-            write(moduleGroup, "Reservoir", DRT.ReservoirTable[hydro_idx, iMod,:,:,:])
-            write(moduleGroup, "Production", DRT.HProdTable[hydro_idx, iMod,:,:,:])
-            write(moduleGroup, "Discharge", DRT.DischargeTable[hydro_idx, iMod,:,:,:])
-            write(moduleGroup, "Spillage", DRT.SpillTable[hydro_idx, iMod,:,:,:])
-            write(moduleGroup, "Bypass", DRT.BypassTable[hydro_idx, iMod,:,:,:])
-   
-            for dset in keys(moduleGroup)
-               attrs(moduleGroup[dset])["Dim 1"] = "NScen"
-               attrs(moduleGroup[dset])["Dim 2"] = "NStage"
-               attrs(moduleGroup[dset])["Dim 3"] = "NK"
-            end
+         for dset in keys(moduleGroup)
+            attrs(moduleGroup[dset])["Dim 1"] = "NScen"
+            attrs(moduleGroup[dset])["Dim 2"] = "NStage"
+            attrs(moduleGroup[dset])["Dim 3"] = "NK"
          end
-         write(hydroGroup, "WaterValue", DRT.WaterValueTable[hydro_idx,:,:]) #Added
-         attrs(hydroGroup["WaterValue"])["Dim 1"] = "NScen" #Added
-         attrs(hydroGroup["WaterValue"])["Dim 2"] = "NStage" #Added
       end
+      
+      write(hydroGroup, "WaterValue", DRT.WaterValueTable[iArea,:,:]) #Added
+      attrs(hydroGroup["WaterValue"])["Dim 1"] = "NScen" #Added
+      attrs(hydroGroup["WaterValue"])["Dim 2"] = "NStage" #Added
+      
 
       #Market results
       marketGroup = create_group(areaGroup, "Market")
@@ -255,15 +253,12 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
       #   write(marketStepGroup, model.AMData[iArea].MSData[iMark].Name, DRT.MarkTable[iArea,iMark,:,:,:])
       #end
       for iMark = 1:model.AMData[iArea].NMStep #ADDED
-
          base_name = model.AMData[iArea].MSData[iMark].Name
          name = base_name
-
          # Hvis navn finnes → legg til nummer
          if haskey(marketStepGroup, name)
             name = string(base_name, "_", iMark)
          end
-
          write(marketStepGroup, name, DRT.MarkTable[iArea,iMark,:,:,:])
       end
 

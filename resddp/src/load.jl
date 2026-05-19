@@ -24,10 +24,12 @@ function load(dataset::String, parameters::Parameters)::Model
 
     EV = ReadEndValue(dataset,NHSys)
 
+    HData = collectHydro(AHData, NAreaSys,HCascade,MyKeys)
+
     model = Model(AHData, AMData, DMData, H2Data, USMod, WPData, DRData, ORData,NArea, ModInfReg,
         ModInfUReg, AreaName, MyKeys, MaxModArea, MCon, LineCap, LineLoss, NLine,
         NCascade, HCascade, NHSys,HSys, NAreaSys, AreaSys, USModSys,
-        InfReg, RegFrac, EV) #ORData Added
+        InfReg, RegFrac, EV,HData) #ORData Added
 
     return model
 end

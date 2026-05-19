@@ -133,14 +133,13 @@ function init_result(NArea,NHSys,NMaxMStep,NScen,NStage,NK,NLine,NZ)::Result #NZ
  end
 
  function init_detailed_result(NArea,NHSys,NMaxMStep,NScen,NStage,NK,NLine,NMaxMod,NZ)::DetailedResult
-
-    ReservoirTable = zeros(Float64,NHSys,NMaxMod,NScen,NStage,NK)
-    HProdTable = zeros(Float64,NHSys,NMaxMod,NScen,NStage,NK) 
+    ReservoirTable = zeros(Float64,NArea,NMaxMod,NScen,NStage,NK) #Byttet fra NHSys til NArea
+    HProdTable = zeros(Float64,NArea,NMaxMod,NScen,NStage,NK) #Byttet fra NHSys til NArea
     MarkTable = zeros(Float64,NArea,NMaxMStep,NScen,NStage,NK) 
     FlowTable = zeros(Float64,NLine,NScen,NStage,NK)
-    DischargeTable = zeros(Float64,NHSys,NMaxMod,NScen,NStage,NK)
-    SpillTable = zeros(Float64,NHSys,NMaxMod,NScen,NStage,NK)
-    BypassTable = zeros(Float64,NHSys,NMaxMod,NScen,NStage,NK)
+    DischargeTable = zeros(Float64,NArea,NMaxMod,NScen,NStage,NK) #Byttet fra NHSys til NArea
+    SpillTable = zeros(Float64,NArea,NMaxMod,NScen,NStage,NK) #Byttet fra NHSys til NArea
+    BypassTable = zeros(Float64,NArea,NMaxMod,NScen,NStage,NK) #Byttet fra NHSys til NArea
     LoadTable = zeros(Float64,NArea,NScen,NStage,NK) 
     WindTable = zeros(Float64,NArea,NScen,NStage,NK) 
     PriceTable = zeros(Float64,NArea,NScen,NStage,NK)
