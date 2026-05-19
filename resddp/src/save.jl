@@ -98,8 +98,13 @@ function save!(RT::Result, SP_FORW,AMData,H2Data,InflowSys,NArea,NHSys,NK,NLine,
     
 end
 
-function save_detailed!(DRT::DetailedResult, SP_FORW,AMData,H2Data,AHData,NArea,NHSys,NK,NLine,s,t,LOperatingReserves)#ADDED LOperatingReserves,H2Data
+function save_detailed!(DRT::DetailedResult, SP_FORW,AMData,H2Data,AHData,NArea,NHSys,NK,NLine,s,t,LOperatingReserves,HSys)#ADDED LOperatingReserves,H2Data,HSys
     DRT.ObjTable[s, t] = JuMP.objective_value(SP_FORW) - JuMP.value(SP_FORW[:alpha]) #ADDED
+    
+    for iSys = 1:NHSys #ADDED
+        iArea = HSys[iSys].AreaNo
+        DRT.WaterValueTable[iArea,s,t] = JuMP.shadow_price(SP_FORW[:endvol][iSys])
+    end
 
     for iSys = 1:NArea
         for iMod = 1:AHData[iSys].NMod
@@ -111,8 +116,7 @@ function save_detailed!(DRT::DetailedResult, SP_FORW,AMData,H2Data,AHData,NArea,
                 DRT.HProdTable[iSys,iMod,s,t,k] = JuMP.value(SP_FORW[:ghy][iSys,iMod,k])
             end
         end
-        DRT.WaterValueTable[iSys,s,t] = JuMP.shadow_price(SP_FORW[:endvol][iSys]) #Added
-        
+
     end
     for iArea = 1:NArea
         for k = 1:NK

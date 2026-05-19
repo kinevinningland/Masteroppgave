@@ -215,6 +215,7 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
    attrs(file)["NK"]     = parameters.Time.NK
 
    write(file, "ObjectiveValue", DRT.ObjTable) #Added
+   HydroAreaNos = Set(model.HSys[iSys].AreaNo for iSys in 1:model.NHSys) #Added
 
    for iArea = 1:model.NArea
       areaGroup = create_group(file, model.AreaName[iArea])
@@ -240,9 +241,11 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
          end
       end
       
-      write(hydroGroup, "WaterValue", DRT.WaterValueTable[iArea,:,:]) #Added
-      attrs(hydroGroup["WaterValue"])["Dim 1"] = "NScen" #Added
-      attrs(hydroGroup["WaterValue"])["Dim 2"] = "NStage" #Added
+      if iArea in HydroAreaNos
+        write(hydroGroup, "WaterValue", DRT.WaterValueTable[iArea,:,:])
+        attrs(hydroGroup["WaterValue"])["Dim 1"] = "NScen"
+        attrs(hydroGroup["WaterValue"])["Dim 2"] = "NStage"
+      end
       
 
       #Market results

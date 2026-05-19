@@ -270,7 +270,7 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
                         write_to_file(SP_FORW, "SPF_H2.lp")
                     end
 
-                    save_detailed!(DetailedResultTable, SP_FORW, model.AMData, model.H2Data,model.AHData, model.NArea, model.NHSys, parameters.Time.NK, model.NLine, iScen, t,parameters.Control.LOperatingReserves) #ADDED LOperatingReserves,H2Data   
+                    save_detailed!(DetailedResultTable, SP_FORW, model.AMData, model.H2Data,model.AHData, model.NArea, model.NHSys, parameters.Time.NK, model.NLine, iScen, t,parameters.Control.LOperatingReserve,model.HSys) #ADDED LOperatingReserves,H2Data,HSys  
 
                     for iSys = 1:model.NArea
                         for iMod = 1:model.AHData[iSys].NMod
