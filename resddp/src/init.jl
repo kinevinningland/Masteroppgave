@@ -156,7 +156,7 @@ function init_result(NArea,NHSys,NMaxMStep,NScen,NStage,NK,NLine,NZ)::Result #NZ
     CapDualUpTable = zeros(Float64, NZ, NScen, NStage, NK) 
     CapDualDownTable = zeros(Float64, NZ, NScen, NStage, NK) 
     ObjTable = zeros(Float64, NScen, NStage)  
-    WaterValueTable = zeros(Float64, NHSys, NScen, NStage)
+    WaterValueTable = zeros(Float64, NArea, NScen, NStage)
     MarkCapUpTablePos   = zeros(Float64, NArea, NScen, NStage, NK)
     MarkCapDownTablePos = zeros(Float64, NArea, NScen, NStage, NK)
     MarkCapUpTableNeg   = zeros(Float64, NArea, NScen, NStage, NK)
