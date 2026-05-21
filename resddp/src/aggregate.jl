@@ -44,13 +44,11 @@ function IdentifyCascades(AHData,NArea,USMod,ModInfReg,ModInfUReg,CTR,CTI,CNS)
     HydroCascade = Vector{HydroSystemArea}()
     NCascadeTot = 0
     for iArea = 1:NArea
-        #println("Sjekker område ", iArea) #ta bort
         #Count number of "root nodes", i.e., all waterways to sea. Require inflow.
         NCascade = 0
         StartNodes = Vector{Int}()
         sumInf = 0.0
         for iMod = 1:AHData[iArea].NMod
-            #println("Sjekker modul ", iMod, " i område ", iArea) #ta bort
             MyCnt = AHData[iArea].MData[iMod].ModCnt
             sumInf = sumInf+sum(ModInfReg[MyCnt,1:CTI.NWeek,1:CTI.NInflowYear]+ModInfUReg[MyCnt,1:CTI.NWeek,1:CTI.NInflowYear])
             if sumInf > 0.1 && AHData[iArea].MData[iMod].DischargeTo == 0 && AHData[iArea].MData[iMod].BypassTo == 0 && AHData[iArea].MData[iMod].SpillTo == 0
@@ -140,7 +138,6 @@ function AggrSystems(HCascade,AHData,NArea,ModInfReg,ModInfUReg,CTR,CTI,CNS,CAGR
             for iSys = 1:NSys
                 if !(iSys in KeepCascade)
                     MyCasc = HCascade[iArea].Systems[iSys]
-                    println("er ikke i keepCascade ", iSys, " i område ", iArea) #ta bort
                     for iMod = 1:MyCasc.NMod
                         MyMod = MyCasc.ModNo[iMod] 
                         MyId = AHData[iArea].MData[MyMod].ModId
@@ -154,7 +151,6 @@ function AggrSystems(HCascade,AHData,NArea,ModInfReg,ModInfUReg,CTR,CTI,CNS,CAGR
                         push!(myModNos,MyMod)
                         push!(myModIds,MyId)
                         push!(myModCnts,MyCnt)
-                        println("Legger til modul ", MyId, " i aggr. system i område ", iArea) #ta bort
                         cMod += 1
                     end
                 end
