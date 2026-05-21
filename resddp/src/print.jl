@@ -206,7 +206,7 @@ end
 
 function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Model,parameters::Parameters)
 
-   file = h5open(string(dataset,"DetSimResults_new_wRes_30scen_system.h5"),"w")
+   file = h5open(string(dataset,"DetSimResults_new_wRes_30scen_systemh2test.h5"),"w")
    
    attrs(file)["NArea"]  = model.NArea
    attrs(file)["NHSys"]  = model.NHSys

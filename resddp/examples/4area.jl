@@ -20,8 +20,8 @@ optimizer = JuMP.optimizer_with_attributes(
 
 println("Threads available: ",Threads.nthreads())
 
-datapath = "/cluster/home/kinevin/Masteroppgave/datasets/baseline_2"
-#datapath = "/Users/kinevinningland/Documents/Final_ReSDDP/datasets"
+#datapath = "/cluster/home/kinevin/Masteroppgave/datasets/baseline_2"
+datapath = "/Users/kinevinningland/Documents/Final_ReSDDP/datasets"
 #datapath = "C:\\Users\\arildh\\data\\res100\\norge30_test\\"
 #datapath = "C:\\Users\\arildh\\data\\res100\\HydroCen_LowEmission_V10\\"
 

@@ -171,16 +171,17 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
     DetailedResultTable = init_detailed_result(model.NArea, model.NHSys, NMaxMStep, parameters.Control.NScenSim, parameters.Control.NStageSim, parameters.Time.NK, model.NLine, NMaxMod, model.ORData.NZ) #ADDED NZ
 
     ResInit0 = zeros(Float64,model.NArea,NMaxMod)
-    H2Init0 = zeros(Float64,model.H2Data.NArea) #Added
+    #H2Init0 = zeros(Float64,model.H2Data.NArea) #Added
+    H2Init = zeros(Float64,model.H2Data.NArea) #Added
 
     for iSys = 1:model.NArea
        for iMod = 1:model.AHData[iSys].NMod
           ResInit0[iSys,iMod] = parameters.Control.ResInitFrac*parameters.Control.MaxResScale*model.AHData[iSys].MData[iMod].MaxRes
        end
     end
-    for iSys=1:model.H2Data.NArea #ADDED, kunne lagt inn initial_value
-        H2Init0[iSys] = parameters.Control.ResInitFrac*parameters.Control.MaxResScale*model.H2Data.Areas[iSys].MaxRes
-    end
+    #for iSys=1:model.H2Data.NArea #ADDED, kunne lagt inn initial_value
+    #    H2Init0[iSys] = parameters.Control.ResInitFrac*parameters.Control.MaxResScale*model.H2Data.Areas[iSys].MaxRes
+    #end
 
     NCluster = min(Threads.nthreads(), parameters.Control.NScenSim) # Never more threads than scenarios in simulation
     NScenPerCluster = Int(ceil(parameters.Control.NScenSim/NCluster)) # Maximum number of scenario per thread
@@ -197,20 +198,22 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
 
                 end_scen = min(sCluster * NScenPerCluster, parameters.Control.NScenSim)
                 ResInit = zeros(Float64,model.NArea,NMaxMod)
-                H2Init = zeros(Float64,model.H2Data.NArea) #Added
+                #H2Init = zeros(Float64,model.H2Data.NArea) #Added
 
                 SP_FORW = StageProbDet.Build(t,sWeek,model.USMod,model.AHData,model.AMData,model.HSys,model.MCon,
                 model.EV,strategy.CCR,strategy.CCH,parameters.Constants,strategy.NCut,model.NHSys,model.NArea,
                 model.NLine,model.LineCap,model.LineLoss,parameters.Time,t==parameters.Control.NStageSim,
                 parameters.Control.LDemandResponse,model.DRData,model.H2Data,parameters.Control.LOperatingReserves,model.ORData,optimizer) #ADDED, LOperatingReserves & ORData &H2Data
-
+                #println("startscen: ", start_scen, " endscen: ", end_scen)
                 for iScen = start_scen:end_scen
                     if t > 1
                         ResInit[1:model.NArea,1:NMaxMod] = SimulatedStateTraj[1:model.NArea,1:NMaxMod,iScen,t-1] 
-                        H2Init[1:model.H2Data.NArea] = SimulatedH2Traj[1:model.H2Data.NArea,iScen,t-1] #Added
+                        #H2Init[1:model.H2Data.NArea] = SimulatedH2Traj[1:model.H2Data.NArea,iScen,t-1] #Added
+                        H2Init[1:model.H2Data.NArea] = SimulatedH2Traj[1:model.H2Data.NArea,iScen,t-1,end] #Added
                     else
                         ResInit[1:model.NArea,1:NMaxMod] = ResInit0[1:model.NArea,1:NMaxMod]
-                        H2Init[1:model.H2Data.NArea] = H2Init0[1:model.H2Data.NArea] #ADDED
+                        #H2Init[1:model.H2Data.NArea] = H2Init0[1:model.H2Data.NArea] #ADDED
+                        H2Init[1:model.H2Data.NArea] = initial_values.H2Init[1:model.H2Data.NArea]
                     end
                     
                     for iArea=1:model.NArea
