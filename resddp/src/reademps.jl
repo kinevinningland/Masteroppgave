@@ -669,6 +669,7 @@ function ReadHDF5(dataset,CNS,CTI,CTR)
 end
 
 #HYDROGEN MODEL
+#=
 function ReadH2(dataset,AHData,NArea,AreaName,CNS,CTI,CTR)
     H2Areas = []
     NH2Area = 0
@@ -688,6 +689,42 @@ function ReadH2(dataset,AHData,NArea,AreaName,CNS,CTI,CTR)
     end
     H2Data = H2System(NH2Area,H2Ind,H2Areas)
     return H2Data
+end
+=#
+
+function ReadH2(dataset, NArea, AreaName, CNS, CTI, CTR) #Added
+    H2Areas = []
+    NH2Area = 0
+    H2Ind = zeros(Int, NArea)
+
+    filename = joinpath(dataset, "model.h5")
+    fid = h5open(filename, "r")
+
+    dset = fid["hydro_data"]
+    HydroAreas = read(dset)
+    MyKeys = HydroAreas.keys
+    
+    for iKey = 1:length(MyKeys)
+        if !isassigned(MyKeys, iKey)
+            MyKeys[iKey] = " "
+        end
+    end
+
+    for iArea = 1:NArea
+        if contains(AreaName[iArea], "H2") && AreaName[iArea] in MyKeys
+            tag = string("hydro_data/", AreaName[iArea], "/Module_data")
+            ModData = read(fid[tag])
+            H2MaxDis = ModData[1].max_flow * CNS.M3S2MM3 * CTI.DT
+            H2MaxRes = ModData[1].max_res
+            LStrategic = H2MaxRes > 2.0
+            NH2Area += 1
+            H2Ind[iArea] = NH2Area
+            push!(H2Areas, H2Area(iArea, H2MaxDis, H2MaxRes, CTR.H2CompLoss, LStrategic))
+        end
+    end
+
+    close(fid)
+    return H2System(NH2Area, H2Ind, H2Areas)
 end
 
 function PrintMarketSummary(datapath,NArea,AMData,WPData,MCon,LineCap,CTI)
@@ -859,51 +896,3 @@ function ReadDynmod(dataset,AHData,NArea,AreaName,MyKeys,MaxModArea,NWeek)
     return DMData
 end
 
-function collectHydro(AHData,NAreaSys) #Ta bort
-    HydroAreas = findall(NAreaSys .> 0)
-    Hydro = []
-    for iArea = HydroAreas
-        push!(Hydro,AreaDataHydro(AHData[iArea].NMod,AHData[iArea].EffSea,AHData[iArea].RegDegComp,AHData[iArea].MagShare,
-            AHData[iArea].RegShare,AHData[iArea].URegShare,AHData[iArea].RampFrac,AHData[iArea].MData,
-            AHData[iArea].PQData,AHData[iArea].RCData))
-    end
-    return Hydro
-end
-
-function collectHydro(AHData, NAreaSys, HydroCascade,MyKeys)
-    Hydro = []
-    for iArea in 1:length(AHData)
-         if !contains(MyKeys[iArea], "H2")
-            push!(Hydro, AHData[iArea])
-        end
-    end
-    return Hydro
-    #=
-    HydroAreas = findall(NAreaSys .> 0)
-    Hydro = []
-    for iArea in HydroAreas
-        # Hent alle modulnummer som finnes i kaskader for dette området
-        validMods = Set{Int}()
-        for iSys in 1:HydroCascade[iArea].NSys
-            for iMod in 1:HydroCascade[iArea].Systems[iSys].NMod
-                push!(validMods, HydroCascade[iArea].Systems[iSys].ModNo[iMod])
-            end
-        end
-        validMods = sort(collect(validMods))
-
-        push!(Hydro, AreaDataHydro(
-            length(validMods),
-            AHData[iArea].EffSea[validMods],
-            AHData[iArea].RegDegComp[validMods],
-            AHData[iArea].MagShare[validMods],
-            AHData[iArea].RegShare[validMods],
-            AHData[iArea].URegShare[validMods],
-            AHData[iArea].RampFrac[validMods],
-            AHData[iArea].MData[validMods],
-            AHData[iArea].PQData,
-            AHData[iArea].RCData
-        ))
-    end
-    return Hydro
-    =#
-end
