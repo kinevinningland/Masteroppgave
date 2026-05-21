@@ -158,7 +158,7 @@ function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::
 end
 =#
 
-function simulate_detailed(model::Model, inflow_model::InflowModel, parameters::Parameters, strategy::Strategy; optimizer=JuMP.optimizer_with_attributes(Clp.Optimizer, "SolveType" => 0, "PresolveType" => 1, "LogLevel" => 0))::DetailedResult
+function simulate_detailed(model::Model, inflow_model::InflowModel,initial_values::InitialValues, parameters::Parameters, strategy::Strategy; optimizer=JuMP.optimizer_with_attributes(Clp.Optimizer, "SolveType" => 0, "PresolveType" => 1, "LogLevel" => 0))::DetailedResult
     
     NMaxMod = maximum([model.AHData[iSys].NMod for iSys in 1:model.NArea])
 

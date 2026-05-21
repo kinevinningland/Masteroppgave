@@ -87,7 +87,7 @@ print_strategy(datapath,strategy,parameters.Control.LCostApprox)
 print_feas(datapath,feas_spaces[1],model.NHSys)
 
 println("Start detailed simulation ..")
-results_det = simulate_detailed(model, inflow_model, parameters, strategy; optimizer = optimizer)
+results_det = simulate_detailed(model, inflow_model, init_val, parameters, strategy; optimizer = optimizer)
 
 println("Write detailed results ..")
 print_detailed_results(datapath,results_det,model,parameters)
