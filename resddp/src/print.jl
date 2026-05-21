@@ -206,7 +206,7 @@ end
 
 function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Model,parameters::Parameters)
 
-   file = h5open(string(dataset,"DetSimResults_new_woRes_30scen.h5"),"w")
+   file = h5open(string(dataset,"DetSimResults_new_wRes_30scen.h5"),"w")
    
    attrs(file)["NArea"]  = model.NArea
    attrs(file)["NHSys"]  = model.NHSys
@@ -363,18 +363,17 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
             aname = model.AreaName[a]
             aGroup = create_group(areasGroup, aname)
 
-            if a <= model.NHSys
-               for iMod=1:model.AHData[a].NMod
-                  moduleGroupRes = create_group(aGroup, "Module "*string(iMod))
-                  write(moduleGroupRes, "HydroCapUp", DRT.HydroCapUpTable[a,iMod,:,:,:])
-                  write(moduleGroupRes, "HydroCapDown", DRT.HydroCapDownTable[a,iMod,:,:,:])
+            for iMod=1:model.AHData[a].NMod
+               moduleGroupRes = create_group(aGroup, "Module "*string(iMod))
+               write(moduleGroupRes, "HydroCapUp", DRT.HydroCapUpTable[a,iMod,:,:,:])
+               write(moduleGroupRes, "HydroCapDown", DRT.HydroCapDownTable[a,iMod,:,:,:])
 
-                  for dset in keys(moduleGroupRes)
-                     attrs(moduleGroupRes[dset])["Dim 1"] = "NScen"
-                     attrs(moduleGroupRes[dset])["Dim 2"] = "NStage"
-                     attrs(moduleGroupRes[dset])["Dim 3"] = "NK"
-                  end
+               for dset in keys(moduleGroupRes)
+                  attrs(moduleGroupRes[dset])["Dim 1"] = "NScen"
+                  attrs(moduleGroupRes[dset])["Dim 2"] = "NStage"
+                  attrs(moduleGroupRes[dset])["Dim 3"] = "NK"
                end
+            end
                   #=
                   # dette hydrosystemet tilhører område a
                   if hasproperty(DRT, :HydroCapUpTable)
@@ -389,7 +388,7 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
                   end
                   =#
                
-            end
+            
 
             # Bidrag per område (finnes allerede i RT)
             if hasproperty(DRT, :WindCapDownTable)

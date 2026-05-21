@@ -172,7 +172,7 @@ function save_detailed!(DRT::DetailedResult, SP_FORW,AMData,H2Data,AHData,NArea,
                 DRT.CapDualDownTable[z,s,t,k] = JuMP.shadow_price(czdn[z,k])
             end
         end  
-        for iSys = 1:NHSys
+        for iSys = 1:NArea
             for iMod = 1:AHData[iSys].NMod
                 for k = 1:NK
                     DRT.HydroCapDownTable[iSys,iMod,s,t,k] = JuMP.value(SP_FORW[:cap_hydro_down_mod][iSys,iMod,k])
