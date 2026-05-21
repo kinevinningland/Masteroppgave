@@ -348,7 +348,6 @@ struct Model
     RegFrac # Average fraction of regulated inflow
     # End value
     EV # type EndValuation
-    HData::Array{AreaDataHydro} # type Array{AreaDataHydro}
 end
 
 struct InitialValues
