@@ -213,7 +213,7 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,A
         end
     end
 
-    hydrosys_to_area = fill(0, NHSys)
+    hydrosys_to_area = fill(0, NArea)
     for a in 1:NArea
         for j in 1:NAreaSys[a]
             hydrosys_to_area[AreaSys[a,j]] = a
