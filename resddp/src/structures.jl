@@ -413,7 +413,6 @@ struct Result
     MarkCapDownTablePos::Array{Float64}
     MarkCapUpTableNeg::Array{Float64}
     MarkCapDownTableNeg::Array{Float64}
-    WindTableAwail::Array{Float64}
     ResAmount::Array{Float64}
 end
 
@@ -448,6 +447,5 @@ struct DetailedResult
     MarkCapDownTableNeg::Array{Float64}
     SlackUpTable::Array{Float64}
     SlackDownTable::Array{Float64}
-    WindTableAwail::Array{Float64}
     ResAmount::Array{Float64}
 end

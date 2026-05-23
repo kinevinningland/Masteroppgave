@@ -16,18 +16,15 @@ function print_results_h5(dataset::String,RT::Result,model::Model,parameters::Pa
       areaGroup = create_group(file, model.AreaName[iArea])
 
       #Hydro results
-      if iArea <= model.NHSys
+      if model.NAreaSys[iArea] > 0 #Changed
          hydroGroup = create_group(areaGroup, "Hydro")
-
-         iSys = model.HSys[iArea].AreaNo #Added
-         #changed from iArea to iSys in this if-block
-
-         write(hydroGroup, "Reservoir", RT.ReservoirTable[iSys,:,:,:])
-         write(hydroGroup, "Production", RT.HProdTable[iSys,:,:,:])
-         write(hydroGroup, "Ramping", repeat(RT.HRampTable[iSys,:,:], 1, 1, parameters.Time.NK))
-         write(hydroGroup, "ReserveCapacity", repeat(RT.HCapTable[iSys,:,:,:], 1, 1, parameters.Time.NK))
-         write(hydroGroup, "Spillage", RT.SpillTable[iSys,:,:,:])
-         write(hydroGroup, "Inflow", parameters.Time.WeekFrac*repeat(RT.InflowTable[iSys,:,:,:], 1, 1, parameters.Time.NK))
+         
+         write(hydroGroup, "Reservoir", sum(RT.ReservoirTable[model.AreaSys[iArea,iSys],:,:,:] for iSys=1:model.NAreaSys[iArea]))
+         write(hydroGroup, "Production", sum(RT.HProdTable[model.AreaSys[iArea,iSys],:,:,:] for iSys=1:model.NAreaSys[iArea]))
+         write(hydroGroup, "Ramping", sum(repeat(RT.HRampTable[model.AreaSys[iArea,iSys],:,:], 1, 1, parameters.Time.NK) for iSys=1:model.NAreaSys[iArea]))
+         write(hydroGroup, "ReserveCapacity", sum(repeat(RT.HCapTable[model.AreaSys[iArea,iSys],:,:,:], 1, 1, parameters.Time.NK) for iSys=1:model.NAreaSys[iArea]))
+         write(hydroGroup, "Spillage", sum(RT.SpillTable[model.AreaSys[iArea,iSys],:,:,:] for iSys=1:model.NAreaSys[iArea]))
+         write(hydroGroup, "Inflow", sum(parameters.Time.WeekFrac*repeat(RT.InflowTable[model.AreaSys[iArea,iSys],:,:,:], 1, 1, parameters.Time.NK) for iSys=1:model.NAreaSys[iArea]))
 
          for dset in keys(hydroGroup)
             attrs(hydroGroup[dset])["Dim 1"] = "NScen"
@@ -35,7 +32,7 @@ function print_results_h5(dataset::String,RT::Result,model::Model,parameters::Pa
             attrs(hydroGroup[dset])["Dim 3"] = "NK"
          end
 
-         write(hydroGroup, "WaterValue", RT.WaterValueTable[iSys,:,:]) #Added
+         write(hydroGroup, "WaterValue", RT.WaterValueTable[model.AreaSys[iArea,iSys],:,:]) #Added
          attrs(hydroGroup["WaterValue"])["Dim 1"] = "NScen" #Added
          attrs(hydroGroup["WaterValue"])["Dim 2"] = "NStage" #Added
 
@@ -66,7 +63,6 @@ function print_results_h5(dataset::String,RT::Result,model::Model,parameters::Pa
       write(marketGroup, "Rationing", RT.RationingTable[iArea,:,:,:])
       write(marketGroup, "DemandUpShift", RT.DemandUpTable[iArea,:,:,:])
       write(marketGroup, "DemandDownShift", RT.DemandDnTable[iArea,:,:,:])
-      write(marketGroup, "WindTableAwail", RT.WindTableAwail[iArea,:,:,:])
 
       for dset in keys(marketStepGroup)
          attrs(marketStepGroup[dset])["Dim 1"] = "NScen"
@@ -159,11 +155,11 @@ function print_results_h5(dataset::String,RT::Result,model::Model,parameters::Pa
             aGroup = create_group(areasGroup, aname)
 
             for iSys in 1:model.NHSys
-               if iSys == a
+               if model.HSys[iSys].AreaNo == a
                   # dette hydrosystemet tilhører område a
                   if hasproperty(RT, :HydroCapUpTable)
-                     write(aGroup, "HydroCapUp", RT.HydroCapUpTable[a,:,:,:])
-                     write(aGroup, "HydroCapDown", RT.HydroCapDownTable[a,:,:,:])
+                     write(aGroup, "HydroCapUp", RT.HydroCapUpTable[iSys,:,:,:])
+                     write(aGroup, "HydroCapDown", RT.HydroCapDownTable[iSys,:,:,:])
 
                      for dset in ["HydroCapUp", "HydroCapDown"]
                         attrs(aGroup[dset])["Dim 1"] = "NScen"
@@ -221,34 +217,34 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
    write(file, "ObjectiveValue", DRT.ObjTable) #Added
    HydroAreaNos = Set(model.HSys[iSys].AreaNo for iSys in 1:model.NHSys) #Added
 
-   for iArea = 1:model.NArea
+   for iArea = 1:model.NArea #removed: if iArea <= model.NHSys
       areaGroup = create_group(file, model.AreaName[iArea])
-      #removed: if iArea <= model.NHSys
       #Hydro results
       hydroGroup = create_group(areaGroup, "Hydro")
       
       attrs(hydroGroup)["NMod"] = model.AHData[iArea].NMod
+      if model.AHData[iArea].NMod > 0
+         for iMod=1:model.AHData[iArea].NMod
+            moduleGroup = create_group(hydroGroup, "Module "*string(iMod))
 
-      for iMod=1:model.AHData[iArea].NMod
-         moduleGroup = create_group(hydroGroup, "Module "*string(iMod))
+            write(moduleGroup, "Reservoir", DRT.ReservoirTable[iArea, iMod,:,:,:])
+            write(moduleGroup, "Production", DRT.HProdTable[iArea, iMod,:,:,:])
+            write(moduleGroup, "Discharge", DRT.DischargeTable[iArea, iMod,:,:,:])
+            write(moduleGroup, "Spillage", DRT.SpillTable[iArea, iMod,:,:,:])
+            write(moduleGroup, "Bypass", DRT.BypassTable[iArea, iMod,:,:,:])
 
-         write(moduleGroup, "Reservoir", DRT.ReservoirTable[iArea, iMod,:,:,:])
-         write(moduleGroup, "Production", DRT.HProdTable[iArea, iMod,:,:,:])
-         write(moduleGroup, "Discharge", DRT.DischargeTable[iArea, iMod,:,:,:])
-         write(moduleGroup, "Spillage", DRT.SpillTable[iArea, iMod,:,:,:])
-         write(moduleGroup, "Bypass", DRT.BypassTable[iArea, iMod,:,:,:])
-
-         for dset in keys(moduleGroup)
-            attrs(moduleGroup[dset])["Dim 1"] = "NScen"
-            attrs(moduleGroup[dset])["Dim 2"] = "NStage"
-            attrs(moduleGroup[dset])["Dim 3"] = "NK"
+            for dset in keys(moduleGroup)
+               attrs(moduleGroup[dset])["Dim 1"] = "NScen"
+               attrs(moduleGroup[dset])["Dim 2"] = "NStage"
+               attrs(moduleGroup[dset])["Dim 3"] = "NK"
+            end
          end
-      end
-      
-      if iArea in HydroAreaNos #Added
-        write(hydroGroup, "WaterValue", DRT.WaterValueTable[iArea,:,:])
-        attrs(hydroGroup["WaterValue"])["Dim 1"] = "NScen"
-        attrs(hydroGroup["WaterValue"])["Dim 2"] = "NStage"
+         
+         if iArea in HydroAreaNos #Added
+         write(hydroGroup, "WaterValue", DRT.WaterValueTable[iArea,:,:])
+         attrs(hydroGroup["WaterValue"])["Dim 1"] = "NScen"
+         attrs(hydroGroup["WaterValue"])["Dim 2"] = "NStage"
+         end
       end
       
 
@@ -275,7 +271,6 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
       write(marketGroup, "Rationing", DRT.RationingTable[iArea,:,:,:])
       write(marketGroup, "DemandUpShift", DRT.DemandUpTable[iArea,:,:,:])
       write(marketGroup, "DemandDownShift", DRT.DemandDnTable[iArea,:,:,:])
-      write(marketGroup, "WindTableAwail", DRT.WindTableAwail[iArea,:,:,:])
 
       for dset in keys(marketStepGroup)
          attrs(marketStepGroup[dset])["Dim 1"] = "NScen"

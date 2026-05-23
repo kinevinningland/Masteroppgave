@@ -23,7 +23,6 @@ function save!(RT::Result, SP_FORW,AMData,H2Data,InflowSys,NArea,NHSys,NK,NLine,
 
             RT.RationingTable[iArea,s,t,k] = JuMP.value(SP_FORW[:rat][iArea,k])
             RT.WindTable[iArea,s,t,k] = JuMP.value(SP_FORW[:wprod][iArea,k])
-            RT.WindTableAwail[iArea,s,t,k] = JuMP.value(SP_FORW[:wp_avail][iArea,k])
             RT.DemandUpTable[iArea,s,t,k] = JuMP.haskey(SP_FORW, :dr_up) ?  JuMP.value(SP_FORW[:dr_up][iArea,k]) : 0
             RT.DemandDnTable[iArea,s,t,k] = JuMP.haskey(SP_FORW, :dr_dn) ? (JuMP.value(SP_FORW[:dr_up][iArea,k]) - JuMP.value(SP_FORW[:dr_tot][iArea,k])) : 0
         end
@@ -136,7 +135,6 @@ function save_detailed!(DRT::DetailedResult, SP_FORW,AMData,H2Data,AHData,NArea,
             DRT.WindTable[iArea,s,t,k] = JuMP.value(SP_FORW[:wprod][iArea,k])
             DRT.DemandUpTable[iArea,s,t,k] = JuMP.haskey(SP_FORW, :dr_up) ?  JuMP.value(SP_FORW[:dr_up][iArea,k]) : 0
             DRT.DemandDnTable[iArea,s,t,k] = JuMP.haskey(SP_FORW, :dr_dn) ?  (JuMP.value(SP_FORW[:dr_up][iArea,k]) - JuMP.value(SP_FORW[:dr_tot][iArea,k])) : 0
-            DRT.WindTableAwail[iArea,s,t,k] = JuMP.value(SP_FORW[:wp_avail][iArea,k])
         end
         if H2Data.Ind[iArea] > 0 #ADDED
             for k = 1:NK
