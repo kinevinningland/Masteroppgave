@@ -170,6 +170,8 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,A
     if !LOperatingReserves
         return OperatingReserves(0,String[],ReserveZoneReq[],Vector{Int}(),Vector{Vector{Int}}(),Int[],false,0,0, Dict{Int, Set{Int}}(), Dict{Int, Set{Int}}())
     end
+    
+    LMarkReserves = isfile(joinpath(dataset, "ORData_mark.csv"))
     LMarkReserves = false
     LZoneReq = true
 
@@ -264,19 +266,23 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,A
     b = 150
 
     # Read reserve CSV
-    f = open(joinpath(dataset, "ORData_mark.csv"), "r")
-    readline(f)  # skip header
-    reserve_rules = Dict{String, Vector{Tuple{Int,Bool,Bool}}}()  # zone -> [(power_cat, pos, neg)]
-    for line in eachline(f)
-        isempty(strip(line)) && continue
-        items = split(line, ",")
-        power_cat = parse(Int, strip(items[1]))
-        zone      = strip(items[2])
-        pos       = lowercase(strip(items[3])) == "true"
-        neg       = lowercase(strip(items[4])) == "true"
-        push!(get!(reserve_rules, zone, Vector{Tuple{Int,Bool,Bool}}()), (power_cat, pos, neg))
+    if LMarkReserves
+        f = open(joinpath(dataset, "ORData_mark.csv"), "r")
+        readline(f)  # skip header
+        reserve_rules = Dict{String, Vector{Tuple{Int,Bool,Bool}}}()
+        for line in eachline(f)
+            isempty(strip(line)) && continue
+            items = split(line, ",")
+            power_cat = parse(Int, strip(items[1]))
+            zone      = strip(items[2])
+            pos       = lowercase(strip(items[3])) == "true"
+            neg       = lowercase(strip(items[4])) == "true"
+            push!(get!(reserve_rules, zone, Vector{Tuple{Int,Bool,Bool}}()), (power_cat, pos, neg))
+        end
+        close(f)
+    else
+        reserve_rules = Dict{String, Vector{Tuple{Int,Bool,Bool}}}()
     end
-    close(f)
 
 
     # Names of market steps where positive/negative Mark are reserve-eligible

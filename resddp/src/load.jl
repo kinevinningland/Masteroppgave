@@ -8,7 +8,7 @@ function load(dataset::String, parameters::Parameters)::Model
     MCon,LineCap,LineLoss,NLine = ReadMaske(dataset,NArea,CNS,CTR)
     DMData = ReadDynmod(dataset,AHData,NArea,AreaName,MyKeys,MaxModArea,CTI.NWeek)
     DRData = ReadDemandResponse(dataset,NArea,CTI.NWeek,AreaName,CTR.LDemandResponse)
-    H2Data = ReadH2(dataset,NArea,AreaName,CNS,CTI,CTR) #Added, AHData er tatt bort
+    H2Data = ReadH2(dataset,NArea,AreaName,CNS,CTI,CTR) #Changed, AHData er tatt bort
     PrintMarketSummary(dataset,NArea,AMData,WPData,MCon,LineCap,CTI)
     
 
