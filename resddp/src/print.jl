@@ -32,7 +32,7 @@ function print_results_h5(dataset::String,RT::Result,model::Model,parameters::Pa
             attrs(hydroGroup[dset])["Dim 3"] = "NK"
          end
 
-         write(hydroGroup, "WaterValue", RT.WaterValueTable[model.AreaSys[iArea,iSys],:,:]) #Added
+         write(hydroGroup,"WaterValue", RT.WaterValueTable[model.AreaSys[iArea,iSys],:,:] for iSys=1:model.NAreaSys[iArea]) #Added
          attrs(hydroGroup["WaterValue"])["Dim 1"] = "NScen" #Added
          attrs(hydroGroup["WaterValue"])["Dim 2"] = "NStage" #Added
 
