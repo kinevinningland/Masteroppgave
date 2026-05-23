@@ -6,7 +6,6 @@ Pkg.instantiate()
 
 using ReSDDP
 include("params.jl") # Import parameters
-include(joinpath(@__DIR__, "..", "src", "LeseDataset.jl")) #Added
 using .LeseData #Added
 
 import JuMP

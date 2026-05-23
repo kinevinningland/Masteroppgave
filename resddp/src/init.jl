@@ -126,20 +126,22 @@ function init_result(NArea,NHSys,NMaxMStep,NScen,NStage,NK,NLine,NZ)::Result #NZ
     MarkCapDownTablePos = zeros(Float64, NArea, NScen, NStage, NK)
     MarkCapUpTableNeg   = zeros(Float64, NArea, NScen, NStage, NK)
     MarkCapDownTableNeg = zeros(Float64, NArea, NScen, NStage, NK)
+    WindTableAwail = zeros(Float64,NArea,NScen,NStage,NK) 
+    ResAmount = zeros(Float64, NZ, NScen, NStage, NK)
     
     return Result(ReservoirTable,HProdTable,HRampTable,HCapTable,MarkTable,FlowTable,SpillTable,InflowTable,LoadTable,WindTable,PriceTable,
                   RationingTable,DemandUpTable,DemandDnTable,H2StoreTable,H2DisTable,
-                  CapZoneUpTable, CapZoneDownTable, HydroCapUpTable, HydroCapDownTable, WindCapDownTable, CapDualUpTable, CapDualDownTable, ObjTable, WaterValueTable,MarkCapUpTablePos,MarkCapDownTablePos,MarkCapUpTableNeg,MarkCapDownTableNeg) #Last line ADDED
+                  CapZoneUpTable, CapZoneDownTable, HydroCapUpTable, HydroCapDownTable, WindCapDownTable, CapDualUpTable, CapDualDownTable, ObjTable, WaterValueTable,MarkCapUpTablePos,MarkCapDownTablePos,MarkCapUpTableNeg,MarkCapDownTableNeg,WindTableAwail,ResAmount) #Last line ADDED
  end
 
  function init_detailed_result(NArea,NMaxMStep,NScen,NStage,NK,NLine,NMaxMod,NZ)::DetailedResult
-    ReservoirTable = zeros(Float64,NArea,NMaxMod,NScen,NStage,NK) #Byttet fra NHSys til NArea
-    HProdTable = zeros(Float64,NArea,NMaxMod,NScen,NStage,NK) #Byttet fra NHSys til NArea
+    ReservoirTable = zeros(Float64,NArea,NMaxMod,NScen,NStage,NK) #Changed from NHSys to NArea
+    HProdTable = zeros(Float64,NArea,NMaxMod,NScen,NStage,NK) #Changed from NHSys to NArea
     MarkTable = zeros(Float64,NArea,NMaxMStep,NScen,NStage,NK) 
     FlowTable = zeros(Float64,NLine,NScen,NStage,NK)
-    DischargeTable = zeros(Float64,NArea,NMaxMod,NScen,NStage,NK) #Byttet fra NHSys til NArea
-    SpillTable = zeros(Float64,NArea,NMaxMod,NScen,NStage,NK) #Byttet fra NHSys til NArea
-    BypassTable = zeros(Float64,NArea,NMaxMod,NScen,NStage,NK) #Byttet fra NHSys til NArea
+    DischargeTable = zeros(Float64,NArea,NMaxMod,NScen,NStage,NK) #Changed from NHSys to NArea
+    SpillTable = zeros(Float64,NArea,NMaxMod,NScen,NStage,NK) #Changed from NHSys to NArea
+    BypassTable = zeros(Float64,NArea,NMaxMod,NScen,NStage,NK) #Changed from NHSys to NArea
     LoadTable = zeros(Float64,NArea,NScen,NStage,NK) 
     WindTable = zeros(Float64,NArea,NScen,NStage,NK) 
     PriceTable = zeros(Float64,NArea,NScen,NStage,NK)
@@ -163,9 +165,11 @@ function init_result(NArea,NHSys,NMaxMStep,NScen,NStage,NK,NLine,NZ)::Result #NZ
     MarkCapDownTableNeg = zeros(Float64, NArea, NScen, NStage, NK)
     SlackUpTable = zeros(Float64,NZ,NScen,NStage,NK)
     SlackDownTable = zeros(Float64,NZ,NScen,NStage,NK)
+    WindTableAwail = zeros(Float64,NArea,NScen,NStage,NK) 
+    ResAmount = zeros(Float64, NZ, NScen, NStage, NK)
 
     return DetailedResult(ReservoirTable,HProdTable,MarkTable,FlowTable,DischargeTable,SpillTable,BypassTable,LoadTable,WindTable,PriceTable,
                           RationingTable,DemandUpTable,DemandDnTable,H2StoreTable,H2DisTable,
-                          CapZoneUpTable, CapZoneDownTable, HydroCapUpTable, HydroCapDownTable, WindCapDownTable, CapDualUpTable, CapDualDownTable, ObjTable, WaterValueTable,MarkCapUpTablePos,MarkCapDownTablePos,MarkCapUpTableNeg,MarkCapDownTableNeg,SlackUpTable,SlackDownTable) #Last line ADDED
+                          CapZoneUpTable, CapZoneDownTable, HydroCapUpTable, HydroCapDownTable, WindCapDownTable, CapDualUpTable, CapDualDownTable, ObjTable, WaterValueTable,MarkCapUpTablePos,MarkCapDownTablePos,MarkCapUpTableNeg,MarkCapDownTableNeg,SlackUpTable,SlackDownTable,WindTableAwail,ResAmount) #Last line ADDED
  end
 

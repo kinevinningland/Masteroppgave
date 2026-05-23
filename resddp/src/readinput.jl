@@ -204,7 +204,6 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,A
         end
     end
     
-    
     areas_in_zone = [Int[] for _ in 1:NZ]
     for a in 1:NArea
         z = area_to_zone[a]

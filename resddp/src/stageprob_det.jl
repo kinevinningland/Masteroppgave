@@ -5,7 +5,7 @@ module StageProbDet
    using MathOptInterface
    const MOI = MathOptInterface
 
-   function Build(t,iWeek,USMod,AHData,AMData,HSys,MCon,EV,CCR,CCH,CNS,NCut,NHSys,NArea,NLine,LineCap,LineLoss,CTI,LEndVal,LDemandResponse,DR,H2Data,LOperatingReserves,ORData,optimizer) #H2Data Added
+   function Build(t,iWeek,USMod,AHData,AMData,HSys,MCon,EV,CCR,CCH,CNS,NCut,NHSys,NArea,NLine,LineCap,LineLoss,CTI,LEndVal,LDemandResponse,DR,H2Data,LOperatingReserves,ORData,optimizer) #H2Data, LOperatingReserves & ORData Added
 
       M = Model(optimizer)
 
@@ -86,7 +86,7 @@ module StageProbDet
                   -WeekFrac*MW2GWHWEEK*sum(AHData[iArea].PQData[iMod].Eff[iSeg]*disSeg[iArea,iMod,iSeg,k] for iSeg=1:AHData[iArea].PQData[iMod].NSeg) == 0.0)
 
       #Reservoir state: V_{t}
-      @constraint(M,endvol[iSys=1:NHSys], rstate[iSys] - sum(AHData[HSys[iSys].AreaNo].EffSea[iMod]*MAGEFF2GWH*res[HSys[iSys].AreaNo,iMod,NK] for iMod=1:AHData[HSys[iSys].AreaNo].NMod) == 0.0)
+      @constraint(M,endvol[iSys=1:NHSys], rstate[iSys] - sum(AHData[HSys[iSys].AreaNo].EffSea[iMod]*MAGEFF2GWH*res[HSys[iSys].AreaNo,iMod,NK] for iMod=1:AHData[HSys[iSys].AreaNo].NMod) == 0.0) #Changed to collecting AHData from hydropower areas: Sys[iSys].AreaNo
 
 
       #POWER BALANCE [GWh/step]
@@ -129,17 +129,17 @@ module StageProbDet
       end
       
       if LOperatingReserves #ADDED
-         NZ = ORData.NZ #antall prissoner
-         zone_reqs = ORData.zone_reqs #reservemengder
-         areas_in_zone = ORData.areas_in_zone #map over områdene i hver sone
-         hydrosys_to_area = ORData.hydrosys_to_area #map over 
-         a = ORData.a #empirisk konstant fra Entso-E
-         b = ORData.b #empirisk konstant fra Entso-E
-         pos_by_area = ORData.pos_by_area
-         neg_by_area = ORData.neg_by_area
+         NZ = ORData.NZ #number of price zones
+         zone_reqs = ORData.zone_reqs #reserve requirements per zone
+         areas_in_zone = ORData.areas_in_zone #map from zone to areas in zone
+         hydrosys_to_area = ORData.hydrosys_to_area #map from hydrosystem to area
+         a = ORData.a #empirical constant from Entso-E
+         b = ORData.b #empirical constant from Entso-E
+         pos_by_area = ORData.pos_by_area #map from area to its allowed market steps with positive capacity which can contribute to reserves
+         neg_by_area = ORData.neg_by_area #map from area to its allowed market steps with negative capacity which can contribute to reserves
 
          
-         #Opp- og nedreguleringsreserver
+         #Up and down regulation reserves
          @variable(M, 0 <= cap_zone_up[z=1:NZ, k=1:NK], base_name="cap_zone_up")
          @variable(M, 0 <= cap_zone_down[z=1:NZ, k=1:NK], base_name="cap_zone_down")
          @variable(M, 0 <= cap_hydro_up_mod[iArea=1:NArea,iMod=1:AHData[iArea].NMod,k=1:NK], base_name="cap_hydro_up_mod")
@@ -157,29 +157,28 @@ module StageProbDet
             @constraint(M, mark_dn_pos[a=1:NArea, iMark=1:AMData[a].NMStep, k=1:NK; iMark in get(pos_by_area, a, Set{Int}())], mark[a,iMark,k] >= cap_mark_down_pos[a,iMark,k])      
          end
 
-         #Diverse
-         @variable(M, wp_avail[a=1:NArea, k=1:NK] >= 0, base_name="wp_avail")
-         @constraint(M, wp_avail_fix[a=1:NArea, k=1:NK],wp_avail[a,k] == 0.0) #RHS endres i simulate
+         #Div.
+         @variable(M, wp_avail[a=1:NArea, k=1:NK] >= 0, base_name="wp_avail") #available wind power used to calculate reserve requirements
+         @constraint(M, wp_avail_fix[a=1:NArea, k=1:NK],wp_avail[a,k] == 0.0) #RHS is changed in simulate.jl
 
-
-         #Opp- og nedreguleringskrav
+         #Up and down regulation requirements
          @expression(M, cap_up_amount[z = 1:NZ, k=1:NK], 
-            zone_reqs[z].RI_up * CTI.DT                                                                                                   #RI ledd
-            + zone_reqs[z].NI_up * sum(wp_avail[a,k] for a in areas_in_zone[z] if !(a in zone_reqs[z].owp_areas_in_zone); init=0.0)       #NI onshore ledd
-            + zone_reqs[z].NI_up_OWP * sum(wp_avail[a,k] for a in zone_reqs[z].owp_areas_in_zone; init=0.0)                               #NI offshore ledd
-            + (sqrt(a*zone_reqs[z].MaxLoad/(CNS.MW2GW*CTI.DT)+b^2)-b)*CNS.MW2GW*CTI.DT)                                                   #Last ledd
+            zone_reqs[z].RI_up * CTI.DT                                                                                                   #RI 
+            + zone_reqs[z].NI_up * sum(wp_avail[a,k] for a in areas_in_zone[z] if !(a in zone_reqs[z].owp_areas_in_zone); init=0.0)       #NI onshore 
+            + zone_reqs[z].NI_up_OWP * sum(wp_avail[a,k] for a in zone_reqs[z].owp_areas_in_zone; init=0.0)                               #NI offshore 
+            + (sqrt(a*zone_reqs[z].MaxLoad/(CNS.MW2GW*CTI.DT)+b^2)-b)*CNS.MW2GW*CTI.DT)                                                   #Load 
          
          @expression(M, cap_down_amount[z = 1:NZ, k=1:NK], 
-            zone_reqs[z].RI_down * CTI.DT                                                                                                 #RI ledd
-            + zone_reqs[z].NI_down * sum(wp_avail[a,k] for a in areas_in_zone[z] if !(a in zone_reqs[z].owp_areas_in_zone); init=0.0)     #NI onshore ledd
-            + zone_reqs[z].NI_down_OWP * sum(wp_avail[a,k] for a in zone_reqs[z].owp_areas_in_zone; init=0.0)                             #NI offshore ledd
-            + (sqrt(a*zone_reqs[z].MaxLoad/(CNS.MW2GW*CTI.DT)+b^2)-b)*CNS.MW2GW*CTI.DT)                                                   #Last ledd
+            zone_reqs[z].RI_down * CTI.DT                                                                                                 #RI 
+            + zone_reqs[z].NI_down * sum(wp_avail[a,k] for a in areas_in_zone[z] if !(a in zone_reqs[z].owp_areas_in_zone); init=0.0)     #NI onshore 
+            + zone_reqs[z].NI_down_OWP * sum(wp_avail[a,k] for a in zone_reqs[z].owp_areas_in_zone; init=0.0)                             #NI offshore 
+            + (sqrt(a*zone_reqs[z].MaxLoad/(CNS.MW2GW*CTI.DT)+b^2)-b)*CNS.MW2GW*CTI.DT)                                                   #Load 
       
          @constraint(M, reserve_req_up[z=1:NZ, k=1:NK], cap_zone_up[z,k] + slackUp[z,k] >= cap_up_amount[z,k])
          @constraint(M, reserve_req_down[z=1:NZ, k=1:NK], cap_zone_down[z,k] + slackDown[z,k] >= cap_down_amount[z,k])
 
 
-         #Sammenhengen mellom total sonesum og bidrag fra kraftverkene i sonen
+         #Relationship between the total zone sum and the contribution from the power plants in the zone
          @constraint(M, reserve_split_down[z=1:NZ, k=1:NK], cap_zone_down[z,k] ==
             sum(sum(cap_hydro_down_mod[iSys, iMod, k] for iMod in 1:AHData[iSys].NMod) for iSys in 1:NArea if (hydrosys_to_area[iSys] in areas_in_zone[z]); init=0.0)
             + sum(cap_wind_down[a,k] for a in areas_in_zone[z]; init=0.0) 
@@ -194,10 +193,10 @@ module StageProbDet
             + (ORData.LMarkReserves ? sum(cap_mark_up_neg[a, iMark, k] for a in areas_in_zone[z] for iMark in get(ORData.neg_by_area, a, Set{Int}()); init=0.0) : 0.0)
          )
 
-         #koble hver teknologis cap-variabel til dens egne fysiske grenser
+         #link each technological cap-variable to its own physical limits
          @constraint(M, hydro_up_mod[iArea=1:NArea, iMod=1:AHData[iArea].NMod, k=1:NK], cap_hydro_up_mod[iArea,iMod,k] <= WeekFrac * MW2GWHWEEK * sum(AHData[iArea].PQData[iMod].Eff[iSeg] * (AHData[iArea].PQData[iMod].DMax[iSeg] - disSeg[iArea,iMod,iSeg,k]) for iSeg=1:AHData[iArea].PQData[iMod].NSeg))
          @constraint(M, hydro_down_mod[iArea=1:NArea, iMod=1:AHData[iArea].NMod, k=1:NK], cap_hydro_down_mod[iArea,iMod,k] <= ghy[iArea,iMod,k])
-         @constraint(M, hydro_res_up_mod[iArea=1:NArea, iMod=1:AHData[iArea].NMod, k=1:NK], cap_hydro_up_mod[iArea,iMod,k] <= AHData[iArea].EffSea[iMod] * MAGEFF2GWH * res[iArea,iMod,k]) #skalere neD? 
+         @constraint(M, hydro_res_up_mod[iArea=1:NArea, iMod=1:AHData[iArea].NMod, k=1:NK], cap_hydro_up_mod[iArea,iMod,k] <= AHData[iArea].EffSea[iMod] * MAGEFF2GWH * res[iArea,iMod,k])
          @constraint(M, wind_dn[iArea=1:NArea,k=1:NK], wprod[iArea,k] >= cap_wind_down[iArea,k]) 
 
       end   
@@ -225,7 +224,6 @@ module StageProbDet
             @constraint(M,endset,alpha == 0)
          end
       else
-         #@constraint(M,cut[c=1:NCut],alpha-sum(CCR[iSys,t,c]*rstate[iSys] for iSys=1:NHSys) >= 0.0)
          @constraint(M,cut[c=1:NCut],alpha- sum(CCR[iSys,t,c]*rstate[iSys] for iSys=1:NHSys) - sum(CCH[iArea,t,c]*h2res[iArea,end] for iArea=1:NH2Area)>= 0.0) #h2res Added    
       end
 

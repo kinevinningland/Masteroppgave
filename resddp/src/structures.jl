@@ -86,29 +86,29 @@ struct DemandResponse
 end
 
 struct ReserveZoneReq #ADDED
-    zone_name::String
-    RI_up::Float64          #Reference incident up [GW]
-    RI_down::Float64        #Reference incident down [GW]
-    NI_up::Float64          #Nominal imbalance up [GW]
-    NI_down::Float64        #Nominal imbalance down [GW]
-    NI_up_OWP::Float64
-    NI_down_OWP::Float64
-    MaxLoad::Float64
-    owp_areas_in_zone::Vector{Int}
+    zone_name::String               #Name of the reserve zones
+    RI_up::Float64                  #Reference incident up [GW]
+    RI_down::Float64                #Reference incident down [GW]
+    NI_up::Float64                  #Normal imbalance up factor for onshore wind [GW]
+    NI_down::Float64                #Normal imbalance down factor for onshore wind [GW]
+    NI_up_OWP::Float64              #Normal imbalance up factor for OWP [GW]
+    NI_down_OWP::Float64            #Normal imbalance down factor for OWP [GW]
+    MaxLoad::Float64                #Maximum load in the zone [GW]
+    owp_areas_in_zone::Vector{Int}  #List of model area indices with offshore wind power in the zone
 end
 
 struct OperatingReserves #ADDED
-    NZ::Int                 # Total number of price zones, incl "others"
-    price_zones::Vector{String}          #price zone names
-    zone_reqs::Vector{ReserveZoneReq}
-    area_to_zone::Vector{Int}
-    areas_in_zone::Vector{Vector{Int}}   # Zone index -> list of model area indices
-    hydrosys_to_area::Vector{Int}        # Hydro system index -> model area index
-    LMarkReserves::Bool 
-    a::Int
-    b::Int
-    pos_by_area::Dict{Int, Set{Int}}
-    neg_by_area::Dict{Int, Set{Int}}
+    NZ::Int                             #Total number of price zones
+    price_zones::Vector{String}         #zone names for reserve requirements
+    zone_reqs::Vector{ReserveZoneReq}   #Reserve requirements for each zone
+    area_to_zone::Vector{Int}           #Model area index -> zone index (0 if area not in any reserve zone)
+    areas_in_zone::Vector{Vector{Int}}  #map from zone to areas in zone
+    hydrosys_to_area::Vector{Int}       #map from hydrosystem to area
+    LMarkReserves::Bool                 #Whether to include reserve requirements for "mark" variables
+    a::Int                              #empirical constant from Entso-E
+    b::Int                              #empirical constant from Entso-E
+    pos_by_area::Dict{Int, Set{Int}}    #map from area to its allowed market steps with positive capacity which can contribute to reserves
+    neg_by_area::Dict{Int, Set{Int}}    #map from area to its allowed market steps with negative capacity which can contribute to reserves
 end
 
 struct Parameters
@@ -413,6 +413,8 @@ struct Result
     MarkCapDownTablePos::Array{Float64}
     MarkCapUpTableNeg::Array{Float64}
     MarkCapDownTableNeg::Array{Float64}
+    WindTableAwail::Array{Float64}
+    ResAmount::Array{Float64}
 end
 
 struct DetailedResult
@@ -446,4 +448,6 @@ struct DetailedResult
     MarkCapDownTableNeg::Array{Float64}
     SlackUpTable::Array{Float64}
     SlackDownTable::Array{Float64}
+    WindTableAwail::Array{Float64}
+    ResAmount::Array{Float64}
 end
