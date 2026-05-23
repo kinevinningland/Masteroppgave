@@ -168,7 +168,7 @@ function simulate_detailed(model::Model, inflow_model::InflowModel,initial_value
 
     NMaxMStep = maximum([model.AMData[iArea].NMStep for iArea in 1:model.NArea])
 
-    DetailedResultTable = init_detailed_result(model.NArea, model.NHSys, NMaxMStep, parameters.Control.NScenSim, parameters.Control.NStageSim, parameters.Time.NK, model.NLine, NMaxMod, model.ORData.NZ) #ADDED NZ
+    DetailedResultTable = init_detailed_result(model.NArea, NMaxMStep, parameters.Control.NScenSim, parameters.Control.NStageSim, parameters.Time.NK, model.NLine, NMaxMod, model.ORData.NZ) #ADDED NZ
 
     ResInit0 = zeros(Float64,model.NArea,NMaxMod)
     #H2Init0 = zeros(Float64,model.H2Data.NArea) #Added

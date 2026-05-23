@@ -165,7 +165,7 @@ function ReadDemandResponse(dataset,NArea,NWeek,AreaName,LDemandResponse)
     return DemandResponse(NLoadRecStep, LoadRec, MaxUpShift, MaxDnShift, LIncludeExtraConstr, ExtraConstrFilter, ExtraConstrSigma)
 end
 
-function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,AreaName,LOperatingReserves)
+function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,AreaName,LOperatingReserves) #Added
     #Return dummy object if OR is not included
     if !LOperatingReserves
         return OperatingReserves(0,String[],ReserveZoneReq[],Vector{Int}(),Vector{Vector{Int}}(),Int[],false,0,0, Dict{Int, Set{Int}}(), Dict{Int, Set{Int}}())
@@ -307,10 +307,6 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,A
         end
     end
 
-    # Convert name sets -> local iMark indices used by the optimisation model.
-    # Important:
-    # pos_by_area = positive Mark capacity steps only
-    # neg_by_area = negative Mark capacity steps only
     pos_by_area = Dict{Int, Set{Int}}()
     neg_by_area = Dict{Int, Set{Int}}()
 

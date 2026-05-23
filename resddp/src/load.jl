@@ -8,14 +8,12 @@ function load(dataset::String, parameters::Parameters)::Model
     MCon,LineCap,LineLoss,NLine = ReadMaske(dataset,NArea,CNS,CTR)
     DMData = ReadDynmod(dataset,AHData,NArea,AreaName,MyKeys,MaxModArea,CTI.NWeek)
     DRData = ReadDemandResponse(dataset,NArea,CTI.NWeek,AreaName,CTR.LDemandResponse)
-    #H2Data = ReadH2(dataset,AHData,NArea,AreaName,CNS,CTI,CTR)
-    H2Data = ReadH2(dataset,NArea,AreaName,CNS,CTI,CTR) #Added
+    H2Data = ReadH2(dataset,NArea,AreaName,CNS,CTI,CTR) #Added, AHData er tatt bort
     PrintMarketSummary(dataset,NArea,AMData,WPData,MCon,LineCap,CTI)
     
 
     NCascade,HCascade = IdentifyCascades(AHData,NArea,USMod,ModInfReg,ModInfUReg,CTR,CTI,CNS)
     NHSys,HSys,NAreaSys,AreaSys,USModSys = AggrSystems(HCascade,AHData,NArea,ModInfReg,ModInfUReg,CTR,CTI,CNS,CAGR)
-    println("antall hydroområder:", NHSys)
     InfReg,RegFrac = AggrInflow(NHSys,HSys,ModInfReg,ModInfUReg,AHData,CTR,CTI,CNS)
 
     ORData = ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys,AreaSys, AMData,AreaName,CTR.LOperatingReserves) #Added

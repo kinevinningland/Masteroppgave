@@ -132,7 +132,7 @@ function init_result(NArea,NHSys,NMaxMStep,NScen,NStage,NK,NLine,NZ)::Result #NZ
                   CapZoneUpTable, CapZoneDownTable, HydroCapUpTable, HydroCapDownTable, WindCapDownTable, CapDualUpTable, CapDualDownTable, ObjTable, WaterValueTable,MarkCapUpTablePos,MarkCapDownTablePos,MarkCapUpTableNeg,MarkCapDownTableNeg) #Last line ADDED
  end
 
- function init_detailed_result(NArea,NHSys,NMaxMStep,NScen,NStage,NK,NLine,NMaxMod,NZ)::DetailedResult
+ function init_detailed_result(NArea,NMaxMStep,NScen,NStage,NK,NLine,NMaxMod,NZ)::DetailedResult
     ReservoirTable = zeros(Float64,NArea,NMaxMod,NScen,NStage,NK) #Byttet fra NHSys til NArea
     HProdTable = zeros(Float64,NArea,NMaxMod,NScen,NStage,NK) #Byttet fra NHSys til NArea
     MarkTable = zeros(Float64,NArea,NMaxMStep,NScen,NStage,NK) 

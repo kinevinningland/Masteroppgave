@@ -20,8 +20,8 @@ optimizer = JuMP.optimizer_with_attributes(
 
 println("Threads available: ",Threads.nthreads())
 
-datapath = "/cluster/home/kinevin/Masteroppgave/datasets/baseline_2"
-#datapath = "/Users/kinevinningland/Documents/Final_ReSDDP/datasets"
+#datapath = "/cluster/home/kinevin/Masteroppgave/datasets/baseline_2"
+datapath = "/Users/kinevinningland/Documents/Final_ReSDDP/datasets"
 #datapath = "C:\\Users\\arildh\\data\\res100\\norge30_test\\"
 #datapath = "C:\\Users\\arildh\\data\\res100\\HydroCen_LowEmission_V10\\"
 
@@ -49,16 +49,16 @@ strategy = init_strategy(model, parameters)
 init_val = init_system(model, parameters)
 
 #Compute strategy by SDDP
-println("Start strategy computation..")
+#println("Start strategy computation..")
 
-train!(strategy, init_val, model, inflow_model, feas_spaces, parameters; optimizer=optimizer) #kommentert ut
+#train!(strategy, init_val, model, inflow_model, feas_spaces, parameters; optimizer=optimizer) #kommentert ut
 # using Serialization
 #serialize(joinpath(@__DIR__, "strategy.jls"), strategy) # Save cuts to file
 #strategy = deserialize(joinpath(@__DIR__, "strategy.jls")) # Load cuts from file
 
 # Save strategy to file
 file = File(format"JLD2", joinpath(datapath, "strategy.jld2"))
-save(file, "strategy", strategy) #kommentert ut
+#save(file, "strategy", strategy) #kommentert ut
 
 # Load strategy from file
 data = JLD2.load(file) 
@@ -74,7 +74,7 @@ println("Write results ..")
 print_results(datapath,results_agg,model,parameters)
 print_results_h5(datapath,results_agg,model,parameters)
 
-
+=#
 print_dims(datapath,model.NHSys,model.H2Data.NArea,parameters.Control.NStage,parameters.Control.NScenSim,strategy.NCut,parameters.Control.MaxIter,parameters.Control.CCMaxIter)
 print_strategy(datapath,strategy,parameters.Control.LCostApprox)
 print_feas(datapath,feas_spaces[1],model.NHSys)
@@ -86,4 +86,3 @@ println("Write detailed results ..")
 print_detailed_results(datapath,results_det,model,parameters)
 print_detailed_results_h5(datapath,results_det,model,parameters)
 println("Program finished.")
-=#
