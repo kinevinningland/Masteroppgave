@@ -173,7 +173,7 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,A
     
     LMarkReserves = isfile(joinpath(dataset, "ORData_mark.csv"))
     LMarkReserves = false
-    LZoneReq = true
+    LZoneReq = false
 
     zone_reqs = Dict{String, Vector{Float64}}()
     price_zones = String[]
