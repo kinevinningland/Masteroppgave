@@ -834,7 +834,7 @@ function ReadDynmod(dataset,AHData,NArea,AreaName,MyKeys,MaxModArea,NWeek)
     QfoMinTD = zeros(Float64,NArea,MaxModArea,NWeek)
     ModNrTD = zeros(Int,NArea,MaxModArea)
     for iArea = 1:NArea
-        if AreaName[iArea] in MyKeys && !contains(AreaName[iArea], "H2") #ADDED:,  && !contains(AreaName[iArea], "H2")
+        if AreaName[iArea] in MyKeys 
             if iArea < 10
                 fname = joinpath(dataset,"DYNMODELL.OM0$iArea")
             else
@@ -879,14 +879,24 @@ function ReadDynmod(dataset,AHData,NArea,AreaName,MyKeys,MaxModArea,NWeek)
                 end
                 #They seem to be sorted similarly, could be skipped
                 for iMod = 1:NModA
-                    Indx = findfirst(x->x==AHData[iArea].MData[iMod].ModId,ModNrTD[iArea,1:NModA])
-                    MaMaxTD[iArea,iMod,1:NWeek] = MaMaxTmp[Indx,1:NWeek]
-                    MaMinTD[iArea,iMod,1:NWeek] = MaMinTmp[Indx,1:NWeek]
-                    QMaxTD[iArea,iMod,1:NWeek] = QMaxTmp[Indx,1:NWeek]
-                    QMinTD[iArea,iMod,1:NWeek] = QMinTmp[Indx,1:NWeek]
-                    QfoMaxTD[iArea,iMod,1:NWeek] = QfoMaxTmp[Indx,1:NWeek]
-                    QfoMinTD[iArea,iMod,1:NWeek] = QfoMinTmp[Indx,1:NWeek]
-                end
+                    if contains(AreaName[iArea], "H2") #Since AHData is not available for H2, we assume the order of modules in DYNMODELL.OM is the same as in model.h5.
+                        # No AHData for H2 — copy directly in file order
+                        MaMaxTD[iArea,iMod,1:NWeek] = MaMaxTmp[iMod,1:NWeek]
+                        MaMinTD[iArea,iMod,1:NWeek] = MaMinTmp[iMod,1:NWeek]
+                        QMaxTD[iArea,iMod,1:NWeek]  = QMaxTmp[iMod,1:NWeek]
+                        QMinTD[iArea,iMod,1:NWeek]  = QMinTmp[iMod,1:NWeek]
+                        QfoMaxTD[iArea,iMod,1:NWeek] = QfoMaxTmp[iMod,1:NWeek]
+                        QfoMinTD[iArea,iMod,1:NWeek] = QfoMinTmp[iMod,1:NWeek]
+                    else
+                        Indx = findfirst(x->x==AHData[iArea].MData[iMod].ModId,ModNrTD[iArea,1:NModA])
+                        MaMaxTD[iArea,iMod,1:NWeek] = MaMaxTmp[Indx,1:NWeek]
+                        MaMinTD[iArea,iMod,1:NWeek] = MaMinTmp[Indx,1:NWeek]
+                        QMaxTD[iArea,iMod,1:NWeek] = QMaxTmp[Indx,1:NWeek]
+                        QMinTD[iArea,iMod,1:NWeek] = QMinTmp[Indx,1:NWeek]
+                        QfoMaxTD[iArea,iMod,1:NWeek] = QfoMaxTmp[Indx,1:NWeek]
+                        QfoMinTD[iArea,iMod,1:NWeek] = QfoMinTmp[Indx,1:NWeek]
+                    end
+                end 
             end # close DYNMODELL.OM
         end 
     end
