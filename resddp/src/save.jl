@@ -83,8 +83,8 @@ function save!(RT::Result, SP_FORW,AMData,H2Data,InflowSys,NArea,NHSys,NK,NLine,
                 if JuMP.haskey(SP_FORW, :cap_mark_up_pos)
                     RT.MarkCapUpTablePos[iArea,s,t,k] = sum(JuMP.value(SP_FORW[:cap_mark_up_pos][iArea,iMark,k])  for iMark in get(ORData.pos_by_area, iArea, Set{Int}()); init=0.0)
                 end
-                if JuMP.haskey(SP_FORW, :cap_mark_down)
-                    RT.MarkCapDownTablePos[iArea,s,t,k] = sum(JuMP.value(SP_FORW[:cap_mark_down][iArea,iMark,k])  for iMark in get(ORData.pos_by_area, iArea, Set{Int}()); init=0.0)
+                if JuMP.haskey(SP_FORW, :cap_mark_down_pos)
+                    RT.MarkCapDownTablePos[iArea,s,t,k] = sum(JuMP.value(SP_FORW[:cap_mark_down_pos][iArea,iMark,k])  for iMark in get(ORData.pos_by_area, iArea, Set{Int}()); init=0.0)
                 end
                 if JuMP.haskey(SP_FORW, :cap_mark_up_neg)
                     RT.MarkCapUpTableNeg[iArea,s,t,k] = sum(JuMP.value(SP_FORW[:cap_mark_up_neg][iArea,iMark,k])  for iMark in get(ORData.pos_by_area, iArea, Set{Int}()); init=0.0)
@@ -208,8 +208,8 @@ function save_detailed!(DRT::DetailedResult, SP_FORW,AMData,H2Data,AHData,NArea,
                 if JuMP.haskey(SP_FORW, :cap_mark_up_pos)
                     DRT.MarkCapUpTablePos[iArea,s,t,k] = sum(JuMP.value(SP_FORW[:cap_mark_up_pos][iArea,iMark,k])  for iMark in get(ORData.pos_by_area, iArea, Set{Int}()); init=0.0)
                 end
-                if JuMP.haskey(SP_FORW, :cap_mark_down)
-                    DRT.MarkCapDownTablePos[iArea,s,t,k] = sum(JuMP.value(SP_FORW[:cap_mark_down][iArea,iMark,k])  for iMark in get(ORData.pos_by_area, iArea, Set{Int}()); init=0.0)
+                if JuMP.haskey(SP_FORW, :cap_mark_down_pos)
+                    DRT.MarkCapDownTablePos[iArea,s,t,k] = sum(JuMP.value(SP_FORW[:cap_mark_down_pos][iArea,iMark,k])  for iMark in get(ORData.pos_by_area, iArea, Set{Int}()); init=0.0)
                 end
                 if JuMP.haskey(SP_FORW, :cap_mark_up_neg)
                     DRT.MarkCapUpTableNeg[iArea,s,t,k] = sum(JuMP.value(SP_FORW[:cap_mark_up_neg][iArea,iMark,k])  for iMark in get(ORData.pos_by_area, iArea, Set{Int}()); init=0.0)

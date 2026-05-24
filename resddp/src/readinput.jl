@@ -237,6 +237,7 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,A
                 total_load_per_zone[z] += sum(AMData[a].MLData[iLoad].Load)
             end
         end
+        println("Total load in zone ", price_zones[z], ": ", total_load_per_zone[z], " MW") #Ta bort
     end
 
     owp_areas_in_zone = [Int[] for _ in 1:NZ]
