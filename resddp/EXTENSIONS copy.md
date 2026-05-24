@@ -20,7 +20,7 @@ constraints are added.
 
 Set `LOperatingReserves = true` in [`examples/params.jl`](examples/params.jl) 
 
-## Input Data Files (ADDED)
+## Input Data Files 
 
 The following files can be present in the dataset folder when `LOperatingReserves = true`:
 
@@ -149,8 +149,6 @@ Logic:
 - Builds `pos_by_area` and `neg_by_area`: local `iMark` indices per area eligible for reserve provision, separated by the sign of their capacity
 - Safety check: no `iMark` may appear in both sets for the same area
 - Sets empirical ENTSO-E constants: `a = 10`, `b = 150`
-
-### `src/reademps.jl`
 
 
 ### `src/stageprob_full.jl` (aggregated model)
@@ -315,6 +313,22 @@ Note: `HydroCapUpTable` and `HydroCapDownTable` in the detailed result have an e
 dimension: `NHSys × NMaxMod × NScen × NStage × NK`.
 
 
+### `src/solvebwd.jl` and `src/solvefwd.jl`
+
+`ORData` is passed to stage problem builder during SDDP training, with `LOperatingReserves` explicitly set to `false`:
+
+```julia
+StageProbFull.Build(..., model.H2Data, false, model.ORData, optimizer)
+```
+
+Operating reserves are intentionally disabled during backward/forward training passes and only
+active during simulation.
+
+
+
+### `src/reademps.jl`
+
+
 ### `src/simulate.jl`
 
 Canges in `simulate_detailed`:
@@ -392,98 +406,73 @@ JuMP.set_normalized_rhs(SP_FORW[:resbalReg0][iArea,iMod],
 #ADDED max(0.0,...) to avoid negative reservoir levels
 ```
 
-
-### `src/solvebwd.jl` and `src/solvefwd.jl`
-
-`ORData` is passed to stage problem builder during SDDP training, with `LOperatingReserves` explicitly set to `false`:
-
-```julia
-StageProbFull.Build(..., model.H2Data, false, model.ORData, optimizer)
-```
-
-Operating reserves are intentionally disabled during backward/forward training passes and only
-active during simulation.
-
-
 ### `src/save.jl`
 
-**CHANGED — `save!` signature**: `LOperatingReserves` and `ORData` added:
+Changed `save!` signature: `LOperatingReserves` and `ORData` added:
 
 ```julia
 function save!(RT::Result, SP_FORW, AMData, H2Data, InflowSys,
                NArea, NHSys, NK, NLine, s, t,
-               LOperatingReserves, ORData)   #NZ, LOperatingReserves ADDED
+               LOperatingReserves, ORData)   #ORData, LOperatingReserves 
 ```
 
-**ADDED — water value extraction in `save!`:**
+Added water value extraction in `save!`:
 
 ```julia
-RT.WaterValueTable[iSys,s,t] = JuMP.shadow_price(SP_FORW[:rstate][iSys])  #Added
+RT.WaterValueTable[iSys,s,t] = JuMP.shadow_price(SP_FORW[:rstate][iSys]) 
 ```
 
-**ADDED — reserve result extraction block in `save!`**, guarded by `if LOperatingReserves`:
+Added reserve result extraction block in `save!`, guarded by `if LOperatingReserves` where the results used for the analysis of the thesis are extracted.
 
-Extracted using `JuMP.haskey` checks before access:
-- `CapZoneUpTable`, `CapZoneDownTable` from `cap_zone_up / cap_zone_down`
-- `CapDualUpTable`, `CapDualDownTable` from shadow prices on `reserve_req_up / reserve_req_down`
-- `HydroCapUpTable`, `HydroCapDownTable` from `cap_hydro_up / cap_hydro_down`
-- `WindCapDownTable` from `cap_wind_down`
-- `MarkCapUpTablePos/Neg`, `MarkCapDownTablePos/Neg` from market reserve variables, summed
-  over eligible `iMark` per area using `ORData.pos_by_area`
 
-**CHANGED — `save_detailed!` signature**: `LOperatingReserves` and `HydroAreas` added:
+Changed `save_detailed!` signature: `LOperatingReserves`, `HSys` amd `H2Data` are added:
 
 ```julia
-function save_detailed!(DRT::DetailedResult, SP_FORW, AMData, H2Data, AHData,
-                        NArea, NHSys, NK, NLine, s, t,
-                        LOperatingReserves, HydroAreas)   #ADDED LOperatingReserves, H2Data
+function save_detailed!(DRT::DetailedResult, SP_FORW, AMData, H2Data, AHData, NArea, NHSys, NK, NLine, s, t, LOperatingReserves, HSys) 
 ```
 
-**ADDED — stage objective extraction in `save_detailed!`:**
+Added stage objective extraction in `save_detailed!`:
 
 ```julia
-DRT.ObjTable[s,t] = JuMP.objective_value(SP_FORW) - JuMP.value(SP_FORW[:alpha])  #ADDED
+DRT.ObjTable[s,t] = JuMP.objective_value(SP_FORW) - JuMP.value(SP_FORW[:alpha])
 ```
 
-**ADDED — water value extraction in `save_detailed!`** (uses end-volume constraint):
+Added water value extraction in `save_detailed!` (uses end-volume constraint):
 
 ```julia
-DRT.WaterValueTable[i,s,t] = JuMP.shadow_price(SP_FORW[:endvol][iSys])  #Added
+DRT.WaterValueTable[i,s,t] = JuMP.shadow_price(SP_FORW[:endvol][iSys])  
 ```
 
-**ADDED — H2 result extraction in `save_detailed!`**, guarded by `H2Data.Ind[iArea] > 0`:
+Added H2 result extraction in `save_detailed!`, guarded by `H2Data.Ind[iArea] > 0`:
 
 ```julia
 DRT.H2StoreTable[iArea,s,t,k] = JuMP.value(SP_FORW[:h2res][H2Data.Ind[iArea],k])
 DRT.H2DisTable[iArea,s,t,k]   = -(1-CompLoss)*h2chg + h2dis
 ```
 
-**ADDED — detailed reserve extraction block in `save_detailed!`**, guarded by
-`if LOperatingReserves`. Same as aggregated, plus:
+Added detailed reserve extraction block in `save_detailed!`, guarded by
+`if LOperatingReserves`, where the results used for the analysis of the thesis are extracted.
 
-- `HydroCapUpTable`, `HydroCapDownTable` per module from `cap_hydro_up_mod / cap_hydro_down_mod`
-- `SlackUpTable`, `SlackDownTable` from `slackUp / slackDown`
-
----
 
 ### `src/print.jl`
 
-**ADDED — `ObjectiveValue` written to HDF5** in both `print_results_h5` and
-`print_detailed_results_h5`:
+The two functions that are changed are `print_results_h5` and `print_detailed_results_h5`to extract results for the analysis of the thesis. 
+
+`ObjectiveValue` is added and written to HDF5 in both `print_results_h5` and `print_detailed_results_h5`:
 
 ```julia
-write(file, "ObjectiveValue", RT.ObjTable)  #Added
+write(file, "ObjectiveValue", RT.ObjTable)  
 ```
 
-**ADDED — `WaterValue` written to HDF5** per hydro area in both print functions:
+`WaterValue` is added and  written to HDF5 per hydro area in both print functions:
 
 ```julia
-write(hydroGroup, "WaterValue", RT.WaterValueTable[hydro_idx,:,:])  #Added
-attrs(hydroGroup["WaterValue"])["Dim 1"] = "NScen"                  #Added
-attrs(hydroGroup["WaterValue"])["Dim 2"] = "NStage"                 #Added
+write(hydroGroup, "WaterValue", RT.WaterValueTable[hydro_idx,:,:])  
+attrs(hydroGroup["WaterValue"])["Dim 1"] = "NScen"                  
+attrs(hydroGroup["WaterValue"])["Dim 2"] = "NStage"                 
 ```
 
-**CHANGED — market step HDF5 output**: duplicate name handling added to avoid HDF5 dataset
+Changed market step HDF5 output: duplicate name handling added to avoid HDF5 dataset
 name collisions when multiple market steps share the same name:
 
 ```julia
@@ -497,55 +486,25 @@ for iMark = 1:model.AMData[iArea].NMStep   #ADDED (replaces old loop)
 end
 ```
 
-**ADDED — H2 results written to HDF5** in `print_detailed_results_h5`,
+H2 results are added and  written to HDF5 in `print_detailed_results_h5`,
 guarded by `model.H2Data.Ind[iArea] > 0`:
 
 ```julia
-if model.H2Data.Ind[iArea] > 0   #ADDED
+if model.H2Data.Ind[iArea] > 0  
     H2Group = create_group(areaGroup, "H2")
     write(H2Group, "Storage",   DRT.H2StoreTable[iArea,:,:,:])
     write(H2Group, "Discharge", DRT.H2DisTable[iArea,:,:,:])
 end
 ```
 
-**ADDED — reserve HDF5 group** written when `LOperatingReserves = true` in both print
-functions. Group `XNordic_Reserve_req` structure:
+Reserve HDF5 group is added and written when `LOperatingReserves = true` in both print functions. Group `XNordic_Reserve_req` 
 
-```
-XNordic_Reserve_req/
-  Names            — zone name strings
-  AreaToZone       — area-to-zone index mapping
-  price_zones      — zone name strings (duplicate for convenience)
-  ByZoneArea/
-    <ZoneName>/
-      ReserveUp        — CapZoneUpTable[z,:,:,:]
-      ReserveDown      — CapZoneDownTable[z,:,:,:]
-      ReserveDualUp    — CapDualUpTable[z,:,:,:]
-      ReserveDualDown  — CapDualDownTable[z,:,:,:]
-      SlackUp          — SlackUpTable[z,:,:,:]   (DetailedResult only)
-      SlackDown        — SlackDownTable[z,:,:,:] (DetailedResult only)
-      AreaIndices      — list of area indices in zone
-      Areas/
-        <AreaName>/
-          HydroCapUp       — HydroCapUpTable[a,:,:,:]
-          HydroCapDown     — HydroCapDownTable[a,:,:,:]
-          Module <i>/      — per-module (DetailedResult only)
-            HydroCapUp
-            HydroCapDown
-          WindDownArea     — WindCapDownTable[a,:,:,:]
-          SpotPrice        — PriceTable[a,:,:,:]
-          MarketUpAreaPos  — MarkCapUpTablePos[a,:,:,:]   (if LMarkReserves)
-          MarketDownAreaPos
-          MarketUpAreaNeg
-          MarketDownAreaNeg
-```
 
-**CHANGED — `print_results` text output**: market sum uses `init=0.0` to handle areas with
-no market steps:
+Changed `print_results` text output: market sum uses `init=0.0` to handle areas with no market steps:
 
 ```julia
-val = sum(RT.MarkTable[iArea,iMark,...] for iMark=1:...; init=0.0)  #Added
-@printf(out, "%16.6f ", val)                                         #Added
+val = sum(RT.MarkTable[iArea,iMark,...] for iMark=1:...; init=0.0)  
+@printf(out, "%16.6f ", val)                                         
 ```
 
 
