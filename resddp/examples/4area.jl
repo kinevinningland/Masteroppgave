@@ -43,7 +43,7 @@ feas_spaces = data["feas_spaces"]
 
 ReSDDP.print(model, parameters, true, true)
 
-2strategy = init_strategy(model, parameters)
+strategy2 = init_strategy(model, parameters)
 init_val = init_system(model, parameters)
 
 #Compute strategy by SDDP
@@ -55,12 +55,12 @@ train!(strategy2, init_val, model, inflow_model, feas_spaces, parameters; optimi
 #strategy = deserialize(joinpath(@__DIR__, "strategy.jls")) # Load cuts from file
 
 # Save strategy to file
-file = File(format"JLD2", joinpath(datapath, "strategy.jld2"))
-save(file, "strategy2", strategy2) #kommentert ut
+file2 = File(format"JLD2", joinpath(datapath, "strategy.jld2"))
+save(file2, "strategy2", strategy2) #kommentert ut
 
 # Load strategy from file
-data = JLD2.load(file) 
-strategy2 = data["strategy2"]
+data2 = JLD2.load(file2) 
+strategy2 = data2["strategy2"]
 
 # Simulate aggregated
 #=
