@@ -692,38 +692,38 @@ function ReadH2(dataset,AHData,NArea,AreaName,CNS,CTI,CTR)
 end
 =#
 
-function ReadH2(dataset, NArea, AreaName, CNS, CTI, CTR) #Added
+function ReadH2(dataset, NArea, AreaName, CNS, CTI, CTR) #Changed, AHData removed
     H2Areas = []
     NH2Area = 0
     H2Ind = zeros(Int, NArea)
 
-    filename = joinpath(dataset, "model.h5")
-    fid = h5open(filename, "r")
+    filename = joinpath(dataset, "model.h5") #Added
+    fid = h5open(filename, "r") #Added
 
-    dset = fid["hydro_data"]
-    HydroAreas = read(dset)
-    MyKeys = HydroAreas.keys
+    dset = fid["hydro_data"] #Added
+    HydroAreas = read(dset) #Added
+    MyKeys = HydroAreas.keys #Added
     
-    for iKey = 1:length(MyKeys)
+    for iKey = 1:length(MyKeys) #Added
         if !isassigned(MyKeys, iKey)
             MyKeys[iKey] = " "
         end
     end
 
     for iArea = 1:NArea
-        if contains(AreaName[iArea], "H2") && AreaName[iArea] in MyKeys
-            tag = string("hydro_data/", AreaName[iArea], "/Module_data")
-            ModData = read(fid[tag])
-            H2MaxDis = ModData[1].max_flow * CNS.M3S2MM3 * CTI.DT
-            H2MaxRes = ModData[1].max_res
-            LStrategic = H2MaxRes > 2.0
+        if contains(AreaName[iArea], "H2") && AreaName[iArea] in MyKeys #Added && AreaName[iArea] in MyKeys
+            tag = string("hydro_data/", AreaName[iArea], "/Module_data") #Added
+            ModData = read(fid[tag]) #Added
+            H2MaxDis = ModData[1].max_flow * CNS.M3S2MM3 * CTI.DT #Changed
+            H2MaxRes = ModData[1].max_res #Changed
+            LStrategic = H2MaxRes > 2.0 #Changed
             NH2Area += 1
             H2Ind[iArea] = NH2Area
             push!(H2Areas, H2Area(iArea, H2MaxDis, H2MaxRes, CTR.H2CompLoss, LStrategic))
         end
     end
 
-    close(fid)
+    close(fid) #Added
     return H2System(NH2Area, H2Ind, H2Areas)
 end
 

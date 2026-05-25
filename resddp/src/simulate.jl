@@ -158,6 +158,7 @@ function simulate_aggregated(model::Model, inflow_model::InflowModel, parameters
         sWeek = mod1(t, parameters.Time.NWeek)
         fWeek = sWeek; if !parameters.Control.LFeasPerStage; fWeek = 1; end
 
+       
         Threads.@threads for sCluster = 1:NCluster
             start_scen = (sCluster-1) * NScenPerCluster + 1
             if start_scen <= parameters.Control.NScenSim

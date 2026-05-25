@@ -68,6 +68,40 @@ print_results_h5 / print_detailed_results_h5
   └─ Writes WaterValue, ObjectiveValue, H2 results to HDF5 output
 ```
 
+## Issue fix - modifications to reademps.jl
+
+An issue was identified in how hydropower areas are constructed in the detailed simulation. The dataset contains 24 hydropower areas. Rather than creating hydro variables for the correct price area IDs, the code created variables for the first 24 (lenght of the hydropower areas) price areas by index.
+
+To fix the area indexing issue, the detailed simulation was extended to create hydropower variables for all 78 price areas rather than only the 
+first 24. This ensures that all areas with hydropower are correctly included. This was done by insted of iterating throught the size of `NHSys` for hydropower variables in `Stageprob_det`, they are iterating trough `NArea`. 
+
+In the original framework, characteristics for hydropower, batteries, and hydrogen are all stored in the struct `AHData`, which is used in 
+the detailed simulation when hydropower variables are created. This struct holds detailed module-level characteristics for each area. In the aggregated simulation, `AHData` is used to construct `HSys`, which stores aggregated hydropower characteristics only, excluding hydrogen and batteries. Hydrogen characteristics are separately extracted from `AHData` and stored in `H2Data` for the areas designated as hydrogen areas in the dataset.
+
+However, creating hydropower variables for hydrogen areas is 
+undesirable, as hydrogen storage is handled through separate variables which is added though this thesis work. To resolve this, the way data is read into the optimization problem was modified. Rather than reading hydrogen characteristics into `AHData`, dummy objects are now assigned to hydrogen areas in that struct:
+
+```julia
+if AreaName[iArea] in MyKeys && !contains(AreaName[iArea], "H2")
+```
+
+The construction of `H2Data` in `ReadH2`was also changed to read hydrogen characteristics directly from the input dataset instead of extracting them from `AHData`:
+
+Since hydrogen areas are now assigned dummy objects in `AHData`, the original approach of reading `H2MaxDis` and `H2MaxRes` from `AHData[iArea].MData[1]` is no longer valid. The updated `ReadH2` therefore opens the HDF5 input file directly and reads module-level characteristics from `hydro_data/<AreaName>/Module_data`. The `AHData` argument was removed from the function signature entirely, as the function no longer depends on the pre-processed hydropower struct.
+
+This ensures that hydrogen storage is represented only through the dedicated hydrogen variables and not incorrectly duplicated through the hydropower variables.
+
+A similar adjustment was required in `ReadDynmod`, which reads time-dependent module data from the binary `DYNMODELL.OM` files. In the original implementation, all areas used `AHData[iArea].MData[iMod].ModId` to look up the correct module index in the file via findfirst, ensuring that data was mapped to the right module regardless of storage order. Since hydrogen areas are no longer stored in `AHData`, this lookup would fail for those areas. The updated function therefore branches on whether the current area is an H2 area: 
+
+* for hydrogen areas, module data is copied directly in file order, relying on the assumption that the module ordering in DYNMODELL.OM is consistent with that in model.h5
+* for all other areas, the original index-lookup logic is preserved unchanged
+
+In simulate_detailed in `simulate.jl`, multiple loop bounds were changed from `NHSys` to `NArea`, marked by #Changed from NHSys to NArea. This was done to fix the indexing issue mentioned. Another change to fix this problem was adding this line:
+```julia
+iArea = model.HSys[iSys].AreaNo 
+```
+to loops that iterate over hydropower systems (`iSys = 1:model.NHSys`) and access `AHData` when updating the `cut`constraint. Previously, `AHData` was indexed directly by `iSys`, implicitly assuming that the hydropower system index corresponds to the area index. This assumption no longer holds after the area indexing fix, since `HSys` contains only hydropower systems and their indices do not necessarily match the area indices in `AHData`.
+
 
 ## File-by-File Summary
 
@@ -328,30 +362,50 @@ active during simulation.
 
 ### `src/reademps.jl`
 
+An issue was identified in how hydropower areas are constructed in the detailed simulation. The dataset contains 24 hydropower areas. Rather than creating hydro variables for the correct price area IDs, the code created variables for the first 24 (lenght of the hydropower areas) price areas by index.
+
+To fix the area indexing issue, the detailed simulation was extended to create hydropower variables for all 78 price areas rather than only the 
+first 24. This ensures that all areas with hydropower are correctly included. Since batteries are modeled as hydropower in the current framework, areas containing only battery storage are included in the hydropower variables. However, creating hydropower variables for hydrogen areas is 
+undesirable, as hydrogen storage is handled through separate variables.
+
+To resolve this, the way data is read into the optimization problem was modified. Rather than reading hydrogen characteristics into `AHData` in `ReadHDF5`, dummy objects are now assigned to hydrogen areas in that struct by excluding these areas:
+
+```julia
+if AreaName[iArea] in MyKeys && !contains(AreaName[iArea], "H2")
+```
+
+The construction of `H2Data` in `ReadH2`was also changed to read hydrogen characteristics directly from the input dataset instead of extracting them from `AHData`:
+
+ This ensures that hydrogen storage is represented 
+only through the dedicated hydrogen variables and not incorrectly duplicated through the hydropower variables.
+
 
 ### `src/simulate.jl`
 
 Canges in `simulate_detailed`:
 
+`initial_values::InitialValues` is added as an explicit argument to `simulate_detailed`, allowing the function to receive the correct initial reservoir and hydrogen storage levels rather than relying on hardcoded or default values.
+
 H2 trajectory tracking:
 ```julia
-SimulatedH2Traj = zeros(Float64, model.H2Data.NArea, NScenSim, NStageSim)  #Added
-H2Init0 = zeros(Float64, model.H2Data.NArea)                               #Added
-H2Init  = zeros(Float64, model.H2Data.NArea)                               #Added
+SimulatedH2Traj = zeros(Float64, model.H2Data.NArea, NScenSim, NStageSim)  
+H2Init  = zeros(Float64, model.H2Data.NArea)                              
 ```
-
-Initial H2 levels set from `ResInitFrac` and `MaxResScale`:
+Initial H2 levels set from `initial_values.H2Init`, which are initialized from `ResInitFrac` and the maximum reservoir capacity of each H2 area:
 
 ```julia
-for iSys = 1:model.H2Data.NArea   #ADDED
-    H2Init0[iSys] = ResInitFrac * MaxResScale * model.H2Data.Areas[iSys].MaxRes
-end
+H2Init[1:model.H2Data.NArea] = initial_values.H2Init[1:model.H2Data.NArea]
+```
+and H2 storage is updated:
+
+```julia
+H2Init[1:model.H2Data.NArea] = SimulatedH2Traj[1:model.H2Data.NArea,iScen,t-1,end]
 ```
 
 H2 initial constraint RHS updated each stage/scenario:
 
 ```julia
-for iH2a = 1:model.H2Data.NArea   #ADDED
+for iH2a = 1:model.H2Data.NArea 
     JuMP.set_normalized_rhs(SP_FORW[:h2storage0][iH2a,1], H2Init[iH2a])
 end
 ```
@@ -364,41 +418,40 @@ for iH2a = 1:model.H2Data.NArea   #Added
 end
 ```
 
-**ADDED — `NZ` passed to `init_detailed_result` and `init_result`:**
+`NZ` is added and passed to `init_detailed_result` and `init_result`:
 
 ```julia
 DetailedResultTable = init_detailed_result(..., model.ORData.NZ)  #ADDED NZ
 ResultTable         = init_result(..., model.ORData.NZ)           #NZ ADDED
 ```
 
-**ADDED — `LOperatingReserves` and `ORData` passed to stage problem builder** in both
+`LOperatingReserves` and `ORData` are added and passed to stage problem builder in both
 `simulate_detailed` and `simulate_aggregated`:
 
 ```julia
 StageProbDet.Build(..., model.H2Data,
-                   parameters.Control.LOperatingReserves, model.ORData, optimizer)  #ADDED
+                   parameters.Control.LOperatingReserves, model.ORData, optimizer) 
 ```
 
-**ADDED — `wp_avail_fix` RHS updated per scenario/stage** when reserves are active:
+`wp_avail_fix` RHS updated per scenario/stage** when reserves are active is added for both `simulate_detailed` and `simulate_aggregated`:
 
 ```julia
-if parameters.Control.LOperatingReserves   #ADDED
+if parameters.Control.LOperatingReserves   
     JuMP.set_normalized_rhs(SP_FORW[:wp_avail_fix][iArea,k],
                             max(model.WPData[...], 0.0))
 end
 ```
 
-**CHANGED — wind scenario sampling in `simulate_aggregated`**: each simulation scenario now
-uses a distinct wind year instead of always using year 1:
+Wind scenario sampling is also changed in `simulate_aggregated` to sample the same wind scenarios as detailed simulation: each simulation scenario now uses a distinct wind year instead of always using year 1:
 
 ```julia
-# SampledWindYears = fill(1, parameters.Control.NScenSim)   #commented out
-SampledWindYears = collect(1:parameters.Control.NScenSim)   #Added
+# SampledWindYears = fill(1, parameters.Control.NScenSim)   #changed to the next
+SampledWindYears = collect(1:parameters.Control.NScenSim)   
 ...
-wYear = SampledWindYears[iScen]   #Added
+wYear = SampledWindYears[iScen] 
 ```
 
-**ADDED — bug fix** preventing negative initial reservoir levels in `simulate_detailed`:
+Added bug fix preventing negative initial reservoir levels in `simulate_detailed`:
 
 ```julia
 JuMP.set_normalized_rhs(SP_FORW[:resbalReg0][iArea,iMod],
