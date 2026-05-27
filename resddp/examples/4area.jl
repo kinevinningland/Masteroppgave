@@ -27,7 +27,7 @@ datapath = "/cluster/home/kinevin/Masteroppgave/datasets/baseline_2"
 model = load(datapath, parameters) 
 inflow_model = load_inflow(datapath, model, parameters)
 
-#=
+
 using JLD2 
 using FileIO 
 
@@ -47,7 +47,7 @@ ReSDDP.print(model, parameters, true, true)
 
 strategy = init_strategy(model, parameters)
 init_val = init_system(model, parameters)
-=#
+
 #Compute strategy by SDDP
 #println("Start strategy computation..")
 
