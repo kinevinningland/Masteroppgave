@@ -448,4 +448,5 @@ struct DetailedResult
     SlackUpTable::Array{Float64}
     SlackDownTable::Array{Float64}
     ResAmount::Array{Float64}
+    alpha::Array{Float64}
 end

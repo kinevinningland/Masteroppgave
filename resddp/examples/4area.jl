@@ -62,10 +62,10 @@ file = File(format"JLD2", joinpath(datapath, "strategy.jld2"))
 
 # Load strategy from file
 data = JLD2.load(file) 
-strategy = data["strategy2"]
+strategy = data["strategy"]
 
 # Simulate aggregated
-
+#=
 println("Start simulation ..")
 results_agg = simulate_aggregated(model, inflow_model, parameters, strategy, feas_spaces, init_val; optimizer = optimizer, fixed_seed = true)#fixed_seed added
 
@@ -73,8 +73,8 @@ results_agg = simulate_aggregated(model, inflow_model, parameters, strategy, fea
 println("Write results ..")
 print_results(datapath,results_agg,model,parameters)
 print_results_h5(datapath,results_agg,model,parameters)
+=#
 
-#=
 print_dims(datapath,model.NHSys,model.H2Data.NArea,parameters.Control.NStage,parameters.Control.NScenSim,strategy.NCut,parameters.Control.MaxIter,parameters.Control.CCMaxIter)
 print_strategy(datapath,strategy,parameters.Control.LCostApprox)
 print_feas(datapath,feas_spaces[1],model.NHSys)
@@ -86,4 +86,3 @@ println("Write detailed results ..")
 print_detailed_results(datapath,results_det,model,parameters)
 print_detailed_results_h5(datapath,results_det,model,parameters)
 println("Program finished.")
-=#

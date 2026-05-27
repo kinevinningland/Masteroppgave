@@ -102,6 +102,7 @@ end
 
 function save_detailed!(DRT::DetailedResult, SP_FORW,AMData,H2Data,AHData,NArea,NHSys,NK,NLine,s,t,LOperatingReserves,HSys)#ADDED LOperatingReserves,H2Data,HSys
     DRT.ObjTable[s, t] = JuMP.objective_value(SP_FORW) - JuMP.value(SP_FORW[:alpha]) #ADDED
+    DRT.alpha[s, t] = JuMP.value(SP_FORW[:alpha]) #ADDED
     
     for iSys = 1:NHSys #ADDED
         iArea = HSys[iSys].AreaNo

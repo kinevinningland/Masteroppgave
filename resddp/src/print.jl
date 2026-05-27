@@ -206,7 +206,7 @@ end
 
 function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Model,parameters::Parameters)
 
-   file = h5open(string(dataset,"DetSimResults_check_hydro.h5"),"w")
+   file = h5open(string(dataset,"DetSimResults_final_wRes.h5"),"w")
    
    attrs(file)["NArea"]  = model.NArea
    attrs(file)["NHSys"]  = model.NHSys
@@ -215,6 +215,7 @@ function print_detailed_results_h5(dataset::String,DRT::DetailedResult,model::Mo
    attrs(file)["NK"]     = parameters.Time.NK
 
    write(file, "ObjectiveValue", DRT.ObjTable) #Added
+   write(file, "alpha", DRT.alpha) #ADDED
    HydroAreaNos = Set(model.HSys[iSys].AreaNo for iSys in 1:model.NHSys) #Added
 
    for iArea = 1:model.NArea #removed: if iArea <= model.NHSys
