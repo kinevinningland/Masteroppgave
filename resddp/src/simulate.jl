@@ -178,7 +178,7 @@ function simulate_aggregated(model::Model, inflow_model::InflowModel, parameters
                     parameters.Control.LFeasSpace, feas_spaces[fWeek].NFeasCut, feas_spaces[fWeek].FCC,
                     parameters.Control.CapReqFrac,MyWPData,parameters.Control.LDemandResponse,model.DRData,
                     model.H2Data,parameters.Control.LOperatingReserves,model.ORData,optimizer) #ADDED, LOperatingReserves &ORData
-                wind_NO =0 #Added
+                wind_NO1 = 0 #Added
                 for iScen = start_scen:end_scen
                     #wYear = sample(strategy.WindYears) #changed to the next line
                     wYear = SampledWindYears[iScen] #Added
