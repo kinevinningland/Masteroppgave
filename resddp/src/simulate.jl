@@ -149,7 +149,7 @@ function simulate_aggregated(model::Model, inflow_model::InflowModel, parameters
 
     NCluster = min(Threads.nthreads(), parameters.Control.NScenSim) # Never more threads than scenarios in simulation
     NScenPerCluster = Int(ceil(parameters.Control.NScenSim/NCluster)) # Maximum number of scenario per thread
-
+    wind_NO1 = 0 #Added
     dTS1 = dTS2 = 0.0
     t1 = time_ns()
     println("VRES-years simulated: ",strategy.WindYears)
@@ -178,7 +178,6 @@ function simulate_aggregated(model::Model, inflow_model::InflowModel, parameters
                     parameters.Control.LFeasSpace, feas_spaces[fWeek].NFeasCut, feas_spaces[fWeek].FCC,
                     parameters.Control.CapReqFrac,MyWPData,parameters.Control.LDemandResponse,model.DRData,
                     model.H2Data,parameters.Control.LOperatingReserves,model.ORData,optimizer) #ADDED, LOperatingReserves &ORData
-                wind_NO1 = 0 #Added
                 for iScen = start_scen:end_scen
                     #wYear = sample(strategy.WindYears) #changed to the next line
                     wYear = SampledWindYears[iScen] #Added
