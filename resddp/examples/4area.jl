@@ -62,7 +62,7 @@ file = File(format"JLD2", joinpath(datapath, "strategy.jld2"))
 
 # Load strategy from file
 data = JLD2.load(file) 
-strategy = data["strategy"]
+strategy = data["strategy2"]
 
 # Simulate aggregated
 
