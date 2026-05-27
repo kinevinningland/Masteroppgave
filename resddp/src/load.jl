@@ -23,15 +23,6 @@ function load(dataset::String, parameters::Parameters)::Model
 
     EV = ReadEndValue(dataset,NHSys)
 
-    max_load_per_zone = zeros(Float64,NZ)
-    for z in 1:NZ
-        for a in areas_in_zone[z]
-            for iLoad in 1:AMData[a].NLoad
-                max_load_per_zone[z] += maximum(AMData[a].MLData[iLoad].Load)
-            end
-        end
-    end
-
     model = Model(AHData, AMData, DMData, H2Data, USMod, WPData, DRData, ORData,NArea, ModInfReg,
         ModInfUReg, AreaName, MyKeys, MaxModArea, MCon, LineCap, LineLoss, NLine,
         NCascade, HCascade, NHSys,HSys, NAreaSys, AreaSys, USModSys,
