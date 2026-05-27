@@ -178,7 +178,7 @@ function simulate_aggregated(model::Model, inflow_model::InflowModel, parameters
                     parameters.Control.LFeasSpace, feas_spaces[fWeek].NFeasCut, feas_spaces[fWeek].FCC,
                     parameters.Control.CapReqFrac,MyWPData,parameters.Control.LDemandResponse,model.DRData,
                     model.H2Data,parameters.Control.LOperatingReserves,model.ORData,optimizer) #ADDED, LOperatingReserves &ORData
-
+                wind_NO =0 #Added
                 for iScen = start_scen:end_scen
                     #wYear = sample(strategy.WindYears) #changed to the next line
                     wYear = SampledWindYears[iScen] #Added
@@ -213,11 +213,15 @@ function simulate_aggregated(model::Model, inflow_model::InflowModel, parameters
                             JuMP.set_normalized_rhs(SP_FORW[:cut][iCut], strategy.CRHS[t,iCut]+adjust[iCut])
                         end
                     end
+                    
                     for iArea = 1:model.NArea
                         for k = 1:parameters.Time.NK
                             JuMP.set_normalized_rhs(SP_FORW[:wptarget][iArea,k], max(model.WPData[iArea,wYear,sWeek,k],0.0))
                             if parameters.Control.LOperatingReserves #ADDED
-                            JuMP.set_normalized_rhs(SP_FORW[:wp_avail_fix][iArea,k], max(model.WPData[iArea,wYear,sWeek,k],0.0))
+                                JuMP.set_normalized_rhs(SP_FORW[:wp_avail_fix][iArea,k], max(model.WPData[iArea,wYear,sWeek,k],0.0))
+                                if iArea == 1 || iArea == 2 || iArea == 3
+                                    wind_NO1 += max(model.WPData[iArea,wYear,sWeek,k],0.0)
+                                end
                             end
                         end
                     end
@@ -254,6 +258,7 @@ function simulate_aggregated(model::Model, inflow_model::InflowModel, parameters
                 end
             end
         end
+        println("wind_NO1: ", wind_NO1)
     end
     @printf("%s %6.2f \n"," Time - Total : ",(time_ns()-t1)*1.0E-9)
     @printf("%s %6.2f \n"," Time - Solver: ",dTS2*1.0E-9)
