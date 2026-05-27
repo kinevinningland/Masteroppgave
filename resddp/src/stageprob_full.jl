@@ -186,6 +186,13 @@ module StageProbFull
             + zone_reqs[z].NI_down * sum(wp_avail[a,k] for a in areas_in_zone[z] if !(a in zone_reqs[z].owp_areas_in_zone); init=0.0)
             + zone_reqs[z].NI_down_OWP * sum(wp_avail[a,k] for a in zone_reqs[z].owp_areas_in_zone; init=0.0)
             + (sqrt(a*zone_reqs[z].MaxLoad/(CNS.MW2GW*CTI.DT)+b^2)-b)*CNS.MW2GW*CTI.DT)
+
+         if t==1
+            println("Reserve requirements for stage 1 RI (GWh/step): ", zone_reqs[z].RI_down * CTI.DT)
+            println("Reserve requirements for stage 1 NI onshore (GWh/step): ", zone_reqs[z].NI_down * sum(wp_avail[a,k] for a in areas_in_zone[z] if !(a in zone_reqs[z].owp_areas_in_zone); init=0.0))
+            println("Reserve requirements for stage 1 NI offshore (GWh/step): ", zone_reqs[z].NI_down_OWP * sum(wp_avail[a,k] for a in zone_reqs[z].owp_areas_in_zone; init=0.0))
+            println("Reserve requirement for stage 1 load-based component (GWh/step): ", (sqrt(a*zone_reqs[z].MaxLoad/(CNS.MW2GW*CTI.DT)+b^2)-b)*CNS.MW2GW*CTI.DT)
+         end
          
          @constraint(M, reserve_req_up[z=1:NZ, k=1:NK], cap_zone_up[z,k] >= cap_up_amount[z,k])
          @constraint(M, reserve_req_down[z=1:NZ, k=1:NK], cap_zone_down[z,k] >= cap_down_amount[z,k])

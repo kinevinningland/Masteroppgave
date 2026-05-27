@@ -18,14 +18,16 @@ optimizer = JuMP.optimizer_with_attributes(
 
 println("Threads available: ",Threads.nthreads())
 
-datapath = "/cluster/home/kinevin/Masteroppgave/datasets/baseline_2"
+#datapath = "/cluster/home/kinevin/Masteroppgave/datasets/baseline_2"
 #datapath = "/Users/kinevinningland/Documents/Final_ReSDDP/datasets"
+datapath = "/Users/kinevinningland/Documents/Final_ReSDDP/datasets"
 #datapath = "C:\\Users\\arildh\\data\\res100\\norge30_test\\"
 #datapath = "C:\\Users\\arildh\\data\\res100\\HydroCen_LowEmission_V10\\"
 
 model = load(datapath, parameters) 
 inflow_model = load_inflow(datapath, model, parameters)
 
+#=
 using JLD2 
 using FileIO 
 
@@ -45,7 +47,7 @@ ReSDDP.print(model, parameters, true, true)
 
 strategy = init_strategy(model, parameters)
 init_val = init_system(model, parameters)
-
+=#
 #Compute strategy by SDDP
 #println("Start strategy computation..")
 
