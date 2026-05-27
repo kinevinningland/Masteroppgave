@@ -192,6 +192,8 @@ module StageProbFull
             println("Reserve requirements for stage 1 RI (GWh/step): ", zone_reqs[zi].RI_down * CTI.DT)
             #println("Reserve requirements for stage 1 NI onshore (GWh/step): ", zone_reqs[zi].NI_down * sum(wp_avail[a,k] for a in areas_in_zone[zi] if !(a in zone_reqs[zi].owp_areas_in_zone); init=0.0) for k in 1:NK)
             #println("Reserve requirements for stage 1 NI offshore (GWh/step): ", zone_reqs[zi].NI_down_OWP * sum(wp_avail[a,k] for a in zone_reqs[zi].owp_areas_in_zone; init=0.0) for k in 1:NK)
+            println(a)
+            println(b)
             println("Reserve requirement for stage 1 load-based component (GWh/step): ", (sqrt(a*zone_reqs[zi].MaxLoad/(CNS.MW2GW*CTI.DT)+b^2)-b)*CNS.MW2GW*CTI.DT)
             println("last:",zone_reqs[zi].MaxLoad)
          end
