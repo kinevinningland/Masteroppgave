@@ -57,12 +57,12 @@ init_val = init_system(model, parameters)
 #strategy = deserialize(joinpath(@__DIR__, "strategy.jls")) # Load cuts from file
 
 # Save strategy to file
-file = File(format"JLD2", joinpath(datapath, "strategy.jld2"))
+file = File(format"JLD2", joinpath(datapath, "2strategy.jld2"))
 #save(file, "strategy", strategy) #kommentert ut
 
 # Load strategy from file
 data = JLD2.load(file) 
-strategy = data["strategy"]
+strategy = data["strategy2"]
 
 # Simulate aggregated
 #=
