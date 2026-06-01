@@ -253,8 +253,8 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,A
         ) for z in 1:NZ
     ]
 
-    a = 10
-    b = 150
+    EEa = 10
+    EEb = 150
 
     # Read reserve CSV
     if LMarkReserves
@@ -348,7 +348,7 @@ function ReadOperatingReserves(dataset,NArea, NHSys, NAreaSys, AreaSys, AMData,A
 
     println("Read ORData.csv")
 
-    return OperatingReserves(NZ,price_zones,zone_reqs,area_to_zone,areas_in_zone,hydrosys_to_area,LMarkReserves,a,b,pos_by_area,neg_by_area)
+    return OperatingReserves(NZ,price_zones,zone_reqs,area_to_zone,areas_in_zone,hydrosys_to_area,LMarkReserves,EEa,EEb,pos_by_area,neg_by_area)
 end
 
 function ReadCuts(NHSys,NStage,IM,dataset)

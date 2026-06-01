@@ -105,8 +105,8 @@ struct OperatingReserves #ADDED
     areas_in_zone::Vector{Vector{Int}}  #map from zone to areas in zone
     hydrosys_to_area::Vector{Int}       #map from hydrosystem to area
     LMarkReserves::Bool                 #Whether to include reserve requirements for "mark" variables
-    a::Int                              #empirical constant from Entso-E
-    b::Int                              #empirical constant from Entso-E
+    EEa::Int                              #empirical constant from Entso-E
+    EEb::Int                              #empirical constant from Entso-E
     pos_by_area::Dict{Int, Set{Int}}    #map from area to its allowed market steps with positive capacity which can contribute to reserves
     neg_by_area::Dict{Int, Set{Int}}    #map from area to its allowed market steps with negative capacity which can contribute to reserves
 end
