@@ -669,7 +669,7 @@ function ReadHDF5(dataset,CNS,CTI,CTR)
 end
 
 #HYDROGEN MODEL
-#=
+#= Original version
 function ReadH2(dataset,AHData,NArea,AreaName,CNS,CTI,CTR)
     H2Areas = []
     NH2Area = 0

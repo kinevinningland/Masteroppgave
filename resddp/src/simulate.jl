@@ -94,9 +94,6 @@ function simulate_detailed(model::Model, inflow_model::InflowModel,initial_value
                     t2 = time_ns()
                     optimize!(SP_FORW)
                     dTS2 = dTS2+(time_ns()-t2)/NCluster
-                    if t == 1 && iScen == start_scen #Ta bort
-                        write_to_file(SP_FORW, "SPF_h230.lp")
-                    end
                     if primal_status(SP_FORW) != MOI.FEASIBLE_POINT 
                         write_to_file(SP_FORW, "SPF_err.lp")
                         termstat = termination_status(SP_FORW)
@@ -236,9 +233,6 @@ function simulate_aggregated(model::Model, inflow_model::InflowModel, parameters
                         write_to_file(SP_FORW, "SPF_err.mps")
                         termstat = termination_status(SP_FORW)
                         error(println("Solver terminated with status $termstat in forward iteration (stage,scen): ",t," ",iScen))
-                    end
-                    if t==1 #Ta bort
-                        write_to_file(SP_FORW, "SPF_mark.lp")
                     end
                     save!(ResultTable, SP_FORW, model.AMData,model.H2Data, InflowSys, model.NArea, model.NHSys, parameters.Time.NK, model.NLine, iScen, t, parameters.Control.LOperatingReserves, model.ORData) #ADDED parameters.Control.LOperatingReserves, model.ORData
 
