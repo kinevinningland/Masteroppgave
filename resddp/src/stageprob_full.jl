@@ -145,8 +145,8 @@ module StageProbFull
          zone_reqs = ORData.zone_reqs #reserve requirements per zone
          areas_in_zone = ORData.areas_in_zone #map from zone to areas in zone
          hydrosys_to_area = ORData.hydrosys_to_area #map from hydrosystem to area
-         EEa = ORData.a #empirical constant from Entso-E
-         EEBb = ORData.b #empirical constant from Entso-E
+         EEa = ORData.EEa #empirical constant from Entso-E
+         EEBb = ORData.EEBb #empirical constant from Entso-E
          pos_by_area = ORData.pos_by_area #map from area to its allowed market steps with positive capacity which can contribute to reserves
          neg_by_area = ORData.neg_by_area #map from area to its allowed market steps with negative capacity which can contribute to reserves
 
