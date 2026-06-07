@@ -146,7 +146,7 @@ module StageProbFull
          areas_in_zone = ORData.areas_in_zone #map from zone to areas in zone
          hydrosys_to_area = ORData.hydrosys_to_area #map from hydrosystem to area
          EEa = ORData.EEa #empirical constant from Entso-E
-         EEBb = ORData.EEBb #empirical constant from Entso-E
+         EEb = ORData.EEb #empirical constant from Entso-E
          pos_by_area = ORData.pos_by_area #map from area to its allowed market steps with positive capacity which can contribute to reserves
          neg_by_area = ORData.neg_by_area #map from area to its allowed market steps with negative capacity which can contribute to reserves
 
@@ -179,13 +179,13 @@ module StageProbFull
             zone_reqs[z].RI_up * CTI.DT
             + zone_reqs[z].NI_up * sum(wp_avail[a,k] for a in areas_in_zone[z] if !(a in zone_reqs[z].owp_areas_in_zone); init=0.0)
             + zone_reqs[z].NI_up_OWP * sum(wp_avail[a,k] for a in zone_reqs[z].owp_areas_in_zone; init=0.0)
-            + (sqrt(EEa*zone_reqs[z].MaxLoad/(CNS.MW2GW*CTI.DT)+EEBb^2)-EEBb)*CNS.MW2GW*CTI.DT)
+            + (sqrt(EEa*zone_reqs[z].MaxLoad/(CNS.MW2GW*CTI.DT)+EEb^2)-EEb)*CNS.MW2GW*CTI.DT)
          
          @expression(M, cap_down_amount[z = 1:NZ, k=1:NK], 
             zone_reqs[z].RI_down * CTI.DT
             + zone_reqs[z].NI_down * sum(wp_avail[a,k] for a in areas_in_zone[z] if !(a in zone_reqs[z].owp_areas_in_zone); init=0.0)
             + zone_reqs[z].NI_down_OWP * sum(wp_avail[a,k] for a in zone_reqs[z].owp_areas_in_zone; init=0.0)
-            + (sqrt(EEa*zone_reqs[z].MaxLoad/(CNS.MW2GW*CTI.DT)+EEBb^2)-EEBb)*CNS.MW2GW*CTI.DT)
+            + (sqrt(EEa*zone_reqs[z].MaxLoad/(CNS.MW2GW*CTI.DT)+EEb^2)-EEb)*CNS.MW2GW*CTI.DT)
 
          
          @constraint(M, reserve_req_up[z=1:NZ, k=1:NK], cap_zone_up[z,k] >= cap_up_amount[z,k])
