@@ -1,0 +1,45 @@
+
+Log for '/Users/kinevinningland/Downloads/SPF._1tidssteg.lp' Clone_2 (V22.1.1.0) Wed Apr 29 10:28:18 2026
+
+Tried aggregator 1 time.
+LP Presolve eliminated 186456 rows and 306507 columns.
+Aggregator did 98742 substitutions.
+Reduced LP has 256532 rows, 436624 columns, and 1194872 nonzeros.
+Presolve time = 3.16 sec. (909.86 ticks)
+
+Iteration log . . .
+Iteration:     1    Scaled infeas =     174290421.043039
+Iteration:  1742    Scaled infeas =     174244894.827073
+Iteration:  2112    Scaled infeas =      81741734.151191
+Iteration:  2278    Scaled infeas =      57254178.062175
+Iteration:  4570    Scaled infeas =        270257.296817
+Iteration:  6809    Scaled infeas =             0.002303
+Iteration:  6839    Objective     =      21444666.969479
+Iteration: 14263    Objective     =      17657056.964659
+Iteration: 23654    Objective     =      16643799.687489
+Iteration: 26485    Objective     =      16238290.598970
+Iteration: 27572    Objective     =      16022222.771864
+Iteration: 28170    Objective     =      15915502.325519
+Iteration: 28661    Objective     =      15846648.506092
+Iteration: 28999    Objective     =      15807656.882878
+Iteration: 29337    Objective     =      15776306.196705
+Iteration: 29666    Objective     =      15754352.656494
+Iteration: 29959    Objective     =      15733091.304622
+Iteration: 30197    Objective     =      15713455.040365
+Switched to devex.
+Iteration: 31496    Objective     =      15707400.212964
+Iteration: 33313    Objective     =      15675329.290378
+Iteration: 35229    Objective     =      15651184.032045
+Iteration: 37067    Objective     =      15635152.746806
+Iteration: 38849    Objective     =      15618444.708647
+Iteration: 40672    Objective     =      15606746.969318
+Iteration: 43321    Objective     =      15590279.043975
+Iteration: 45149    Objective     =      15581305.422915
+Iteration: 46998    Objective     =      15574075.519020
+Iteration: 48436    Objective     =      15566815.589067
+Elapsed time = 29.54 sec. (10000.51 ticks, 49703 iterations)
+Iteration: 49965    Objective     =      15559028.173224
+Removing shift (111).
+
+Dual simplex solved model.
+

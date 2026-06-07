@@ -1,0 +1,118 @@
+
+Log started (V22.1.1.0) Wed Apr 29 10:27:14 2026
+
+File 'SPF._1tidssteg.lp' not found.
+No file read.
+No problem exists.
+No problem exists.
+
+Problem '/Users/kinevinningland/Downloads/SPF._1tidssteg.lp' read.
+Read time = 2.25 sec. (79.22 ticks)
+File 'SPF._1tidssteg.lp' not found.
+No file read.
+Version identifier: 22.1.1.0 | 2022-11-28 | 9160aff4d
+Parallel mode: deterministic, using up to 8 threads for concurrent optimization:
+ * Starting dual Simplex on 1 thread...
+ * Starting Barrier on 6 threads...
+ * Starting primal Simplex on 1 thread...
+Tried aggregator 1 time.
+LP Presolve eliminated 186456 rows and 306507 columns.
+Aggregator did 98742 substitutions.
+Reduced LP has 256532 rows, 436624 columns, and 1194872 nonzeros.
+Presolve time = 3.08 sec. (909.86 ticks)
+Initializing dual steep norms . . .
+
+Iteration log . . .
+Iteration:     1   Dual objective     =    -325595842.522059
+Perturbation started.
+Iteration:  1414   Dual objective     =       5724306.129606
+Iteration:  2917   Dual objective     =       6187631.034620
+Iteration:  4206   Dual objective     =       6708192.010503
+Iteration:  5371   Dual objective     =       6886143.679436
+Iteration:  6072   Dual objective     =       7082126.726044
+Iteration:  7228   Dual objective     =       7361703.813352
+Iteration:  8171   Dual objective     =       7662855.466887
+Iteration:  9273   Dual objective     =       7888916.258335
+Iteration: 10170   Dual objective     =       8024075.763492
+Iteration: 11075   Dual objective     =       8105334.353223
+Iteration: 11959   Dual objective     =       8248618.767728
+Iteration: 12851   Dual objective     =       8324058.755363
+Iteration: 13826   Dual objective     =       8375378.276835
+Iteration: 14675   Dual objective     =       8428325.266873
+Iteration: 15607   Dual objective     =       8454797.658673
+Iteration: 16441   Dual objective     =       8491240.963069
+Iteration: 17223   Dual objective     =       8519158.730740
+Iteration: 17995   Dual objective     =       8540888.674973
+Iteration: 18683   Dual objective     =       8563797.032763
+Iteration: 19447   Dual objective     =       8576254.616797
+Iteration: 20147   Dual objective     =       8585627.410432
+Iteration: 20875   Dual objective     =       8604302.304144
+Iteration: 21627   Dual objective     =       8628530.510456
+Iteration: 22215   Dual objective     =       8643237.141756
+Iteration: 23136   Dual objective     =       8654624.580803
+Iteration: 23748   Dual objective     =       8667828.099213
+Iteration: 24852   Dual objective     =       8695647.182621
+Iteration: 25365   Dual objective     =       8711225.884083
+Iteration: 26485   Dual objective     =       8731218.422831
+Iteration: 27070   Dual objective     =       8743866.543256
+Iteration: 28126   Dual objective     =       8764009.120853
+Iteration: 28695   Dual objective     =       8770572.906943
+Iteration: 29926   Dual objective     =       8779349.722158
+Iteration: 30446   Dual objective     =       8785043.382873
+Iteration: 31558   Dual objective     =       8793179.804201
+Iteration: 32161   Dual objective     =       8796874.714501
+Iteration: 33467   Dual objective     =       8802862.305440
+Iteration: 34040   Dual objective     =       8806927.773466
+Markowitz threshold set to 0.1
+Iteration: 34282   Dual objective     =       8808972.957742
+Iteration: 35369   Dual objective     =       8842346.535118
+Iteration: 35996   Dual objective     =       8845346.158681
+Iteration: 37275   Dual objective     =       8849616.777361
+Iteration: 37933   Dual objective     =       8852526.175888
+Iteration: 39151   Dual objective     =       8860505.393609
+Iteration: 39734   Dual objective     =       8861795.862206
+Iteration: 40980   Dual objective     =       8864262.141803
+Iteration: 41611   Dual objective     =       8864536.625377
+Iteration: 42990   Dual objective     =       8865184.494174
+Iteration: 43568   Dual objective     =       8865308.383765
+Iteration: 44978   Dual objective     =       8865635.327638
+Iteration: 45619   Dual objective     =       8865726.615231
+Iteration: 46385   Dual objective     =       8866194.264983
+Iteration: 47077   Dual objective     =       8866293.763966
+Iteration: 47598   Dual objective     =       8866366.973185
+Iteration: 49004   Dual objective     =       8866569.720898
+Iteration: 49994   Dual objective     =       8866587.536532
+Iteration: 51313   Dual objective     =       8866591.872776
+Iteration: 52772   Dual objective     =       8866598.008007
+Iteration: 54517   Dual objective     =       8866598.408980
+Iteration: 56230   Dual objective     =       8866601.380617
+Iteration: 57560   Dual objective     =       8866605.469830
+Iteration: 59019   Dual objective     =       8866607.080594
+Iteration: 59769   Dual objective     =       8866634.854981
+Iteration: 60630   Dual objective     =       8866649.705988
+Iteration: 61127   Dual objective     =       8866652.022342
+Iteration: 62346   Dual objective     =       8866713.776552
+Iteration: 62905   Dual objective     =       8866766.478203
+Iteration: 64084   Dual objective     =       8866777.712714
+Iteration: 64676   Dual objective     =       8866778.727676
+Iteration: 65762   Dual objective     =       8866781.058553
+Iteration: 66216   Dual objective     =       8866781.934389
+Removing perturbation.
+Iteration: 67008    Objective     =       8866782.094707
+Elapsed time = 18.08 sec. (10019.82 ticks, 67022 iterations)
+Iteration: 67022   Dual objective     =       8866782.094705
+
+Dual simplex solved model.
+
+
+Dual simplex - Optimal:  Objective =  8.8667820949e+06
+Solution time =   31.27 sec.  Iterations = 67881 (0)
+Deterministic time = 10590.99 ticks  (338.71 ticks/sec)
+
+
+Version identifier: 22.1.1.0 | 2022-11-28 | 9160aff4d
+Tried aggregator 1 time.
+LP Presolve eliminated 186456 rows and 306507 columns.
+Aggregator did 98742 substitutions.
+Reduced LP has 256532 rows, 436624 columns, and 1194872 nonzeros.
+Presolve time = 2.02 sec. (900.86 ticks)
